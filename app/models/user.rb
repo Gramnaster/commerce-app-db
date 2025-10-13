@@ -7,12 +7,13 @@ class User < ApplicationRecord
          :confirmable, :timeoutable,
          :jwt_authenticatable, jwt_revocation_strategy: self
 
+  # Prevent unconfirmed users from signing in
+  # def active_for_authentication?
+  #   super && confirmed?
+  # end
 
-  # Override Devise's send_confirmation_instructions to make it async
-  def send_confirmation_instructions_async
-    generate_confirmation_token! unless @raw_confirmation_token
-    opts = pending_reconfirmation? ? { to: unconfirmed_email } : {}
-    # Queue the confirmation email as an ActiveJob instead of sending it immediately
-    Devise::Mailer.confirmation_instructions(self, @raw_confirmation_token, opts).deliver_later
-  end
+  # Custom message for unconfirmed users
+  # def inactive_message
+  #   confirmed? ? super : :unconfirmed
+  # end
 end

@@ -5,6 +5,29 @@ class Api::V1::Users::SessionsController < Devise::SessionsController
 
   respond_to :json
 
+  # Disable new action for API (no login form needed)
+  def new
+    render json: { error: "Use POST /api/v1/users/login to authenticate" }, status: :method_not_allowed
+  end
+
+  def create
+    self.resource = warden.authenticate!(auth_options)
+
+    # Check if user is confirmed
+    unless resource.confirmed?
+      sign_out(resource)
+      return render json: {
+        status: { code: 401, message: "Please confirm your email address before logging in." },
+        errors: [ "Email not confirmed" ]
+      }, status: :unauthorized
+    end
+
+    set_flash_message!(:notice, :signed_in)
+    sign_in(resource_name, resource)
+    yield resource if block_given?
+    respond_with resource, location: after_sign_in_path_for(resource)
+  end
+
   private
   def respond_with(resource, _opts = {})
     # The `resource` is the signed-in user.
