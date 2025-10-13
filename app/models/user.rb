@@ -7,6 +7,7 @@ class User < ApplicationRecord
          :confirmable, :timeoutable,
          :jwt_authenticatable, jwt_revocation_strategy: self
 
+  validates :password_confirmation, presence: true
 
   # Override Devise's send_confirmation_instructions to make it async
   def send_confirmation_instructions_async

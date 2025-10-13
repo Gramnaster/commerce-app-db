@@ -1,0 +1,13 @@
+json.status do
+  json.code 200
+  json.message "Account created successfully."
+end
+
+{
+    "user": {
+        "email": "rondmondo@gmail.com",
+        "password": "123password",
+        "password_confirmation": "123password",
+        "current_password": "password123"
+    }
+}	

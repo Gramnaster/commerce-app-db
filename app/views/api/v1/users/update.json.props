@@ -1,0 +1,17 @@
+json.message "User updated successfully"
+  json.user do
+    json.id @user.id
+    json.email @user.email
+    json.first_name @user.first_name
+    json.middle_name @user.middle_name
+    json.last_name @user.last_name
+    json.date_of_birth @user.date_of_birth
+    json.mobile_no @user.mobile_no
+    json.address_line_01 @user.address_line_01
+    json.address_line_02 @user.address_line_02
+    json.city @user.city
+    json.zip_code @user.zip_code
+    json.country_id @user.country_id
+
+  end
+end
