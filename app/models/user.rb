@@ -7,13 +7,5 @@ class User < ApplicationRecord
          :confirmable, :timeoutable,
          :jwt_authenticatable, jwt_revocation_strategy: self
 
-  # Prevent unconfirmed users from signing in
-  # def active_for_authentication?
-  #   super && confirmed?
-  # end
-
-  # Custom message for unconfirmed users
-  # def inactive_message
-  #   confirmed? ? super : :unconfirmed
-  # end
+  validates :password_confirmation, presence: true
 end
