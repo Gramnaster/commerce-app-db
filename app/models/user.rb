@@ -8,12 +8,4 @@ class User < ApplicationRecord
          :jwt_authenticatable, jwt_revocation_strategy: self
 
   validates :password_confirmation, presence: true
-
-  # Override Devise's send_confirmation_instructions to make it async
-  def send_confirmation_instructions_async
-    generate_confirmation_token! unless @raw_confirmation_token
-    opts = pending_reconfirmation? ? { to: unconfirmed_email } : {}
-    # Queue the confirmation email as an ActiveJob instead of sending it immediately
-    Devise::Mailer.confirmation_instructions(self, @raw_confirmation_token, opts).deliver_later
-  end
 end

@@ -1,13 +1,10 @@
 json.status do
-  json.code 200
-  json.message "Account created successfully."
+  json.code 201 # 201 Created
+  json.message "Signed up successfully."
 end
 
-{
-    "user": {
-        "email": "rondmondo@gmail.com",
-        "password": "123password",
-        "password_confirmation": "123password",
-        "current_password": "password123"
-    }
-}	
+json.data do
+  json.id resource.id
+  json.email resource.email
+  json.jti resource.jti
+end

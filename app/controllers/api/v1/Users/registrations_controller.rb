@@ -3,6 +3,42 @@
 class Api::V1::Users::RegistrationsController < Devise::RegistrationsController
   # before_action :configure_sign_up_params, only: [:create]
   # before_action :configure_account_update_params, only: [:update]
+  #
+  respond_to :json
+  def create
+    build_resource(sign_up_params)
+
+    # Skip synchronous confirmation email (we'll queue it instead for faster response)
+    resource.skip_confirmation_notification!
+
+    resource.save
+    if resource.persisted?
+      # Send confirmation email asynchronously via SolidQueue
+      if resource.class.devise_modules.include?(:confirmable)
+        # Generate token and send email async
+        resource.generate_confirmation_token! unless resource.confirmation_token
+        Devise::Mailer.confirmation_instructions(resource, resource.confirmation_token).deliver_later
+      end
+
+      # TODO: Enable welcome email when ready
+      # UserMailer.signup_confirmation(resource).deliver_later
+
+      # TODO: Uncomment when user_role field is added and trader? method is implemented
+      # if resource.trader?
+      #   UserMailer.admin_new_customer_notification(resource).deliver_later
+      # end
+
+      # If the user was saved, let Rails render the view at:
+      # app/views/api/v1/users/registrations/create.json.jbuilder
+      # The JWT will be in the response headers automatically.
+      render :create, status: :created
+    else
+      # If saving failed, render the errors as JSON.
+      render json: {
+        status: { message: "User couldn't be created successfully. #{resource.errors.full_messages.to_sentence}" }
+      }, status: :unprocessable_content
+    end
+  end
 
   respond_to :json
   def create

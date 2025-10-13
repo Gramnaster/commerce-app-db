@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+      .container { max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; }
+      .header { background: #17a2b8; color: white; padding: 20px; text-align: center; }
+      .content { padding: 30px 20px; }
+      .button { background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0; }
+      .user-details { background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0; }
+      .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>New Trader Registration</h1>
+      </div>
+      
+      <div class="content">
+        <h2>Admin Notification</h2>
+        
+        <p>A new trader has registered and is awaiting approval.</p>
+        
+        <div class="user-details">
+          <h3>Applicant Details:</h3>
+          <p><strong>Name:</strong> <%= @user.first_name %> <%= @user.last_name %></p>
+          <p><strong>Email:</strong> <%= @user.email %></p>
+          <p><strong>Mobile:</strong> <%= @user.mobile_no %></p>
+          <p><strong>Date of Birth:</strong> <%= @user.date_of_birth %></p>
+          <p><strong>Address:</strong> <%= @user.address_line_01 %>, <%= @user.city %>, <%= @user.zip_code %></p>
+          <p><strong>Country:</strong> <%= @user.country.name if @user.country %></p>
+          <p><strong>Registration Date:</strong> <%= @user.created_at.strftime("%B %d, %Y at %I:%M %p") %></p>
+          <p><strong>Status:</strong> PENDING</p>
+        </div>
+        
+        <p>Please review this application and take appropriate action.</p>
+        
+        <a href="http://localhost:3001/api/v1/users/pending_traders" class="button">Review Pending Applications</a>
+        
+        <p><strong>Quick Actions:</strong></p>
+        <ul>
+          <li>Use PATCH /api/v1/users/<%= @user.id %>/update_status with user_status: "approved"</li>
+          <li>Or user_status: "rejected" to decline</li>
+        </ul>
+      </div>
+      
+      <div class="footer">
+        <p>💼 <%= @app_name %> Admin System</p>
+      </div>
+    </div>
+  </body>
+</html>

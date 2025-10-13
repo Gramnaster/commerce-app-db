@@ -11,3 +11,4 @@ json.user do
   # JWT token identifier
   json.jti resource.jti
 end
+

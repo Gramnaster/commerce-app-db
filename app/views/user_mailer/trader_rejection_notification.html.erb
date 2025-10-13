@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+      .container { max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; }
+      .header { background: #dc3545; color: white; padding: 20px; text-align: center; }
+      .content { padding: 30px 20px; }
+      .button { background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0; }
+      .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Application Update</h1>
+      </div>
+      
+      <div class="content">
+        <h2>Hello <%= @user.first_name %>,</h2>
+        
+        <p>Thank you for your interest in <%= @app_name %>.</p>
+        
+        <p>After careful review, we're unable to approve your trader account application at this time.</p>
+        
+        <p>This decision may be due to:</p>
+        <ul>
+          <li>Incomplete information provided</li>
+          <li>Documentation requirements not met</li>
+          <li>Current capacity limitations</li>
+        </ul>
+        
+        <p>You're welcome to reapply in the future or contact our support team for more information.</p>
+        
+        <a href="mailto:support@stocktrader.com" class="button">Contact Support</a>
+        
+        <p>Thank you for your understanding.</p>
+      </div>
+      
+      <div class="footer">
+        <p>© 2025 <%= @app_name %></p>
+      </div>
+    </div>
+  </body>
+</html>

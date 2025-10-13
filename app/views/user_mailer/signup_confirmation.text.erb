@@ -1,0 +1,26 @@
+💼 WELCOME TO <%= @app_name.upcase %>!
+
+Hello <%= @user.first_name %>!
+
+Thank you for registering with <%= @app_name %>.
+
+ACCOUNT STATUS: PENDING APPROVAL
+
+Your trader account application is currently being reviewed by our admin team. Here's what happens next:
+
+1. 📋 Your application is in the review queue
+2. 👥 Our admin team will verify your information  
+3. ✉️ You'll receive an email once approved
+4. 💹 Start trading immediately after approval!
+
+Account Details:
+• Email: <%= @user.email %>
+• Name: <%= @user.first_name %> <%= @user.last_name %>
+• Registration Date: <%= @user.created_at.strftime("%B %d, %Y") %>
+
+We'll notify you as soon as your account is approved!
+
+Questions? Contact our support team.
+
+---
+© 2025 <%= @app_name %>. Thanks for joining us!

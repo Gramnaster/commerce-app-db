@@ -1,0 +1,26 @@
+🔔 NEW TRADER REGISTRATION
+
+Admin Notification
+
+A new trader has registered and is awaiting approval.
+
+APPLICANT DETAILS:
+• Name: <%= @user.first_name %> <%= @user.last_name %>
+• Email: <%= @user.email %>
+• Mobile: <%= @user.mobile_no %>
+• Date of Birth: <%= @user.date_of_birth %>
+• Address: <%= @user.address_line_01 %>, <%= @user.city %>, <%= @user.zip_code %>
+• Country: <%= @user.country.name if @user.country %>
+• Registration Date: <%= @user.created_at.strftime("%B %d, %Y at %I:%M %p") %>
+• Status: PENDING
+
+Please review this application and take appropriate action.
+
+Review Pending Applications: http://localhost:3001/api/v1/users/pending_traders
+
+Quick Actions:
+• Approve: PATCH /api/v1/users/<%= @user.id %>/update_status with user_status: "approved"
+• Reject: PATCH /api/v1/users/<%= @user.id %>/update_status with user_status: "rejected"
+
+---
+💼 <%= @app_name %> Admin System
