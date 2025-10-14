@@ -3,8 +3,8 @@ class Api::V1::UsersController < ApplicationController
   # before_action :require_admin, only: [ :index, :create, :update, :destroy, :update_status ]
   # before_action :set_user, only: [ :show, :update, :destroy, :update_status ]
   before_action :authenticate_user!
-  before_action :set_user, only: [ :show, :profile, :destroy ]
-  before_action :authorize_user!, only: [ :profile ]
+  before_action :set_user, only: [ :show, :update, :destroy ]
+  before_action :authorize_user!, only: [ :update ]
 
   # def index
   #   @users = User.all.includes(:country, :wallet)
@@ -93,7 +93,7 @@ class Api::V1::UsersController < ApplicationController
     end
   end
 
-  def profile_params
+  def user_params
     params.require(:user).permit(
       :email, :password, :password_confirmation,
       user_detail_attributes: [ :first_name, :middle_name, :last_name, :dob, :_destroy ],

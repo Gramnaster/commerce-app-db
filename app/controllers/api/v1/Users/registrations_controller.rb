@@ -40,40 +40,6 @@ class Api::V1::Users::RegistrationsController < Devise::RegistrationsController
     end
   end
 
-  respond_to :json
-  def create
-    build_resource(sign_up_params)
-
-    # Skip Devise's automatic confirmation email (we'll send it async instead)
-    resource.skip_confirmation_notification!
-
-    resource.save
-    if resource.persisted?
-      # Send Devise confirmation instructions asynchronously if confirmable is enabled
-      if resource.class.devise_modules.include?(:confirmable) && !resource.confirmed?
-        resource.send_confirmation_instructions_async
-      end
-
-      # Send welcome email to user asynchronously
-      # UserMailer.signup_confirmation(resource).deliver_later
-
-      # Notify admin of new trader registration (only for traders) asynchronously
-      # if resource.trader?
-      # UserMailer.admin_new_trader_notification(resource).deliver_later
-      # end
-
-      # If the user was saved, let Rails render the view at:
-      # app/views/api/v1/users/registrations/create.json.props
-      # The JWT will be in the response headers automatically.
-      render :create, status: :created
-    else
-      # If saving failed, render the errors as JSON.
-      render json: {
-        status: { message: "User couldn't be created. #{resource.errors.full_messages.to_sentence}" }
-      }, status: :unprocessable_content
-    end
-  end
-
   private
 
   def sign_up_params

@@ -7,9 +7,7 @@ class User < ApplicationRecord
          :confirmable, :timeoutable,
          :jwt_authenticatable, jwt_revocation_strategy: self
 
-  validates :password_confirmation, presence: true
-
-  has_one :user_detailm, dependent: :destroy
+  has_one :user_detail, dependent: :destroy
   has_many :user_addresses, dependent: :destroy
   has_many :addresses, through: :user_addresses
   has_many :phones, dependent: :destroy
