@@ -35,7 +35,7 @@ class Api::V1::Users::RegistrationsController < Devise::RegistrationsController
     else
       # If saving failed, render the errors as JSON.
       render json: {
-        status: { message: "User couldn't be created successfully. #{resource.errors.full_messages.to_sentence}" }
+        status: { message: "User couldn't be created. #{resource.errors.full_messages.to_sentence}" }
       }, status: :unprocessable_content
     end
   end
@@ -63,13 +63,13 @@ class Api::V1::Users::RegistrationsController < Devise::RegistrationsController
       # end
 
       # If the user was saved, let Rails render the view at:
-      # app/views/api/v1/users/registrations/create.json.jbuilder
+      # app/views/api/v1/users/registrations/create.json.props
       # The JWT will be in the response headers automatically.
       render :create, status: :created
     else
       # If saving failed, render the errors as JSON.
       render json: {
-        status: { message: "User couldn't be created successfully. #{resource.errors.full_messages.to_sentence}" }
+        status: { message: "User couldn't be created. #{resource.errors.full_messages.to_sentence}" }
       }, status: :unprocessable_content
     end
   end
