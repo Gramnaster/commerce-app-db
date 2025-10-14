@@ -261,6 +261,8 @@ GEM
     raabro (1.4.0)
     racc (1.8.1)
     rack (3.2.3)
+    rack-attack (6.7.0)
+      rack (>= 1.0, < 4)
     rack-cors (3.0.0)
       logger
       rack (>= 3.0.14)
@@ -444,6 +446,7 @@ DEPENDENCIES
   pg (~> 1.1)
   props_template
   puma (>= 5.0)
+  rack-attack
   rack-cors
   rails (~> 8.0.3)
   rspec-rails
