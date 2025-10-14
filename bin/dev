@@ -1,2 +1,21 @@
 #!/usr/bin/env ruby
-exec "./bin/rails", "server", *ARGV
+
+ENV["PORT"] ||= "3001"
+
+require "fileutils"
+
+APP_ROOT = File.expand_path("..", __dir__)
+def system!(*args)
+  system(*args, exception: true)
+end
+
+FileUtils.chdir APP_ROOT do
+  # Install foreman if not available
+  if system("which foreman", out: File::NULL, err: File::NULL).nil?
+    puts "Installing foreman..."
+    system! "gem install foreman"
+  end
+
+  # Run both web server and job worker
+  system! "foreman start -f Procfile.dev"
+end
