@@ -5,8 +5,17 @@ end
 
 json.user do
   # Basic identity
+  json.id resource.id
   json.email resource.email
   # json.first_name resource.first_name
   # JWT token identifier
   json.jti resource.jti
+end
+
+if user.user_details
+  json.user_details do
+    # json.id @user.user_details.id
+    json.first @user.user_details.first_name
+    json.last @user.user_details.last_name
+  end
 end
