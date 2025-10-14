@@ -47,7 +47,7 @@ class Api::V1::Users::RegistrationsController < Devise::RegistrationsController
       :email, :password, :password_confirmation,
       user_detail_attributes: [ :first_name, :middle_name, :last_name, :dob, :_destroy ],
       phones_attributes: [ :id, :phone_no, :phone_type, :_destroy ],
-      user_address_attributes: [
+      user_addresses_attributes: [
         :id, :is_default, :_destroy,
         address_attributes: [ :id, :unit_no, :street_no, :address_line1, :address_line2,
                             :city, :region, :zipcode, :country_id ]

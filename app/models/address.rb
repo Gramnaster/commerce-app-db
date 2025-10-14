@@ -3,5 +3,5 @@ class Address < ApplicationRecord
   has_many :user_addresses, dependent: :destroy
   has_many :users, through: :user_addresses
 
-  validates :unit_no, :street_no, :city, :zipcode, :country_id, presence: true
+  # validates :unit_no, :street_no, :city, :zipcode, :country_id, presence: true
 end

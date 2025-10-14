@@ -14,7 +14,7 @@ class User < ApplicationRecord
   has_many :user_payment_methods, dependent: :destroy
 
   # Nested attributes
-  accepts_nested_attributes_for :user_detail, update_only: true
+  accepts_nested_attributes_for :user_detail, allow_destroy: true, update_only: true
 
   accepts_nested_attributes_for :phones, allow_destroy: true, reject_if: :all_blank
 

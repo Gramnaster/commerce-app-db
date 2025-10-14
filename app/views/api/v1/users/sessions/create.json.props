@@ -6,7 +6,7 @@ end
 json.user do
   # Basic identity
   json.email resource.email
-  josn.first_name resource.first_name
+  # json.first_name resource.first_name
   # JWT token identifier
   json.jti resource.jti
 end
