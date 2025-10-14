@@ -86,6 +86,6 @@ Rails.application.configure do
   # Use async adapter for development (in-memory queue, no separate database needed)
   # config.active_job.queue_adapter = :async
 
-  # config.active_job.queue_adapter = :solid_queue
-  # config.solid_queue.connects_to = { database: { writing: :queue } }
+  config.active_job.queue_adapter = :solid_queue
+  config.solid_queue.connects_to = { database: { writing: :queue } }
 end
