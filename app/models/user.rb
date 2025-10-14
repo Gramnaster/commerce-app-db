@@ -9,6 +9,21 @@ class User < ApplicationRecord
 
   validates :password_confirmation, presence: true
 
+  has_one :user_detailm, dependent: :destroy
+  has_many :user_addresses, dependent: :destroy
+  has_many :addresses, through: :user_addresses
+  has_many :phones, dependent: :destroy
+  has_many :user_payment_methods, dependent: :destroy
+
+  # Nested attributes
+  accepts_nested_attributes_for :user_detail
+
+  accepts_nested_attributes_for :phones
+
+  accepts_nested_attributes_for :user_addresses
+
+  accepts_nested_attributes_for :user_payment_methods
+
   def send_confirmation_instructions_async
     generate_confirmation_token! unless @raw_confirmation_token
     opts = pending_reconfirmation? ? { to: unconfirmed_email } : {}
