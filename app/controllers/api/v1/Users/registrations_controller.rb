@@ -59,7 +59,7 @@ class Api::V1::Users::RegistrationsController < Devise::RegistrationsController
 
       # Notify admin of new trader registration (only for traders) asynchronously
       # if resource.trader?
-        # UserMailer.admin_new_trader_notification(resource).deliver_later
+      # UserMailer.admin_new_trader_notification(resource).deliver_later
       # end
 
       # If the user was saved, let Rails render the view at:
@@ -72,6 +72,22 @@ class Api::V1::Users::RegistrationsController < Devise::RegistrationsController
         status: { message: "User couldn't be created successfully. #{resource.errors.full_messages.to_sentence}" }
       }, status: :unprocessable_content
     end
+  end
+
+  private
+
+  def sign_up_params
+    params.require(:user).permit(
+      :email, :password, :password_confirmation,
+      user_detail_attributes: [ :first_name, :middle_name, :last_name, :dob, :_destroy ],
+      phones_attributes: [ :id, :phone_no, :phone_type, :_destroy ],
+      user_address_attributes: [
+        :id, :is_default, :_destroy,
+        address_attributes: [ :id, :unit_no, :street_no, :address_line1, :address_line2,
+                            :city, :region, :zipcode, :country_id ]
+      ],
+      user_payment_methods_attributes: [ :id, :balance, :payment_type, :_destroy ]
+    )
   end
 
   # GET /resource/sign_up
