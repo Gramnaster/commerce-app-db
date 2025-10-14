@@ -1,34 +1,64 @@
-json.id @user.id
-json.email @user.email
-json.first_name @user.first_name
-json.middle_name @user.middle_name
-json.last_name @user.last_name
-json.date_of_birth @user.date_of_birth
-json.mobile_no @user.mobile_no
-json.address_line_01 @user.address_line_01
-json.address_line_02 @user.address_line_02
-json.city @user.city
-json.zip_code @user.zip_code
-json.country_id @user.country_id
-json.user_status @user.user_status
-json.user_role @user.user_role
-json.created_at @user.created_at
-json.updated_at @user.updated_at
-json.confirmed_at @user.confirmed_at
-
-# Country details if available
-if @user.country
-  json.country do
-    json.id @user.country.id
-    json.name @user.country.name
-    json.code @user.country.code
-  end
+json.status do
+  json.code 200
+  json.message "User retrieved successfully"
 end
 
-# Wallet details
-if @user.wallet
-  json.wallet do
-    json.id @user.wallet.id
-    json.balance @user.wallet.balance
+json.data do
+  json.id @user.id
+  json.email @user.email
+  json.is_verified @user.is_verified
+  json.confirmed_at @user.confirmed_at
+  json.created_at @user.created_at
+  json.updated_at @user.updated_at
+
+  # User details
+  if @user.user_detail
+    json.user_detail do
+      json.id @user.user_detail.id
+      json.first_name @user.user_detail.first_name
+      json.middle_name @user.user_detail.middle_name
+      json.last_name @user.user_detail.last_name
+      json.dob @user.user_detail.dob
+    end
+  end
+
+  # Phones
+  json.phones do
+    json.array! @user.phones do |phone|
+      json.id phone.id
+      json.phone_no phone.phone_no
+      json.phone_type phone.phone_type
+    end
+  end
+
+  # User addresses with nested address details
+  json.user_addresses do
+    json.array! @user.user_addresses do |user_address|
+      json.id user_address.id
+      json.is_default user_address.is_default
+
+      if user_address.address
+        json.address do
+          json.id user_address.address.id
+          json.unit_no user_address.address.unit_no
+          json.street_no user_address.address.street_no
+          json.address_line1 user_address.address.address_line1
+          json.address_line2 user_address.address.address_line2
+          json.city user_address.address.city
+          json.region user_address.address.region
+          json.zipcode user_address.address.zipcode
+          json.country_id user_address.address.country_id
+        end
+      end
+    end
+  end
+
+  # User payment methods
+  json.user_payment_methods do
+    json.array! @user.user_payment_methods do |payment_method|
+      json.id payment_method.id
+      json.balance payment_method.balance
+      json.payment_type payment_method.payment_type
+    end
   end
 end

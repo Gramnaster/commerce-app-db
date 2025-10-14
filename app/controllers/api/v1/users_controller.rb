@@ -1,4 +1,4 @@
-class Api::V1::UsersController < ApplicationController
+class Api::V1::UsersController < Api::V1::BaseController
   # include AdminAuthorization
   # before_action :require_admin, only: [ :index, :create, :update, :destroy, :update_status ]
   # before_action :set_user, only: [ :show, :update, :destroy, :update_status ]
@@ -87,6 +87,10 @@ class Api::V1::UsersController < ApplicationController
                           :addresses, :user_payment_methods).find(params[:id])
   end
 
+  # def set_user
+  #   @user = User.find(params[:id])
+  # end
+
   def authorize_user!
     unless current_user.id == @user.id || current_user.admin?
       render json: { error: "Unauthorized" }, status: :forbidden
@@ -96,9 +100,9 @@ class Api::V1::UsersController < ApplicationController
   def user_params
     params.require(:user).permit(
       :email, :password, :password_confirmation,
-      user_detail_attributes: [ :first_name, :middle_name, :last_name, :dob, :_destroy ],
+      user_detail_attributes: [ :id, :first_name, :middle_name, :last_name, :dob, :_destroy ],
       phones_attributes: [ :id, :phone_no, :phone_type, :_destroy ],
-      user_address_attributes: [
+      user_addresses_attributes: [
         :id, :is_default, :_destroy,
         address_attributes: [ :id, :unit_no, :street_no, :address_line1, :address_line2,
                             :city, :region, :zipcode, :country_id ]
