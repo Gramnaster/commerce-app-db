@@ -18,6 +18,7 @@ gem "omniauth-google-oauth2"
 gem "dotenv-rails"
 gem "acts_as_paranoid", "~> 0.10.3"
 gem "rack-cors"
+gem "rack-attack"
 gem "will_paginate", "~> 4.0"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
