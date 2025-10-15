@@ -9,7 +9,10 @@
 #   end
 
 require 'finnhub_ruby'
+require 'net/http'
+require 'json'
 
+# Seeds the Countries table
 puts "Seeding country data from Finnhub..."
 
 ActiveRecord::Base.transaction do
@@ -42,3 +45,48 @@ ActiveRecord::Base.transaction do
     raise ActiveRecord::Rollback
   end
 end
+
+# Seeds the Producers table
+addresses = [
+  { unit_no: "2020", street_no: "26th Ave", city: "Taguig", zipcode: "1244", country: "102" }
+  { unit_no: "0110", street_no: "9th Roxas", city: "Quezon", zipcode: "1499", country: "102" }
+  { unit_no: "1430", street_no: "8th Cucumber", city: "Metro Manila", zipcode: "1011", country: "102" }
+  { unit_no: "310", street_no: "15th Centre", city: "Cavite", zipcode: "1802", country: "102" }
+]
+
+# Seeds the Categories table
+[ "men's clothing", "women's clothing", "jewelery", "electronics" ].each do |cat_title|
+  ProductCategory.find_or_create_by!(title: cat_title)
+end
+
+# Seeds the Products table
+puts "Seeding product data from fakeproducts..."
+
+# ActiveRecord::Base.transaction do
+#   begin
+#     # API-Wrapper Project
+#     puts "Populating products table"
+#     url = URI.parse('https://fakestoreapi.com/products')
+#     response = Net::HTTP.get(url)
+#     products = JSON.parse(response)
+
+#     products.each do |product_data|
+#       # Find or create category
+#       category = ProductCategory.find_or_create_by!(title: product_data['category'])
+
+#       # Create product
+#       Product.find_or_create_by!(title: product_data['title']) do |product|
+#         product.product_category = category
+#         product.description = product_data['description']
+#         product.price = product_data['price']
+#         product.product_image_url = product_data['image']
+#       end
+#       puts "Seeded product: #{product_data['title']}"
+#     end
+
+#     puts "Products table seeded successfully"
+#   rescue StandardError => e
+#     puts "Failed to seed products. Error: #{e.message}"
+#     raise ActiveRecord::Rollback
+#   end
+# end
