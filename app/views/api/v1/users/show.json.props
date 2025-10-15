@@ -1,6 +1,6 @@
 json.status do
   json.code 200
-  json.message "Kelcie was here"
+  json.message "User was retrieved successfully."
 end
 
 json.data do
