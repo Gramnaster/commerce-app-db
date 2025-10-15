@@ -134,6 +134,8 @@ GEM
       logger
     faraday-net_http (3.4.1)
       net-http (>= 0.5.0)
+    finnhub_ruby (2.0.3)
+      json (~> 2.3)
     fugit (1.11.2)
       et-orbi (~> 1, >= 1.2.11)
       raabro (~> 1.4)
@@ -440,6 +442,7 @@ DEPENDENCIES
   devise-jwt
   dotenv-rails
   factory_bot_rails
+  finnhub_ruby (~> 2.0.0)
   kamal
   omniauth-facebook
   omniauth-google-oauth2

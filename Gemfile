@@ -20,6 +20,7 @@ gem "acts_as_paranoid", "~> 0.10.3"
 gem "rack-cors"
 gem "rack-attack"
 gem "will_paginate", "~> 4.0"
+gem "finnhub_ruby", "~> 2.0.0"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"
