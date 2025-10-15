@@ -47,14 +47,31 @@ ActiveRecord::Base.transaction do
 end
 
 # Seeds the Producers table
+puts "Seeding Producers table..."
 addresses = [
-  { unit_no: "2020", street_no: "26th Ave", city: "Taguig", zipcode: "1244", country: "102" },
-  { unit_no: "0110", street_no: "9th Roxas", city: "Quezon", zipcode: "1499", country: "102" },
-  { unit_no: "1430", street_no: "8th Cucumber", city: "Metro Manila", zipcode: "1011", country: "102" },
-  { unit_no: "310", street_no: "15th Centre", city: "Cavite", zipcode: "1802", country: "102" }
+  { unit_no: "2020", street_no: "26th Ave", city: "Taguig", zipcode: "1244", country_id: "102" },
+  { unit_no: "0110", street_no: "9th Roxas", city: "Quezon", zipcode: "1499", country_id: "102" },
+  { unit_no: "1430", street_no: "8th Cucumber", city: "Metro Manila", zipcode: "1011", country_id: "102" },
+  { unit_no: "310", street_no: "15th Centre", city: "Cavite", zipcode: "1802", country_id: "102" }
 ]
 
+address_records = addresses.map do |attrs|
+  Address.find_or_create_by!(attrs)
+end
+
+producers = [
+  { title: "Nestle Inc.", address: address_records[0] },
+  { title: "Amazonia LLC", address: address_records[1] },
+  { title: "Appollonia Inc.", address: address_records[2] },
+  { title: "Johnsons & Johnsons", address: address_records[3] }
+]
+
+producers.each do |attrs|
+  Producer.find_or_create_by!(title: attrs[:title], address: attrs[:address])
+end
+
 # Seeds the Categories table
+puts "Seeding Categories table..."
 [ "men's clothing", "women's clothing", "jewelery", "electronics" ].each do |cat_title|
   ProductCategory.find_or_create_by!(title: cat_title)
 end
@@ -62,31 +79,39 @@ end
 # Seeds the Products table
 puts "Seeding product data from fakeproducts..."
 
-# ActiveRecord::Base.transaction do
-#   begin
-#     # API-Wrapper Project
-#     puts "Populating products table"
-#     url = URI.parse('https://fakestoreapi.com/products')
-#     response = Net::HTTP.get(url)
-#     products = JSON.parse(response)
+ActiveRecord::Base.transaction do
+  begin
+    # API-Wrapper Project
+    puts "Populating products table"
+    url = URI.parse('https://fakestoreapi.com/products')
+    response = Net::HTTP.get(url)
+    products = JSON.parse(response)
 
-#     products.each do |product_data|
-#       # Find or create category
-#       category = ProductCategory.find_or_create_by!(title: product_data['category'])
+    # Get a producer to assign to products
+    producer = Producer.first
+    unless producer
+      puts "No producers found. Please seed producers first."
+      raise ActiveRecord::Rollback
+    end
 
-#       # Create product
-#       Product.find_or_create_by!(title: product_data['title']) do |product|
-#         product.product_category = category
-#         product.description = product_data['description']
-#         product.price = product_data['price']
-#         product.product_image_url = product_data['image']
-#       end
-#       puts "Seeded product: #{product_data['title']}"
-#     end
+    products.each do |product_data|
+      # Find or create category
+      category = ProductCategory.find_or_create_by!(title: product_data['category'])
 
-#     puts "Products table seeded successfully"
-#   rescue StandardError => e
-#     puts "Failed to seed products. Error: #{e.message}"
-#     raise ActiveRecord::Rollback
-#   end
-# end
+      # Create product
+      Product.find_or_create_by!(title: product_data['title']) do |product|
+        product.product_category = category
+        product.producer = producer
+        product.description = product_data['description']
+        product.price = product_data['price']
+        product.product_image_url = product_data['image']
+      end
+      puts "Seeded product: #{product_data['title']}"
+    end
+
+    puts "Products table seeded successfully"
+  rescue StandardError => e
+    puts "Failed to seed products. Error: #{e.message}"
+    raise ActiveRecord::Rollback
+  end
+end
