@@ -48,9 +48,9 @@ end
 
 # Seeds the Producers table
 addresses = [
-  { unit_no: "2020", street_no: "26th Ave", city: "Taguig", zipcode: "1244", country: "102" }
-  { unit_no: "0110", street_no: "9th Roxas", city: "Quezon", zipcode: "1499", country: "102" }
-  { unit_no: "1430", street_no: "8th Cucumber", city: "Metro Manila", zipcode: "1011", country: "102" }
+  { unit_no: "2020", street_no: "26th Ave", city: "Taguig", zipcode: "1244", country: "102" },
+  { unit_no: "0110", street_no: "9th Roxas", city: "Quezon", zipcode: "1499", country: "102" },
+  { unit_no: "1430", street_no: "8th Cucumber", city: "Metro Manila", zipcode: "1011", country: "102" },
   { unit_no: "310", street_no: "15th Centre", city: "Cavite", zipcode: "1802", country: "102" }
 ]
 
