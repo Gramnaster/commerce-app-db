@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_13_074436) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_15_123431) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -47,6 +47,67 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_13_074436) do
     t.datetime "updated_at", null: false
     t.index ["phone_type"], name: "index_phones_on_phone_type"
     t.index ["user_id"], name: "index_phones_on_user_id"
+  end
+
+  create_table "producers", force: :cascade do |t|
+    t.string "title"
+    t.bigint "address_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["address_id"], name: "index_producers_on_address_id"
+  end
+
+  create_table "product_categories", force: :cascade do |t|
+    t.string "title"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "products", force: :cascade do |t|
+    t.string "title"
+    t.bigint "product_category_id", null: false
+    t.bigint "producer_id", null: false
+    t.string "description"
+    t.decimal "price", precision: 15, scale: 2
+    t.bigint "promotions_id", null: false
+    t.string "product_image_url"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["producer_id"], name: "index_products_on_producer_id"
+    t.index ["product_category_id"], name: "index_products_on_product_category_id"
+    t.index ["promotions_id"], name: "index_products_on_promotions_id"
+  end
+
+  create_table "promotions", force: :cascade do |t|
+    t.decimal "discount_amount", precision: 15, scale: 2
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "promotions_categories", force: :cascade do |t|
+    t.bigint "product_categories_id", null: false
+    t.bigint "promotions_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["product_categories_id"], name: "index_promotions_categories_on_product_categories_id"
+    t.index ["promotions_id"], name: "index_promotions_categories_on_promotions_id"
+  end
+
+  create_table "shopping_cart_items", force: :cascade do |t|
+    t.bigint "shopping_cart_id", null: false
+    t.bigint "product_id", null: false
+    t.decimal "qty", default: "0.0", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["product_id"], name: "index_shopping_cart_items_on_product_id"
+    t.index ["shopping_cart_id"], name: "index_shopping_cart_items_on_shopping_cart_id"
+  end
+
+  create_table "shopping_carts", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_shopping_carts_on_user_id"
   end
 
   create_table "user_addresses", force: :cascade do |t|
@@ -101,6 +162,15 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_13_074436) do
 
   add_foreign_key "addresses", "countries"
   add_foreign_key "phones", "users"
+  add_foreign_key "producers", "addresses"
+  add_foreign_key "products", "producers"
+  add_foreign_key "products", "product_categories"
+  add_foreign_key "products", "promotions", column: "promotions_id"
+  add_foreign_key "promotions_categories", "product_categories", column: "product_categories_id"
+  add_foreign_key "promotions_categories", "promotions", column: "promotions_id"
+  add_foreign_key "shopping_cart_items", "products"
+  add_foreign_key "shopping_cart_items", "shopping_carts"
+  add_foreign_key "shopping_carts", "users"
   add_foreign_key "user_addresses", "addresses"
   add_foreign_key "user_addresses", "users"
   add_foreign_key "user_details", "users"

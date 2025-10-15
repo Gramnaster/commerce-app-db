@@ -4,14 +4,14 @@ class Api::V1::UsersController < Api::V1::BaseController
   # before_action :set_user, only: [ :show, :update, :destroy, :update_status ]
   before_action :authenticate_user!
   before_action :set_user, only: [ :show, :update, :destroy ]
-  before_action :authorize_user!, only: [ :update ]
+  before_action :authorize_user!, only: [ :show, :update ]
 
   # def index
   #   @users = User.all.includes(:country, :wallet)
   # end
 
-  # def show
-  # end
+  def show
+  end
 
   def create
     @user = User.new(user_params)
