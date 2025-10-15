@@ -1,6 +1,6 @@
 json.status do
   json.code 200
-  json.message "User retrieved successfully"
+  json.message "Kelcie was here"
 end
 
 json.data do
@@ -19,15 +19,6 @@ json.data do
       json.middle_name @user.user_detail.middle_name
       json.last_name @user.user_detail.last_name
       json.dob @user.user_detail.dob
-    end
-  end
-
-  # Phones
-  json.phones do
-    json.array! @user.phones do |phone|
-      json.id phone.id
-      json.phone_no phone.phone_no
-      json.phone_type phone.phone_type
     end
   end
 
