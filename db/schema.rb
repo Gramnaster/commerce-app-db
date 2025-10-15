@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_15_123431) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_15_170508) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -69,13 +69,13 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_15_123431) do
     t.bigint "producer_id", null: false
     t.string "description"
     t.decimal "price", precision: 15, scale: 2
-    t.bigint "promotions_id", null: false
+    t.bigint "promotion_id"
     t.string "product_image_url"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["producer_id"], name: "index_products_on_producer_id"
     t.index ["product_category_id"], name: "index_products_on_product_category_id"
-    t.index ["promotions_id"], name: "index_products_on_promotions_id"
+    t.index ["promotion_id"], name: "index_products_on_promotion_id"
   end
 
   create_table "promotions", force: :cascade do |t|
@@ -165,7 +165,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_15_123431) do
   add_foreign_key "producers", "addresses"
   add_foreign_key "products", "producers"
   add_foreign_key "products", "product_categories"
-  add_foreign_key "products", "promotions", column: "promotions_id"
+  add_foreign_key "products", "promotions"
   add_foreign_key "promotions_categories", "product_categories", column: "product_categories_id"
   add_foreign_key "promotions_categories", "promotions", column: "promotions_id"
   add_foreign_key "shopping_cart_items", "products"

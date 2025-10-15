@@ -1,0 +1,2 @@
+class ChangePromotionsNullableOnProduct < ApplicationRecord
+end
