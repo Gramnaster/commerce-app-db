@@ -1,0 +1,28 @@
+json.status do
+  json.code 200
+  json.message "Promotion fetched successfully"
+end
+
+json.data do
+  json.id @promotion.id
+  json.discount_amount @promotion.discount_amount
+  json.products_count @promotion.products.count
+  
+  json.product_categories do
+    json.array! @promotion.product_categories do |category|
+      json.id category.id
+      json.title category.title
+    end
+  end
+  
+  json.products do
+    json.array! @promotion.products do |product|
+      json.id product.id
+      json.title product.title
+      json.price product.price
+    end
+  end
+  
+  json.created_at @promotion.created_at
+  json.updated_at @promotion.updated_at
+end
