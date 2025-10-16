@@ -75,7 +75,16 @@ class Api::V1::AdminUsersController < ApplicationController
   end
 
   def update
-    if @admin_user.update(admin_user_params)
+    filtered_params = admin_user_params
+
+    # Return error if no valid parameters provided
+    if filtered_params.empty? || filtered_params.values.all?(&:blank?)
+      return render json: {
+        error: "No valid parameters provided. Use 'admin_detail_attributes' not 'user_detail_attributes'"
+      }, status: :unprocessable_entity
+    end
+
+    if @admin_user.update(filtered_params)
       render :update
     else
       render json: { errors: @admin_user.errors.full_messages  }, status: :unprocessable_content
