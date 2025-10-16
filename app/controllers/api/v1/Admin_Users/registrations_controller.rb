@@ -3,6 +3,39 @@
 class Api::V1::AdminUsers::RegistrationsController < Devise::RegistrationsController
   # before_action :configure_sign_up_params, only: [:create]
   # before_action :configure_account_update_params, only: [:update]
+  #
+  respond_to :json
+
+  def create
+    build_resource(sign_up_params)
+
+    resource.save
+    if resource.persisted?
+      # If the admin user was saved, let Rails render the view at:
+      # app/views/api/v1/admin_users/registrations/create.json.props
+      render :create, status: :created
+    else
+      # If saving failed, render the errors as JSON.
+      render json: {
+        status: { message: "Admin user couldn't be created. #{resource.errors.full_messages.to_sentence}" }
+      }, status: :unprocessable_content
+    end
+  end
+
+  private
+
+  def sign_up_params
+    params.require(:admin_user).permit(
+      :email, :password, :password_confirmation,
+      admin_detail_attributes: [ :first_name, :middle_name, :last_name, :dob, :_destroy ],
+      admin_phones_attributes: [ :id, :phone_no, :phone_type, :_destroy ],
+      admin_addresses_attributes: [
+        :id, :is_default, :_destroy,
+        address_attributes: [ :id, :unit_no, :street_no, :address_line1, :address_line2,
+                            :city, :region, :zipcode, :country_id ]
+      ]
+    )
+  end
 
   # GET /resource/sign_up
   # def new
