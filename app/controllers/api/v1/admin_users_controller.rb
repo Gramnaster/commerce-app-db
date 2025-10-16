@@ -92,8 +92,9 @@ class Api::V1::AdminUsersController < ApplicationController
   end
 
   def destroy
+    # Soft delete - sets deleted_at timestamp (admin leaves the company)
     if @admin_user.destroy
-      render json: { message: "Admin user deleted successfully" }, status: :ok
+      render json: { message: "Admin user disabled successfully" }, status: :ok
     else
       render json: { errors: @admin_user.errors.full_messages }, status: :unprocessable_content
     end
@@ -118,14 +119,15 @@ class Api::V1::AdminUsersController < ApplicationController
 
   def admin_user_params
     params.require(:admin_user).permit(
-      :email, :password, :password_confirmation,
+      :email, :password, :password_confirmation, :admin_role,
       admin_detail_attributes: [ :id, :first_name, :middle_name, :last_name, :dob, :_destroy ],
       admin_phones_attributes: [ :id, :phone_no, :phone_type, :_destroy ],
       admin_addresses_attributes: [
         :id, :is_default, :_destroy,
         address_attributes: [ :id, :unit_no, :street_no, :address_line1, :address_line2,
                             :city, :region, :zipcode, :country_id ]
-      ]
+      ],
+      admin_users_company_sites_attributes: [ :id, :company_site_id, :_destroy ]
     )
   end
 end

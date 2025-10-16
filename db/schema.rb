@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_16_075425) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_16_151122) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -80,8 +80,10 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_16_075425) do
     t.enum "admin_role", default: "management", null: false, enum_type: "admin_role"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
     t.index ["admin_role"], name: "index_admin_users_on_admin_role"
     t.index ["confirmation_token"], name: "index_admin_users_on_confirmation_token", unique: true
+    t.index ["deleted_at"], name: "index_admin_users_on_deleted_at"
     t.index ["email"], name: "index_admin_users_on_email", unique: true
     t.index ["jti"], name: "index_admin_users_on_jti", unique: true
     t.index ["reset_password_token"], name: "index_admin_users_on_reset_password_token", unique: true
