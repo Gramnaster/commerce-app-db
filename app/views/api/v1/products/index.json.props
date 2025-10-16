@@ -1,0 +1,27 @@
+json.status do
+  json.code 200
+  json.message "Fetched all products successfully"
+end
+
+json.data do
+  json.array! @products do |product|
+    json.id product.id
+    json.name product.title
+    json.category product.product_category.title
+    json.producer product.producer.title
+    json.description product.description
+    json.price product.price
+
+  if product.promotion
+    json.promotion do
+      json.id product.promotion.id
+      json.name product.promotion.title
+      json.code product.promotion.value
+    end
+  else
+    json.promotion nil
+  end
+
+    json.image_url product.product_image_url
+  end
+end
