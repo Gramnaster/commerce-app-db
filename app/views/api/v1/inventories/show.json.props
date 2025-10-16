@@ -12,25 +12,12 @@ json.data do
     json.id @inventory.company_site.id
     json.title @inventory.company_site.title
     json.site_type @inventory.company_site.site_type
-    if @inventory.company_site.address
-      json.address do
-        json.id @inventory.company_site.address.id
-        json.unit_no @inventory.company_site.address.unit_no
-        json.street_no @inventory.company_site.address.street_no
-        json.city @inventory.company_site.address.city
-        json.region @inventory.company_site.address.region
-        json.zipcode @inventory.company_site.address.zipcode
-        json.country @inventory.company_site.address.country.country_name
-      end
-    end
   end
 
   json.product do
     json.id @inventory.product.id
     json.title @inventory.product.title
-    json.description @inventory.product.description
     json.price @inventory.product.price
-    json.product_image_url @inventory.product.product_image_url
   end
 
   json.created_at @inventory.created_at
