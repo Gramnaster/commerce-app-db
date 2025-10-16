@@ -381,7 +381,13 @@ Delete a product.
 
 ### Inventories (Admin Only - Management & Warehouse)
 
-**Important**: Inventories can only be attached to warehouse-type company sites, not management-type sites.
+**Important Notes**: 
+- Inventories can only be attached to warehouse-type company sites, not management-type sites.
+- **SKU is automatically generated** when creating an inventory. The system generates a 12-digit UPC-like code in the format: `SSSPPPPPPRRR` where:
+  - `SSS` = 3-digit warehouse site ID
+  - `PPPPPP` = 6-digit product ID
+  - `RRR` = 3-digit random code for uniqueness
+- Admins can optionally provide a custom SKU, but it's not required.
 
 #### GET /api/v1/inventories
 List all inventories.
