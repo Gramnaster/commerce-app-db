@@ -1,14 +1,20 @@
 class Api::V1::UsersController < Api::V1::BaseController
-  # include AdminAuthorization
-  # before_action :require_admin, only: [ :index, :create, :update, :destroy, :update_status ]
-  # before_action :set_user, only: [ :show, :update, :destroy, :update_status ]
-  before_action :authenticate_user!
+  # Skip base controller authentication for admin users
+  skip_before_action :authenticate_user!, if: :admin_authenticated?
+
+  before_action :authenticate_user_or_admin!
   before_action :set_user, only: [ :show, :update, :destroy ]
   before_action :authorize_user!, only: [ :show, :update ]
 
-  # def index
-  #   @users = User.all.includes(:country, :wallet)
-  # end
+  def index
+    # Only management admins can view all users
+    unless current_admin_user&.management?
+      return render json: { error: "Unauthorized. Management role required." }, status: :forbidden
+    end
+
+    @users = User.includes(:user_detail, :phones, :user_addresses, :addresses).all
+    render :index
+  end
 
   def show
   end
@@ -71,6 +77,55 @@ class Api::V1::UsersController < Api::V1::BaseController
 
   private
 
+  # Check if admin is authenticated (used to skip user authentication)
+  def admin_authenticated?
+    token = request.headers["Authorization"]&.split(" ")&.last
+    return false unless token
+
+    begin
+      decoded_token = JWT.decode(token, ENV["DEVISE_JWT_SECRET_KEY"], true, { algorithm: "HS256" })
+      payload = decoded_token.first
+      payload["scp"] == "admin_user"
+    rescue JWT::DecodeError
+      false
+    end
+  end
+
+  # Authenticate either user or admin
+  def authenticate_user_or_admin!
+    token = request.headers["Authorization"]&.split(" ")&.last
+    return render json: { error: "Missing authentication token" }, status: :unauthorized unless token
+
+    begin
+      decoded_token = JWT.decode(token, ENV["DEVISE_JWT_SECRET_KEY"], true, { algorithm: "HS256" })
+      payload = decoded_token.first
+
+      if payload["scp"] == "admin_user"
+        # Admin user authentication
+        @current_admin_user = AdminUser.find(payload["sub"])
+
+        # Verify JTI for admin users
+        unless @current_admin_user.jti == payload["jti"]
+          render json: { error: "Token has been revoked" }, status: :unauthorized
+        end
+      elsif payload["scp"] == "user"
+        # Regular user authentication - let Devise handle it
+        authenticate_user!
+      else
+        render json: { error: "Invalid token scope" }, status: :unauthorized
+      end
+    rescue JWT::DecodeError => e
+      render json: { error: "Invalid or expired token: #{e.message}" }, status: :unauthorized
+    rescue ActiveRecord::RecordNotFound
+      render json: { error: "User not found" }, status: :unauthorized
+    end
+  end
+
+  # Helper to get current admin user
+  def current_admin_user
+    @current_admin_user
+  end
+
   # def set_user
   #   @user = User.find(params[:id])
   # rescue ActiveRecord::RecordNotFound
@@ -92,7 +147,11 @@ class Api::V1::UsersController < Api::V1::BaseController
   # end
 
   def authorize_user!
-    unless current_user.id == @user.id || current_user.admin?
+    # Management admins can view any user
+    return if current_admin_user&.management?
+
+    # Regular users can only view themselves
+    unless current_user&.id == @user.id
       render json: { error: "Unauthorized" }, status: :forbidden
     end
   end
