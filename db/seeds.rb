@@ -12,34 +12,6 @@ require 'finnhub_ruby'
 require 'net/http'
 require 'json'
 
-# Seeds the Admin User for development
-# puts "Seeding Admin User for development..."
-
-# ActiveRecord::Base.transaction do
-#   begin
-#     admin_user = AdminUser.find_or_create_by!(email: 'admin@admin.com') do |admin|
-#       admin.password = 'admin123456'
-#       admin.password_confirmation = 'admin123456'
-#       puts "  -> Created admin user: #{admin.email}"
-#     end
-
-#     # Create admin detail if it doesn't exist
-#     unless admin_user.admin_detail
-#       admin_user.create_admin_detail!(
-#         first_name: 'Admin',
-#         last_name: 'User',
-#         dob: Date.new(1990, 1, 1)
-#       )
-#       puts "  -> Created admin details"
-#     end
-
-#     puts "Admin user seeded successfully."
-#   rescue StandardError => e
-#     puts "Failed to seed admin user. Error: #{e.message}"
-#     raise ActiveRecord::Rollback
-#   end
-# end
-
 # Seeds the Countries table
 puts "Seeding country data from Finnhub..."
 ActiveRecord::Base.transaction do
@@ -139,6 +111,100 @@ ActiveRecord::Base.transaction do
     puts "Products table seeded successfully"
   rescue StandardError => e
     puts "Failed to seed products. Error: #{e.message}"
+    raise ActiveRecord::Rollback
+  end
+end
+
+# Seeds the Company Sites for development
+puts "Seeding Company Sites table..."
+ph_country = Country.find_by(code: "PH")
+sg_country = Country.find_by(code: "SG")
+company_addresses = [
+  { unit_no: "110", street_no: "87 Cucumber St", city: "Singapore", zipcode: "1557330", country_id: sg_country.id  },
+  { unit_no: "332", street_no: "9th Roxas", city: "Tarlac", zipcode: "5650", country_id: ph_country.id  },
+  { unit_no: "090", street_no: "8th Linkway", city: "Malolos", zipcode: "8110", country_id: ph_country.id  },
+  { unit_no: "3101-A", street_no: "99th Ave", city: "Antipolo", zipcode: "6602", country_id: ph_country.id  }
+]
+
+company_site_records = company_addresses.map do |attrs|
+  Address.find_or_create_by!(attrs)
+end
+
+company_site = [
+  { title: "JPB Management - HQ", address: company_site_records[0] },
+  { title: "JPB Warehouse A", address: company_site_records[1] },
+  { title: "JPB Warehouse B", address: company_site_records[2] },
+  { title: "JPB Warehouse B", address: company_site_records[3] }
+]
+
+company_site.each do |attrs|
+  CompanySite.find_or_create_by!(title: attrs[:title], address: attrs[:address])
+end
+
+# Seeds the Admin User for development
+puts "Seeding Admin Users for development..."
+
+admin_email = ENV['ADMIN_EMAIL']
+admin_password = ENV['ADMIN_PASSWORD']
+
+warehouse_email = ENV['WAREHOUSE_EMAIL']
+warehouse_password = ENV['WAREHOUSE_PASSWORD']
+
+ActiveRecord::Base.transaction do
+  begin
+    # Management Admin
+    management_admin = AdminUser.find_or_create_by!(email: admin_email) do |admin|
+      admin.password = admin_password
+      admin.password_confirmation = admin_password
+      admin.admin_role = 'management'
+    end
+    management_admin.update!(admin_role: 'management') unless management_admin.admin_role == 'management'
+
+    management_admin.create_admin_detail!(
+      first_name: 'Admin',
+      last_name: 'User',
+      dob: Date.new(1990, 1, 1)
+    ) unless management_admin.admin_detail
+
+    AdminAddress.find_or_create_by!(
+      admin_user: management_admin,
+      address: company_site_records.first,
+      is_default: true
+    )
+
+    AdminUsersCompanySite.find_or_create_by!(
+      admin_user: management_admin,
+      company_site: CompanySite.find_by(title: company_site.first[:title])
+    )
+
+    # Warehouse Admin (example, static values)
+    warehouse_admin = AdminUser.find_or_create_by!(email: warehouse_email) do |admin|
+      admin.password = warehouse_password
+      admin.password_confirmation = warehouse_password
+      admin.admin_role = 'warehouse'
+    end
+    warehouse_admin.update!(admin_role: 'warehouse') unless warehouse_admin.admin_role == 'warehouse'
+
+    warehouse_admin.create_admin_detail!(
+      first_name: 'Warehouse',
+      last_name: 'Admin',
+      dob: Date.new(1995, 1, 1)
+    ) unless warehouse_admin.admin_detail
+
+    AdminAddress.find_or_create_by!(
+      admin_user: warehouse_admin,
+      address: company_site_records.second,
+      is_default: true
+    )
+
+    AdminUsersCompanySite.find_or_create_by!(
+      admin_user: warehouse_admin,
+      company_site: CompanySite.find_by(title: company_site.second[:title])
+    )
+
+    puts "Admin users seeded successfully."
+  rescue StandardError => e
+    puts "Failed to seed admin users. Error: #{e.message}"
     raise ActiveRecord::Rollback
   end
 end
