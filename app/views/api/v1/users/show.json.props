@@ -22,6 +22,14 @@ json.data do
     end
   end
 
+  json.phones do
+    json.array! @user.phones do |phone_number|
+      json.id phone_number.id
+      json.phone_no phone_number.phone_no
+      json.phone_type phone_number.phone_type
+    end
+  end
+
   # User addresses with nested address details
   json.user_addresses do
     json.array! @user.user_addresses do |user_address|
