@@ -1,0 +1,23 @@
+json.status do
+  json.code 200
+  json.message "Fetched all promotion-category associations successfully"
+end
+
+json.data do
+  json.array! @promotions_categories do |pc|
+    json.id pc.id
+    
+    json.promotion do
+      json.id pc.promotion.id
+      json.discount_amount pc.promotion.discount_amount
+    end
+    
+    json.product_category do
+      json.id pc.product_category.id
+      json.title pc.product_category.title
+    end
+    
+    json.created_at pc.created_at
+    json.updated_at pc.updated_at
+  end
+end
