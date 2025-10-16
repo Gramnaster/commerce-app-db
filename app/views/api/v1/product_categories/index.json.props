@@ -1,0 +1,14 @@
+json.status do
+  json.code 200
+  json.message "Fetched all product categories successfully"
+end
+
+json.data do
+  json.array! @product_categories do |category|
+    json.id category.id
+    json.title category.title
+    json.products_count category.products.count
+    json.created_at category.created_at
+    json.updated_at category.updated_at
+  end
+end
