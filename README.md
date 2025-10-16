@@ -379,6 +379,136 @@ Delete a product.
 
 ---
 
+### Inventories (Admin Only - Management & Warehouse)
+
+**Important**: Inventories can only be attached to warehouse-type company sites, not management-type sites.
+
+#### GET /api/v1/inventories
+List all inventories.
+- **Auth Required**: Management or Warehouse Admin JWT token
+- **Returns**: Array of inventories with company site and product details
+
+**Example Response**:
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Fetched all inventories successfully"
+  },
+  "data": [
+    {
+      "id": 1,
+      "sku": "SHOES-NKE-001",
+      "qty_in_stock": 150,
+      "company_site": {
+        "id": 2,
+        "title": "JPB Warehouse A",
+        "site_type": "warehouse"
+      },
+      "product": {
+        "id": 1,
+        "title": "Running Shoes",
+        "price": "99.99"
+      },
+      "created_at": "2025-01-14T10:00:00.000Z",
+      "updated_at": "2025-01-14T10:00:00.000Z"
+    }
+  ]
+}
+```
+
+#### GET /api/v1/inventories/:id
+Get a specific inventory.
+- **Auth Required**: Management or Warehouse Admin JWT token
+- **Returns**: Single inventory with full company site address and product details
+
+**Example Response**:
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Inventory fetched successfully"
+  },
+  "data": {
+    "id": 1,
+    "sku": "SHOES-NKE-001",
+    "qty_in_stock": 150,
+    "company_site": {
+      "id": 2,
+      "title": "JPB Warehouse A",
+      "site_type": "warehouse",
+      "address": {
+        "id": 10,
+        "unit_no": "Building 5",
+        "street_no": "123 Industrial Rd",
+        "city": "Manila",
+        "region": "NCR",
+        "zipcode": "1000",
+        "country": "Philippines"
+      }
+    },
+    "product": {
+      "id": 1,
+      "title": "Running Shoes",
+      "description": "High-quality running shoes",
+      "price": "99.99",
+      "product_image_url": "https://example.com/shoes.jpg",
+      "product_category": {
+        "id": 1,
+        "title": "Footwear"
+      },
+      "producer": {
+        "id": 1,
+        "title": "Nike Inc."
+      }
+    },
+    "created_at": "2025-01-14T10:00:00.000Z",
+    "updated_at": "2025-01-14T10:00:00.000Z"
+  }
+}
+```
+
+#### POST /api/v1/inventories
+Create a new inventory.
+- **Auth Required**: Management or Warehouse Admin JWT token
+- **Body**:
+```json
+{
+  "inventory": {
+    "company_site_id": 2,
+    "product_id": 1,
+    "sku": "SHOES-NKE-001",
+    "qty_in_stock": 150
+  }
+}
+```
+- **Required Fields**: `company_site_id`, `product_id`, `sku`, `qty_in_stock`
+- **Validation**: 
+  - `sku` must be unique across all inventories
+  - `qty_in_stock` must be an integer >= 0
+  - `company_site_id` must reference a warehouse-type site (not management-type)
+
+#### PATCH /api/v1/inventories/:id
+Update an inventory.
+- **Auth Required**: Management or Warehouse Admin JWT token
+- **Body** (all fields optional for update):
+```json
+{
+  "inventory": {
+    "qty_in_stock": 200,
+    "sku": "SHOES-NKE-001-V2"
+  }
+}
+```
+
+#### DELETE /api/v1/inventories/:id
+Delete an inventory.
+- **Auth Required**: Management or Warehouse Admin JWT token
+- **Returns**: `{"message": "Inventory deleted successfully"}`
+- **Note**: This will also delete all associated warehouse_orders (cascade delete)
+
+---
+
 ### Admin Users
 
 #### PATCH /api/v1/admin_users/:id
