@@ -10,13 +10,15 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_15_170508) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_16_070514) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   # Custom types defined in this database.
   # Note that some types may not work with other database engines. Be careful if changing database.
+  create_enum "admin_role", ["management", "warehouse"]
   create_enum "phone_type", ["mobile", "home", "work"]
+  create_enum "site_type", ["management", "warehouse"]
 
   create_table "addresses", force: :cascade do |t|
     t.string "unit_no", null: false
@@ -30,6 +32,38 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_15_170508) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["country_id"], name: "index_addresses_on_country_id"
+  end
+
+  create_table "admin_users", force: :cascade do |t|
+    t.string "email", default: "", null: false
+    t.string "encrypted_password", default: "", null: false
+    t.string "jti"
+    t.string "reset_password_token"
+    t.datetime "reset_password_sent_at"
+    t.datetime "remember_created_at"
+    t.string "confirmation_token"
+    t.datetime "confirmed_at"
+    t.datetime "confirmation_sent_at"
+    t.string "unconfirmed_email"
+    t.enum "admin_role", default: "management", null: false, enum_type: "admin_role"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["admin_role"], name: "index_admin_users_on_admin_role"
+    t.index ["confirmation_token"], name: "index_admin_users_on_confirmation_token", unique: true
+    t.index ["email"], name: "index_admin_users_on_email", unique: true
+    t.index ["jti"], name: "index_admin_users_on_jti", unique: true
+    t.index ["reset_password_token"], name: "index_admin_users_on_reset_password_token", unique: true
+  end
+
+  create_table "company_sites", force: :cascade do |t|
+    t.string "title", null: false
+    t.bigint "address_id", null: false
+    t.enum "site_type", default: "warehouse", null: false, enum_type: "site_type"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["address_id"], name: "index_company_sites_on_address_id"
+    t.index ["site_type"], name: "index_company_sites_on_site_type"
+    t.index ["title"], name: "index_company_sites_on_title", unique: true
   end
 
   create_table "countries", force: :cascade do |t|
@@ -161,6 +195,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_15_170508) do
   end
 
   add_foreign_key "addresses", "countries"
+  add_foreign_key "company_sites", "addresses"
   add_foreign_key "phones", "users"
   add_foreign_key "producers", "addresses"
   add_foreign_key "products", "producers"
