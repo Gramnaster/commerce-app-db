@@ -1,5 +1,4 @@
-class Api::V1::ProductsController < Api::V1::BaseController
-  skip_before_action :authenticate_user!, only: [ :index, :show ]
+class Api::V1::ProductsController < ApplicationController
   before_action :authenticate_admin_user!, only: [ :create, :update, :destroy ]
   before_action :authorize_management!, only: [ :create, :update, :destroy ]
   before_action :set_product, only: [ :show, :update, :destroy ]
