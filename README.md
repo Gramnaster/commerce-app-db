@@ -70,6 +70,89 @@ Delete a product category.
 
 ---
 
+### Producers (Management Admin Only)
+
+#### GET /api/v1/producers
+List all producers.
+- **Auth Required**: Management Admin JWT token
+- **Returns**: Array of all producers with address details and products count
+
+#### GET /api/v1/producers/:id
+Get a specific producer.
+- **Auth Required**: Management Admin JWT token
+- **Returns**: Single producer details with full address
+
+#### POST /api/v1/producers
+Create a new producer.
+- **Auth Required**: Management Admin JWT token
+- **Body (Option 1 - with existing address)**:
+```json
+{
+  "producer": {
+    "title": "Nike Inc.",
+    "address_id": 5
+  }
+}
+```
+- **Body (Option 2 - create new address with producer)**:
+```json
+{
+  "producer": {
+    "title": "Nike Inc.",
+    "address_attributes": {
+      "unit_no": "100",
+      "street_no": "Main Street",
+      "address_line1": "Building A",
+      "city": "New York",
+      "region": "NY",
+      "zipcode": "10001",
+      "country_id": 1
+    }
+  }
+}
+```
+
+#### PATCH /api/v1/producers/:id
+Update a producer.
+- **Auth Required**: Management Admin JWT token
+- **Body (update title only)**:
+```json
+{
+  "producer": {
+    "title": "Updated Producer Name"
+  }
+}
+```
+- **Body (update with new address)**:
+```json
+{
+  "producer": {
+    "title": "Updated Producer Name",
+    "address_id": 10
+  }
+}
+```
+- **Body (update address details)**:
+```json
+{
+  "producer": {
+    "address_attributes": {
+      "id": 5,
+      "city": "Los Angeles",
+      "zipcode": "90001"
+    }
+  }
+}
+```
+
+#### DELETE /api/v1/producers/:id
+Delete a producer.
+- **Auth Required**: Management Admin JWT token
+- **Returns**: `{"message": "Producer deleted successfully"}`
+- **Note**: This will also delete all associated products (cascade delete)
+
+---
+
 ### Admin Users
 
 #### PATCH /api/v1/admin_users/:id
