@@ -4,6 +4,7 @@ class Api::V1::AdminUsers::SessionsController < Devise::SessionsController
   # before_action :configure_sign_in_params, only: [:create]
   skip_before_action :require_no_authentication, only: [ :create ]
   skip_before_action :verify_signed_out_user, only: [ :destroy ]
+  before_action :authenticate_admin_user_via_jwt!, only: [ :destroy ]
 
   respond_to :json
 
@@ -34,6 +35,19 @@ class Api::V1::AdminUsers::SessionsController < Devise::SessionsController
     }, status: :unauthorized
   end
 
+  # Override destroy to handle JWT logout
+  def destroy
+    authenticate_admin_user_via_jwt!
+
+    if @current_admin_user
+      # Revoke the JWT token by updating the jti
+      @current_admin_user.update(jti: SecureRandom.uuid)
+      render json: { status: 200, message: "Logged out successfully." }, status: :ok
+    else
+      render json: { status: 401, message: "Couldn't find an active session." }, status: :unauthorized
+    end
+  end
+
   private
   def respond_with(resource, _opts = {})
     # The `resource` is the signed-in admin user.
@@ -44,10 +58,29 @@ class Api::V1::AdminUsers::SessionsController < Devise::SessionsController
 
   # For logout, a simple JSON response is still the most pragmatic.
   def respond_to_on_destroy
-    if current_admin_user
+    if @current_admin_user
       render json: { status: 200, message: "Logged out successfully." }, status: :ok
     else
       render json: { status: 401, message: "Couldn't find an active session." }, status: :unauthorized
+    end
+  end
+
+  # Custom JWT authentication for logout
+  def authenticate_admin_user_via_jwt!
+    token = request.headers["Authorization"]&.split(" ")&.last
+    return unless token
+
+    begin
+      decoded_token = JWT.decode(token, ENV["DEVISE_JWT_SECRET_KEY"], true, { algorithm: "HS256" })
+      payload = decoded_token.first
+
+      # Check if the token is for admin_user scope and set the user
+      if payload["scp"] == "admin_user"
+        @current_admin_user = AdminUser.find(payload["sub"])
+      end
+    rescue JWT::DecodeError, ActiveRecord::RecordNotFound
+      # Token is invalid, @current_admin_user will remain nil
+      @current_admin_user = nil
     end
   end
 

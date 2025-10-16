@@ -30,6 +30,11 @@ class Api::V1::AdminUsersController < ApplicationController
       end
 
       @current_admin_user = AdminUser.find(payload["sub"])
+
+      # Verify the JTI matches (token hasn't been revoked)
+      unless @current_admin_user.jti == payload["jti"]
+        render json: { error: "Token has been revoked" }, status: :unauthorized
+      end
     rescue JWT::DecodeError => e
       render json: { error: "Invalid or expired token: #{e.message}" }, status: :unauthorized
     rescue ActiveRecord::RecordNotFound
