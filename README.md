@@ -153,6 +153,51 @@ Delete a producer.
 
 ---
 
+### Promotions (Management Admin Only)
+
+#### GET /api/v1/promotions
+List all promotions.
+- **Auth Required**: Management Admin JWT token
+- **Returns**: Array of all promotions with product categories and products count
+
+#### GET /api/v1/promotions/:id
+Get a specific promotion.
+- **Auth Required**: Management Admin JWT token
+- **Returns**: Single promotion with product categories and associated products
+
+#### POST /api/v1/promotions
+Create a new promotion.
+- **Auth Required**: Management Admin JWT token
+- **Body**:
+```json
+{
+  "promotion": {
+    "discount_amount": 15.50
+  }
+}
+```
+- **Note**: `discount_amount` must be greater than 0
+
+#### PATCH /api/v1/promotions/:id
+Update a promotion.
+- **Auth Required**: Management Admin JWT token
+- **Body**:
+```json
+{
+  "promotion": {
+    "discount_amount": 20.00
+  }
+}
+```
+
+#### DELETE /api/v1/promotions/:id
+Delete a promotion.
+- **Auth Required**: Management Admin JWT token
+- **Returns**: `{"message": "Promotion deleted successfully"}`
+- **Note**: Associated products will have their promotion_id set to NULL (nullify)
+
+---
+
 ### Admin Users
 
 #### PATCH /api/v1/admin_users/:id
