@@ -1,0 +1,49 @@
+json.admin_users do
+  @admin_users.each do |admin_user|
+    json.set! admin_user.id do
+      json.id admin_user.id
+      json.email admin_user.email
+      json.admin_role admin_user.admin_role
+      json.confirmed_at admin_user.confirmed_at
+      json.created_at admin_user.created_at
+      json.updated_at admin_user.updated_at
+
+      if admin_user.admin_detail
+        json.admin_detail do
+          json.first_name admin_user.admin_detail.first_name
+          json.middle_name admin_user.admin_detail.middle_name
+          json.last_name admin_user.admin_detail.last_name
+          json.dob admin_user.admin_detail.dob
+        end
+      end
+
+      json.admin_phones do
+        json.array! admin_user.admin_phones do |phone|
+          json.id phone.id
+          json.phone_no phone.phone_no
+          json.phone_type phone.phone_type
+        end
+      end
+
+      json.admin_addresses do
+        json.array! admin_user.admin_addresses do |admin_address|
+          json.id admin_address.id
+          json.is_default admin_address.is_default
+          if admin_address.address
+            json.address do
+              json.id admin_address.address.id
+              json.unit_no admin_address.address.unit_no
+              json.street_no admin_address.address.street_no
+              json.address_line1 admin_address.address.address_line1
+              json.address_line2 admin_address.address.address_line2
+              json.city admin_address.address.city
+              json.region admin_address.address.region
+              json.zipcode admin_address.address.zipcode
+              json.country_id admin_address.address.country_id
+            end
+          end
+        end
+      end
+    end
+  end
+end

@@ -1,8 +1,12 @@
 class AdminUser < ApplicationRecord
+  include Devise::JWT::RevocationStrategies::JTIMatcher
+
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
   devise :database_authenticatable, :registerable,
-         :recoverable, :rememberable, :validatable
+         :recoverable, :rememberable, :validatable,
+         :confirmable, :timeoutable,
+         :jwt_authenticatable, jwt_revocation_strategy: self
 
   has_one :admin_detail, dependent: :destroy
   has_many :admin_phones, dependent: :destroy

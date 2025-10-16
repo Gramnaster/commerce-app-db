@@ -15,11 +15,20 @@ class Api::V1::AdminUsers::RegistrationsController < Devise::RegistrationsContro
       # app/views/api/v1/admin_users/registrations/create.json.props
       render :create, status: :created
     else
-      # If saving failed, render the errors as JSON.
+      # If saving failed, render the errors as JSON with detailed messages
       render json: {
-        status: { message: "Admin user couldn't be created. #{resource.errors.full_messages.to_sentence}" }
+        status: {
+          code: 422,
+          message: "Admin user couldn't be created."
+        },
+        errors: resource.errors.full_messages
       }, status: :unprocessable_content
     end
+  rescue ActionController::ParameterMissing => e
+    render json: {
+      status: { code: 400, message: "Missing required parameters." },
+      errors: [ e.message ]
+    }, status: :bad_request
   end
 
   private

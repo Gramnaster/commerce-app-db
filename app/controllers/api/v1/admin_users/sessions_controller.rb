@@ -15,9 +15,23 @@ class Api::V1::AdminUsers::SessionsController < Devise::SessionsController
   def create
     self.resource = warden.authenticate!(auth_options)
 
+    # Check if admin is confirmed (if confirmable is enabled)
+    unless resource.confirmed?
+      sign_out(resource)
+      return render json: {
+        status: { code: 401, message: "Please confirm your email address before logging in." },
+        errors: [ "Email not confirmed" ]
+      }, status: :unauthorized
+    end
+
     sign_in(resource_name, resource)
     yield resource if block_given?
     respond_with resource, location: after_sign_in_path_for(resource)
+  rescue Warden::NotAuthenticated
+    render json: {
+      status: { code: 401, message: "Invalid email or password." },
+      errors: [ "Authentication failed" ]
+    }, status: :unauthorized
   end
 
   private

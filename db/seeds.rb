@@ -161,7 +161,11 @@ ActiveRecord::Base.transaction do
       admin.password_confirmation = admin_password
       admin.admin_role = 'management'
       admin.skip_detail_build = true  # Skip auto-building during seed
+      admin.confirmed_at = Time.current  # Auto-confirm admin users
     end
+
+    # Ensure admin is confirmed (for existing records)
+    management_admin.update!(confirmed_at: Time.current) unless management_admin.confirmed?
 
     unless management_admin.admin_detail
       management_admin.create_admin_detail!(
@@ -188,7 +192,11 @@ ActiveRecord::Base.transaction do
       admin.password_confirmation = warehouse_password
       admin.admin_role = 'warehouse'
       admin.skip_detail_build = true  # Skip auto-building during seed
+      admin.confirmed_at = Time.current  # Auto-confirm admin users
     end
+
+    # Ensure admin is confirmed (for existing records)
+    warehouse_admin.update!(confirmed_at: Time.current) unless warehouse_admin.confirmed?
 
     unless warehouse_admin.admin_detail
       warehouse_admin.create_admin_detail!(
