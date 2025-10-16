@@ -5,8 +5,8 @@ Rails.application.routes.draw do
     registration: "signup"
   },
   controllers: {
-    sessions: "api/v1/admin_users/sessions",
-    registrations: "api/v1/admin_users/registrations"
+    sessions: "api/v1/Admin_Users/sessions",
+    registrations: "api/v1/Admin_Users/registrations"
   }
 
   devise_for :users, path: "api/v1/users", path_names: {
