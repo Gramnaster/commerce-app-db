@@ -50,4 +50,28 @@ json.data do
       end
     end
   end
+
+  # Company sites where admin is registered
+  json.company_sites do
+    json.array! @admin_user.company_sites do |company_site|
+      json.id company_site.id
+      json.title company_site.title
+      json.site_type company_site.site_type
+      json.created_at company_site.created_at
+      json.updated_at company_site.updated_at
+      if company_site.address
+        json.address do
+          json.id company_site.address.id
+          json.unit_no company_site.address.unit_no
+          json.street_no company_site.address.street_no
+          json.address_line1 company_site.address.address_line1
+          json.address_line2 company_site.address.address_line2
+          json.city company_site.address.city
+          json.region company_site.address.region
+          json.zipcode company_site.address.zipcode
+          json.country_id company_site.address.country_id
+        end
+      end
+    end
+  end
 end

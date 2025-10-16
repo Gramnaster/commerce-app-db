@@ -50,7 +50,7 @@ class Api::V1::AdminUsersController < ApplicationController
       return render json: { error: "Unauthorized. Higher permissions required." }, status: :forbidden
     end
 
-    @admin_users = AdminUser.includes(:admin_detail, :admin_phones, :admin_addresses).all
+    @admin_users = AdminUser.includes(:admin_detail, :admin_phones, :admin_addresses, company_sites: :address).all
     render :index
   end
 
@@ -89,7 +89,7 @@ class Api::V1::AdminUsersController < ApplicationController
 
   def set_admin_user
     @admin_user = AdminUser.includes(:admin_detail, :admin_phones, :admin_addresses,
-                                      :addresses).find(params[:id])
+                                      :addresses, company_sites: :address).find(params[:id])
   end
 
   def authorize_admin_user!
