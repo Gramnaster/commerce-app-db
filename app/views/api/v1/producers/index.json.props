@@ -8,7 +8,7 @@ json.data do
     json.id producer.id
     json.title producer.title
     json.products_count producer.products.count
-    
+
     json.address do
       json.id producer.address.id
       json.unit_no producer.address.unit_no
@@ -21,7 +21,7 @@ json.data do
       json.country_id producer.address.country_id
       json.country producer.address.country.name if producer.address.country
     end
-    
+
     json.created_at producer.created_at
     json.updated_at producer.updated_at
   end
