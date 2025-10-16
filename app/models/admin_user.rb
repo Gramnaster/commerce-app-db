@@ -10,4 +10,19 @@ class AdminUser < ApplicationRecord
   has_many :addresses, through: :admin_addresses
   has_many :admin_users_company_sites, dependent: :destroy
   has_many :company_sites, through: :admin_users_company_sites
+
+  # Nested attributes
+  accepts_nested_attributes_for :admin_detail, allow_destroy: true, update_only: true
+
+  accepts_nested_attributes_for :admin_phones, allow_destroy: true, reject_if: :all_blank
+
+  accepts_nested_attributes_for :admin_addresses, allow_destroy: true, reject_if: :all_blank
+
+  after_create :create_details
+
+  private
+
+  def create_details
+    create_admin_detail unless admin_detail
+  end
 end
