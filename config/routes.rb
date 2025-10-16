@@ -33,6 +33,7 @@ Rails.application.routes.draw do
       resources :countries, only: [ :index, :show ]
       resources :products, only: [ :index, :show ]
       resources :product_categories, only: [ :index, :show, :create, :update, :destroy ]
+      resources :producers, only: [ :index, :show, :create, :update, :destroy ]
       # resources :stocks, only: [ :index, :show ]
       # resources :countries, only: [ :index, :show ]
       # resources :wallets, only: [ :index, :show ] do
