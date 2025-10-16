@@ -81,7 +81,7 @@ class Api::V1::AdminUsersController < ApplicationController
     if filtered_params.empty? || filtered_params.values.all?(&:blank?)
       return render json: {
         error: "No valid parameters provided. Use 'admin_detail_attributes', 'admin_phones_attributes', 'admin_addresses_attributes' instead"
-      }, status: :unprocessable_entity
+      }, status: :unprocessable_content
     end
 
     if @admin_user.update(filtered_params)
