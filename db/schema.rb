@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_16_070514) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_16_072407) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -34,6 +34,37 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_16_070514) do
     t.index ["country_id"], name: "index_addresses_on_country_id"
   end
 
+  create_table "admin_addresses", force: :cascade do |t|
+    t.bigint "admin_user_id", null: false
+    t.bigint "address_id", null: false
+    t.boolean "is_default", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["address_id"], name: "index_admin_addresses_on_address_id"
+    t.index ["admin_user_id"], name: "index_admin_addresses_on_admin_user_id"
+  end
+
+  create_table "admin_details", force: :cascade do |t|
+    t.bigint "admin_user_id", null: false
+    t.string "first_name", null: false
+    t.string "middle_name"
+    t.string "last_name", null: false
+    t.date "dob", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["admin_user_id"], name: "index_admin_details_on_admin_user_id"
+  end
+
+  create_table "admin_phones", force: :cascade do |t|
+    t.bigint "admin_user_id", null: false
+    t.integer "phone_no", null: false
+    t.enum "phone_type", default: "mobile", null: false, enum_type: "phone_type"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["admin_user_id"], name: "index_admin_phones_on_admin_user_id"
+    t.index ["phone_type"], name: "index_admin_phones_on_phone_type"
+  end
+
   create_table "admin_users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -53,6 +84,15 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_16_070514) do
     t.index ["email"], name: "index_admin_users_on_email", unique: true
     t.index ["jti"], name: "index_admin_users_on_jti", unique: true
     t.index ["reset_password_token"], name: "index_admin_users_on_reset_password_token", unique: true
+  end
+
+  create_table "admin_users_company_sites", force: :cascade do |t|
+    t.bigint "admin_user_id", null: false
+    t.bigint "company_site_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["admin_user_id"], name: "index_admin_users_company_sites_on_admin_user_id"
+    t.index ["company_site_id"], name: "index_admin_users_company_sites_on_company_site_id"
   end
 
   create_table "company_sites", force: :cascade do |t|
@@ -195,6 +235,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_16_070514) do
   end
 
   add_foreign_key "addresses", "countries"
+  add_foreign_key "admin_addresses", "addresses"
+  add_foreign_key "admin_addresses", "admin_users"
+  add_foreign_key "admin_details", "admin_users"
+  add_foreign_key "admin_phones", "admin_users"
+  add_foreign_key "admin_users_company_sites", "admin_users"
+  add_foreign_key "admin_users_company_sites", "company_sites"
   add_foreign_key "company_sites", "addresses"
   add_foreign_key "phones", "users"
   add_foreign_key "producers", "addresses"
