@@ -1,4 +1,15 @@
 Rails.application.routes.draw do
+  # Take note of using "admin_users" instead of "users" at response body
+  devise_for :admin_users, path: "api/v1/admin_users", path_names: {
+    sign_in: "login",
+    sign_out: "logout",
+    registration: "signup"
+  },
+  controllers: {
+    sessions: "api/v1/admin_users/sessions",
+    registrations: "api/v1/admin_users/registrations"
+  }
+
   devise_for :users, path: "api/v1/users", path_names: {
     sign_in: "login",
     sign_out: "logout",
@@ -17,7 +28,8 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
-      resources :users, only: [ :show, :update, :destroy ]
+      resources :users, only: [ :index, :show, :update, :destroy ]
+      resources :admin_users, only: [ :index, :show, :update, :destroy ]
       resources :countries, only: [ :index, :show ]
       resources :products, only: [ :index, :show ]
       # resources :stocks, only: [ :index, :show ]

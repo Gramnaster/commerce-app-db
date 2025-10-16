@@ -1,0 +1,12 @@
+json.status do
+  json.code 200
+  json.message "Logged in successfully."
+end
+
+json.data do
+  # Basic identity
+  json.id resource.id
+  json.email resource.email
+  # JWT token identifier (if using JWT)
+  # json.jti resource.jti
+end

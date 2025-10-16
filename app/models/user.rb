@@ -13,7 +13,8 @@ class User < ApplicationRecord
   has_many :phones, dependent: :destroy
   has_many :user_payment_methods, dependent: :destroy
   has_one :shopping_cart, dependent: :destroy
-  has_many :shopping_cart_item, through: :shopping_cart
+  has_many :shopping_cart_items, through: :shopping_cart
+  has_many :warehouse_orders, dependent: :destroy
 
   # Nested attributes
   accepts_nested_attributes_for :user_detail, allow_destroy: true, update_only: true
