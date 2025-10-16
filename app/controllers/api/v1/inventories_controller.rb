@@ -44,7 +44,10 @@ class Api::V1::InventoriesController < ApplicationController
   private
 
   def set_inventory
-    @inventory = Inventory.includes(:company_site, :product).find(params[:id])
+    @inventory = Inventory.includes(
+      company_site: { address: :country },
+      product: [ :product_category, :producer ]
+    ).find(params[:id])
   end
 
   # Custom JWT authentication for admin_user
