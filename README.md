@@ -233,6 +233,152 @@ Delete a promotion-category association.
 
 ---
 
+### Products (Public Read, Management CRUD)
+
+#### GET /api/v1/products
+List all products.
+- **Auth Required**: None (public access)
+- **Returns**: Array of products with category, producer, and promotion details
+
+**Example Response**:
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Products retrieved successfully"
+  },
+  "data": [
+    {
+      "id": 1,
+      "title": "Running Shoes",
+      "description": "High-quality running shoes",
+      "price": 99.99,
+      "product_image_url": "https://example.com/shoes.jpg",
+      "product_category": {
+        "id": 1,
+        "title": "Footwear"
+      },
+      "producer": {
+        "id": 1,
+        "title": "Nike Inc."
+      },
+      "promotion": {
+        "id": 2,
+        "discount_amount": 15.50
+      },
+      "created_at": "2025-01-14T10:00:00.000Z",
+      "updated_at": "2025-01-14T10:00:00.000Z"
+    }
+  ]
+}
+```
+
+#### GET /api/v1/products/:id
+Get a specific product.
+- **Auth Required**: None (public access)
+- **Returns**: Single product with full details including producer address
+
+**Example Response**:
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Product retrieved successfully"
+  },
+  "data": {
+    "id": 1,
+    "title": "Running Shoes",
+    "description": "High-quality running shoes",
+    "price": 99.99,
+    "product_image_url": "https://example.com/shoes.jpg",
+    "product_category": {
+      "id": 1,
+      "title": "Footwear"
+    },
+    "producer": {
+      "id": 1,
+      "title": "Nike Inc.",
+      "address": {
+        "id": 5,
+        "unit_no": "100",
+        "street_no": "Main Street",
+        "address_line1": "Building A",
+        "address_line2": null,
+        "city": "New York",
+        "region": "NY",
+        "zipcode": "10001",
+        "country": {
+          "id": 1,
+          "country_name": "United States"
+        }
+      }
+    },
+    "promotion": {
+      "id": 2,
+      "discount_amount": 15.50
+    },
+    "created_at": "2025-01-14T10:00:00.000Z",
+    "updated_at": "2025-01-14T10:00:00.000Z"
+  }
+}
+```
+
+#### POST /api/v1/products
+Create a new product.
+- **Auth Required**: Management Admin JWT token
+- **Body**:
+```json
+{
+  "product": {
+    "title": "Running Shoes",
+    "description": "High-quality running shoes",
+    "price": 99.99,
+    "product_category_id": 1,
+    "producer_id": 1,
+    "promotion_id": 2,
+    "product_image_url": "https://example.com/shoes.jpg"
+  }
+}
+```
+- **Required Fields**: `title`, `price`, `product_category_id`, `producer_id`
+- **Optional Fields**: `description`, `promotion_id`, `product_image_url`
+- **Validation**: 
+  - `title` must be present
+  - `price` must be >= 0
+  - `product_category_id` and `producer_id` must reference existing records
+  - `promotion_id` is optional (nullable)
+
+#### PATCH /api/v1/products/:id
+Update a product.
+- **Auth Required**: Management Admin JWT token
+- **Body** (all fields optional for update):
+```json
+{
+  "product": {
+    "title": "Updated Product Name",
+    "price": 149.99,
+    "promotion_id": 3
+  }
+}
+```
+
+**Example - Remove promotion from product**:
+```json
+{
+  "product": {
+    "promotion_id": null
+  }
+}
+```
+
+#### DELETE /api/v1/products/:id
+Delete a product.
+- **Auth Required**: Management Admin JWT token
+- **Returns**: `{"message": "Product deleted successfully"}`
+- **Note**: This will also delete all associated shopping_cart_items and inventories (cascade delete)
+
+---
+
 ### Admin Users
 
 #### PATCH /api/v1/admin_users/:id

@@ -1,32 +1,42 @@
 json.status do
   json.code 200
-  json.message "Fetched all products successfully"
+  json.message "Product fetched successfully"
 end
 
 json.data do
   json.id @product.id
-  json.name @product.title
-  json.category @product.product_category.title
-
-  if @product.producer
-    json.producer do
-      json.id @product.producer.id
-      json.company_name @product.producer.title
-      json.company_description @product.producer.address
-    end
-  end
+  json.title @product.title
   json.description @product.description
   json.price @product.price
+  json.product_image_url @product.product_image_url
+
+  json.product_category do
+    json.id @product.product_category.id
+    json.title @product.product_category.title
+  end
+
+  json.producer do
+    json.id @product.producer.id
+    json.title @product.producer.title
+    json.address do
+      json.id @product.producer.address.id
+      json.unit_no @product.producer.address.unit_no
+      json.street_no @product.producer.address.street_no
+      json.city @product.producer.address.city
+      json.zipcode @product.producer.address.zipcode
+      json.country @product.producer.address.country.name if @product.producer.address.country
+    end
+  end
 
   if @product.promotion
     json.promotion do
       json.id @product.promotion.id
-      json.name @product.promotion.title
-      json.code @product.promotion.value
+      json.discount_amount @product.promotion.discount_amount
     end
   else
     json.promotion nil
   end
 
-  json.image_url @product.product_image_url
+  json.created_at @product.created_at
+  json.updated_at @product.updated_at
 end
