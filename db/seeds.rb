@@ -131,14 +131,17 @@ company_site_records = company_addresses.map do |attrs|
 end
 
 company_site = [
-  { title: "JPB Management - HQ", address: company_site_records[0] },
-  { title: "JPB Warehouse A", address: company_site_records[1] },
-  { title: "JPB Warehouse B", address: company_site_records[2] },
-  { title: "JPB Warehouse B", address: company_site_records[3] }
+  { title: "JPB Management - HQ", address: company_site_records[0], site_type: "management" },
+  { title: "JPB Warehouse A", address: company_site_records[1], site_type: "warehouse" },
+  { title: "JPB Warehouse B", address: company_site_records[2], site_type: "warehouse" },
+  { title: "JPB Warehouse C", address: company_site_records[3], site_type: "warehouse" }
 ]
 
 company_site.each do |attrs|
-  CompanySite.find_or_create_by!(title: attrs[:title], address: attrs[:address])
+  CompanySite.find_or_create_by!(title: attrs[:title]) do |site|
+    site.address = attrs[:address]
+    site.site_type = attrs[:site_type]
+  end
 end
 
 # Seeds the Admin User for development
@@ -157,14 +160,16 @@ ActiveRecord::Base.transaction do
       admin.password = admin_password
       admin.password_confirmation = admin_password
       admin.admin_role = 'management'
+      admin.skip_detail_build = true  # Skip auto-building during seed
     end
-    management_admin.update!(admin_role: 'management') unless management_admin.admin_role == 'management'
 
-    management_admin.create_admin_detail!(
-      first_name: 'Admin',
-      last_name: 'User',
-      dob: Date.new(1990, 1, 1)
-    ) unless management_admin.admin_detail
+    unless management_admin.admin_detail
+      management_admin.create_admin_detail!(
+        first_name: 'Admin',
+        last_name: 'User',
+        dob: Date.new(1990, 1, 1)
+      )
+    end
 
     AdminAddress.find_or_create_by!(
       admin_user: management_admin,
@@ -177,19 +182,21 @@ ActiveRecord::Base.transaction do
       company_site: CompanySite.find_by(title: company_site.first[:title])
     )
 
-    # Warehouse Admin (example, static values)
+    # Warehouse Admin
     warehouse_admin = AdminUser.find_or_create_by!(email: warehouse_email) do |admin|
       admin.password = warehouse_password
       admin.password_confirmation = warehouse_password
       admin.admin_role = 'warehouse'
+      admin.skip_detail_build = true  # Skip auto-building during seed
     end
-    warehouse_admin.update!(admin_role: 'warehouse') unless warehouse_admin.admin_role == 'warehouse'
 
-    warehouse_admin.create_admin_detail!(
-      first_name: 'Warehouse',
-      last_name: 'Admin',
-      dob: Date.new(1995, 1, 1)
-    ) unless warehouse_admin.admin_detail
+    unless warehouse_admin.admin_detail
+      warehouse_admin.create_admin_detail!(
+        first_name: 'Warehouse',
+        last_name: 'Admin',
+        dob: Date.new(1995, 1, 1)
+      )
+    end
 
     AdminAddress.find_or_create_by!(
       admin_user: warehouse_admin,

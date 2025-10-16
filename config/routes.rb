@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  # Take note of using "admin_users" instead of "users" at response body
   devise_for :admin_users, path: "api/v1/admin_users", path_names: {
     sign_in: "login",
     sign_out: "logout",
