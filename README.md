@@ -477,22 +477,60 @@ Get a specific inventory.
 #### POST /api/v1/inventories
 Create a new inventory.
 - **Auth Required**: Management or Warehouse Admin JWT token
-- **Body**:
+- **Body** (SKU is optional - will auto-generate if not provided):
 ```json
 {
   "inventory": {
     "company_site_id": 2,
     "product_id": 1,
-    "sku": "SHOES-NKE-001",
     "qty_in_stock": 150
   }
 }
 ```
-- **Required Fields**: `company_site_id`, `product_id`, `sku`, `qty_in_stock`
+- **Body** (with custom SKU):
+```json
+{
+  "inventory": {
+    "company_site_id": 2,
+    "product_id": 1,
+    "sku": "CUSTOM-SKU-12345",
+    "qty_in_stock": 150
+  }
+}
+```
+- **Required Fields**: `company_site_id`, `product_id`, `qty_in_stock`
+- **Optional Fields**: `sku` (auto-generated if not provided)
 - **Validation**: 
-  - `sku` must be unique across all inventories
+  - `sku` must be unique across all inventories (automatically ensured if auto-generated)
   - `qty_in_stock` must be an integer >= 0
   - `company_site_id` must reference a warehouse-type site (not management-type)
+
+**Example Response with Auto-Generated SKU**:
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Inventory fetched successfully"
+  },
+  "data": {
+    "id": 1,
+    "sku": "002000001439",
+    "qty_in_stock": 150,
+    "company_site": {
+      "id": 2,
+      "title": "JPB Warehouse A",
+      "site_type": "warehouse"
+    },
+    "product": {
+      "id": 1,
+      "title": "Running Shoes",
+      "price": "99.99"
+    },
+    "created_at": "2025-01-14T10:00:00.000Z",
+    "updated_at": "2025-01-14T10:00:00.000Z"
+  }
+}
+```
 
 #### PATCH /api/v1/inventories/:id
 Update an inventory.

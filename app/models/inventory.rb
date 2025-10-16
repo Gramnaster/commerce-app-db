@@ -35,7 +35,7 @@ class Inventory < ApplicationRecord
 
   def company_site_must_be_warehouse
     if company_site && company_site.site_type != "warehouse"
-      errors.add(:company_site, "must be a warehouse type, not management type")
+      errors.add(:company_site, "must be a warehouse site, not management site")
     end
   end
 end
