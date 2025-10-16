@@ -13,36 +13,35 @@ require 'net/http'
 require 'json'
 
 # Seeds the Admin User for development
-puts "Seeding Admin User for development..."
+# puts "Seeding Admin User for development..."
 
-ActiveRecord::Base.transaction do
-  begin
-    admin_user = AdminUser.find_or_create_by!(email: 'admin@admin.com') do |admin|
-      admin.password = 'admin123456'
-      admin.password_confirmation = 'admin123456'
-      puts "  -> Created admin user: #{admin.email}"
-    end
+# ActiveRecord::Base.transaction do
+#   begin
+#     admin_user = AdminUser.find_or_create_by!(email: 'admin@admin.com') do |admin|
+#       admin.password = 'admin123456'
+#       admin.password_confirmation = 'admin123456'
+#       puts "  -> Created admin user: #{admin.email}"
+#     end
 
-    # Create admin detail if it doesn't exist
-    unless admin_user.admin_detail
-      admin_user.create_admin_detail!(
-        first_name: 'Admin',
-        last_name: 'User',
-        dob: Date.new(1990, 1, 1)
-      )
-      puts "  -> Created admin details"
-    end
+#     # Create admin detail if it doesn't exist
+#     unless admin_user.admin_detail
+#       admin_user.create_admin_detail!(
+#         first_name: 'Admin',
+#         last_name: 'User',
+#         dob: Date.new(1990, 1, 1)
+#       )
+#       puts "  -> Created admin details"
+#     end
 
-    puts "Admin user seeded successfully."
-  rescue StandardError => e
-    puts "Failed to seed admin user. Error: #{e.message}"
-    raise ActiveRecord::Rollback
-  end
-end
+#     puts "Admin user seeded successfully."
+#   rescue StandardError => e
+#     puts "Failed to seed admin user. Error: #{e.message}"
+#     raise ActiveRecord::Rollback
+#   end
+# end
 
 # Seeds the Countries table
 puts "Seeding country data from Finnhub..."
-
 ActiveRecord::Base.transaction do
   begin
     countries_data = nil
@@ -55,7 +54,7 @@ ActiveRecord::Base.transaction do
       country_code = country_data['code2']
       Country.find_or_create_by!(code: country_code) do |country|
         country.name = country_data['country']
-        puts "  -> Created country: #{country.name} (#{country.code})"
+        puts "Seeded country: #{country.name} (#{country.code})"
       end
     end
     puts "Countries table populated successfully."
