@@ -12,6 +12,34 @@ require 'finnhub_ruby'
 require 'net/http'
 require 'json'
 
+# Seeds the Admin User for development
+puts "Seeding Admin User for development..."
+
+ActiveRecord::Base.transaction do
+  begin
+    admin_user = AdminUser.find_or_create_by!(email: 'admin@admin.com') do |admin|
+      admin.password = 'admin123456'
+      admin.password_confirmation = 'admin123456'
+      puts "  -> Created admin user: #{admin.email}"
+    end
+
+    # Create admin detail if it doesn't exist
+    unless admin_user.admin_detail
+      admin_user.create_admin_detail!(
+        first_name: 'Admin',
+        last_name: 'User',
+        dob: Date.new(1990, 1, 1)
+      )
+      puts "  -> Created admin details"
+    end
+
+    puts "Admin user seeded successfully."
+  rescue StandardError => e
+    puts "Failed to seed admin user. Error: #{e.message}"
+    raise ActiveRecord::Rollback
+  end
+end
+
 # Seeds the Countries table
 puts "Seeding country data from Finnhub..."
 
