@@ -1,6 +1,9 @@
 class AdminUser < ApplicationRecord
   include Devise::JWT::RevocationStrategies::JTIMatcher
 
+  # Soft delete support - admin can be disabled when they leave the company
+  acts_as_paranoid
+
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
   devise :database_authenticatable, :registerable,
@@ -24,6 +27,8 @@ class AdminUser < ApplicationRecord
   accepts_nested_attributes_for :admin_phones, allow_destroy: true, reject_if: :all_blank
 
   accepts_nested_attributes_for :admin_addresses, allow_destroy: true, reject_if: :all_blank
+
+  accepts_nested_attributes_for :admin_users_company_sites, allow_destroy: true, reject_if: :all_blank
 
   # Skip auto-building admin_detail during seeding
   attr_accessor :skip_detail_build
