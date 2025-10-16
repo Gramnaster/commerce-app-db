@@ -3,23 +3,25 @@ json.status do
   json.message "Fetched all inventories successfully"
 end
 
-json.data @inventories do |inventory|
-  json.id inventory.id
-  json.sku inventory.sku
-  json.qty_in_stock inventory.qty_in_stock
+json.data do
+  json.array! @inventories do |inventory|
+    json.id inventory.id
+    json.sku inventory.sku
+    json.qty_in_stock inventory.qty_in_stock
 
-  json.company_site do
-    json.id inventory.company_site.id
-    json.title inventory.company_site.title
-    json.site_type inventory.company_site.site_type
+    json.company_site do
+      json.id inventory.company_site.id
+      json.title inventory.company_site.title
+      json.site_type inventory.company_site.site_type
+    end
+
+    json.product do
+      json.id inventory.product.id
+      json.title inventory.product.title
+      json.price inventory.product.price
+    end
+
+    json.created_at inventory.created_at
+    json.updated_at inventory.updated_at
   end
-
-  json.product do
-    json.id inventory.product.id
-    json.title inventory.product.title
-    json.price inventory.product.price
-  end
-
-  json.created_at inventory.created_at
-  json.updated_at inventory.updated_at
 end
