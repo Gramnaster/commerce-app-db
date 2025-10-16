@@ -1,0 +1,21 @@
+json.status do
+  json.code 200
+  json.message "Promotion-category association fetched successfully"
+end
+
+json.data do
+  json.id @promotions_category.id
+
+  json.promotion do
+    json.id @promotions_category.promotion.id
+    json.discount_amount @promotions_category.promotion.discount_amount
+  end
+
+  json.product_category do
+    json.id @promotions_category.product_category.id
+    json.title @promotions_category.product_category.title
+  end
+
+  json.created_at @promotions_category.created_at
+  json.updated_at @promotions_category.updated_at
+end

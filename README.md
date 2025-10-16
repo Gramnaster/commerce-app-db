@@ -198,6 +198,41 @@ Delete a promotion.
 
 ---
 
+### Promotions Categories (Join Table - Management Admin Only)
+
+Manage associations between promotions and product categories.
+
+#### GET /api/v1/promotions_categories
+List all promotion-category associations.
+- **Auth Required**: Management Admin JWT token
+- **Returns**: Array of all associations with promotion and product category details
+
+#### GET /api/v1/promotions_categories/:id
+Get a specific promotion-category association.
+- **Auth Required**: Management Admin JWT token
+- **Returns**: Single association with promotion and product category details
+
+#### POST /api/v1/promotions_categories
+Create a new promotion-category association.
+- **Auth Required**: Management Admin JWT token
+- **Body**:
+```json
+{
+  "promotions_category": {
+    "promotions_id": 1,
+    "product_categories_id": 2
+  }
+}
+```
+- **Note**: The combination of `promotions_id` and `product_categories_id` must be unique
+
+#### DELETE /api/v1/promotions_categories/:id
+Delete a promotion-category association.
+- **Auth Required**: Management Admin JWT token
+- **Returns**: `{"message": "Promotion-category association deleted successfully"}`
+
+---
+
 ### Admin Users
 
 #### PATCH /api/v1/admin_users/:id
