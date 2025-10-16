@@ -1,0 +1,12 @@
+json.status do
+  json.code 200
+  json.message "Product category fetched successfully"
+end
+
+json.data do
+  json.id @product_category.id
+  json.title @product_category.title
+  json.products_count @product_category.products.count
+  json.created_at @product_category.created_at
+  json.updated_at @product_category.updated_at
+end

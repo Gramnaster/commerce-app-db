@@ -24,6 +24,54 @@ Things you may want to cover:
 * ...
 # commerce-app-db
 
+## API Documentation
+
+### Product Categories (Management Admin Only)
+
+#### GET /api/v1/product_categories
+List all product categories.
+- **Auth Required**: Management Admin JWT token
+- **Returns**: Array of all product categories with products count
+
+#### GET /api/v1/product_categories/:id
+Get a specific product category.
+- **Auth Required**: Management Admin JWT token
+- **Returns**: Single product category details
+
+#### POST /api/v1/product_categories
+Create a new product category.
+- **Auth Required**: Management Admin JWT token
+- **Body**:
+```json
+{
+  "product_category": {
+    "title": "electronics"
+  }
+}
+```
+
+#### PATCH /api/v1/product_categories/:id
+Update a product category.
+- **Auth Required**: Management Admin JWT token
+- **Body**:
+```json
+{
+  "product_category": {
+    "title": "updated category name"
+  }
+}
+```
+
+#### DELETE /api/v1/product_categories/:id
+Delete a product category.
+- **Auth Required**: Management Admin JWT token
+- **Returns**: `{"message": "Product category deleted successfully"}`
+- **Note**: This will also delete all associated products (cascade delete)
+
+---
+
+### Admin Users
+
 #### PATCH /api/v1/admin_users/:id
 For updating an admin_user's details, role, and company site assignments:
 
