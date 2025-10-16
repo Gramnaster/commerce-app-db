@@ -36,6 +36,7 @@ Rails.application.routes.draw do
       resources :producers, only: [ :index, :show, :create, :update, :destroy ]
       resources :promotions, only: [ :index, :show, :create, :update, :destroy ]
       resources :promotions_categories, only: [ :index, :show, :create, :destroy ]
+      resources :inventories, only: [ :index, :show, :create, :update, :destroy ]
       # resources :stocks, only: [ :index, :show ]
       # resources :countries, only: [ :index, :show ]
       # resources :wallets, only: [ :index, :show ] do

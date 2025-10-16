@@ -379,6 +379,180 @@ Delete a product.
 
 ---
 
+### Inventories (Admin Only - Management & Warehouse)
+
+**Important Notes**: 
+- Inventories can only be attached to warehouse-type company sites, not management-type sites.
+- **SKU is automatically generated** when creating an inventory. The system generates a 12-digit UPC-like code in the format: `SSSPPPPPPRRR` where:
+  - `SSS` = 3-digit warehouse site ID
+  - `PPPPPP` = 6-digit product ID
+  - `RRR` = 3-digit random code for uniqueness
+- Admins can optionally provide a custom SKU, but it's not required.
+
+#### GET /api/v1/inventories
+List all inventories.
+- **Auth Required**: Management or Warehouse Admin JWT token
+- **Returns**: Array of inventories with company site and product details
+
+**Example Response**:
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Fetched all inventories successfully"
+  },
+  "data": [
+    {
+      "id": 1,
+      "sku": "SHOES-NKE-001",
+      "qty_in_stock": 150,
+      "company_site": {
+        "id": 2,
+        "title": "JPB Warehouse A",
+        "site_type": "warehouse"
+      },
+      "product": {
+        "id": 1,
+        "title": "Running Shoes",
+        "price": "99.99"
+      },
+      "created_at": "2025-01-14T10:00:00.000Z",
+      "updated_at": "2025-01-14T10:00:00.000Z"
+    }
+  ]
+}
+```
+
+#### GET /api/v1/inventories/:id
+Get a specific inventory.
+- **Auth Required**: Management or Warehouse Admin JWT token
+- **Returns**: Single inventory with full company site address and product details
+
+**Example Response**:
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Inventory fetched successfully"
+  },
+  "data": {
+    "id": 1,
+    "sku": "SHOES-NKE-001",
+    "qty_in_stock": 150,
+    "company_site": {
+      "id": 2,
+      "title": "JPB Warehouse A",
+      "site_type": "warehouse",
+      "address": {
+        "id": 10,
+        "unit_no": "Building 5",
+        "street_no": "123 Industrial Rd",
+        "city": "Manila",
+        "region": "NCR",
+        "zipcode": "1000",
+        "country": "Philippines"
+      }
+    },
+    "product": {
+      "id": 1,
+      "title": "Running Shoes",
+      "description": "High-quality running shoes",
+      "price": "99.99",
+      "product_image_url": "https://example.com/shoes.jpg",
+      "product_category": {
+        "id": 1,
+        "title": "Footwear"
+      },
+      "producer": {
+        "id": 1,
+        "title": "Nike Inc."
+      }
+    },
+    "created_at": "2025-01-14T10:00:00.000Z",
+    "updated_at": "2025-01-14T10:00:00.000Z"
+  }
+}
+```
+
+#### POST /api/v1/inventories
+Create a new inventory.
+- **Auth Required**: Management or Warehouse Admin JWT token
+- **Body** (SKU is optional - will auto-generate if not provided):
+```json
+{
+  "inventory": {
+    "company_site_id": 2,
+    "product_id": 1,
+    "qty_in_stock": 150
+  }
+}
+```
+- **Body** (with custom SKU):
+```json
+{
+  "inventory": {
+    "company_site_id": 2,
+    "product_id": 1,
+    "sku": "CUSTOM-SKU-12345",
+    "qty_in_stock": 150
+  }
+}
+```
+- **Required Fields**: `company_site_id`, `product_id`, `qty_in_stock`
+- **Optional Fields**: `sku` (auto-generated if not provided)
+- **Validation**: 
+  - `sku` must be unique across all inventories (automatically ensured if auto-generated)
+  - `qty_in_stock` must be an integer >= 0
+  - `company_site_id` must reference a warehouse-type site (not management-type)
+
+**Example Response with Auto-Generated SKU**:
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Inventory fetched successfully"
+  },
+  "data": {
+    "id": 1,
+    "sku": "002000001439",
+    "qty_in_stock": 150,
+    "company_site": {
+      "id": 2,
+      "title": "JPB Warehouse A",
+      "site_type": "warehouse"
+    },
+    "product": {
+      "id": 1,
+      "title": "Running Shoes",
+      "price": "99.99"
+    },
+    "created_at": "2025-01-14T10:00:00.000Z",
+    "updated_at": "2025-01-14T10:00:00.000Z"
+  }
+}
+```
+
+#### PATCH /api/v1/inventories/:id
+Update an inventory.
+- **Auth Required**: Management or Warehouse Admin JWT token
+- **Body** (all fields optional for update):
+```json
+{
+  "inventory": {
+    "qty_in_stock": 200,
+    "sku": "SHOES-NKE-001-V2"
+  }
+}
+```
+
+#### DELETE /api/v1/inventories/:id
+Delete an inventory.
+- **Auth Required**: Management or Warehouse Admin JWT token
+- **Returns**: `{"message": "Inventory deleted successfully"}`
+- **Note**: This will also delete all associated warehouse_orders (cascade delete)
+
+---
+
 ### Admin Users
 
 #### PATCH /api/v1/admin_users/:id
