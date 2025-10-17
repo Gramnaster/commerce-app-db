@@ -30,18 +30,45 @@ class Api::V1::UserCartOrdersController < ApplicationController
     # Calculate total cost
     total_cost = shopping_cart.shopping_cart_items.sum { |item| item.product.price.to_f * item.qty }
 
-    @user_cart_order = UserCartOrder.new(
-      shopping_cart: shopping_cart,
-      user_address_id: user_cart_order_params[:user_address_id],
-      total_cost: total_cost,
-      is_paid: user_cart_order_params[:is_paid] || false,
-      cart_status: "pending"
-    )
+    # Get user's payment method
+    payment_method = current_user.user_payment_methods.first
 
-    if @user_cart_order.save
-      render :show, status: :created
-    else
-      render json: { errors: @user_cart_order.errors.full_messages }, status: :unprocessable_entity
+    unless payment_method
+      return render json: { error: "Payment method not found" }, status: :not_found
+    end
+
+    # Check if user has sufficient balance
+    unless payment_method.sufficient_balance?(total_cost)
+      return render json: {
+        error: "Insufficient funds",
+        required: total_cost,
+        current_balance: payment_method.balance,
+        shortfall: (total_cost - payment_method.balance).round(2)
+      }, status: :unprocessable_entity
+    end
+
+    # Create the order in a transaction
+    ActiveRecord::Base.transaction do
+      @user_cart_order = UserCartOrder.new(
+        shopping_cart: shopping_cart,
+        user_address_id: user_cart_order_params[:user_address_id],
+        total_cost: total_cost,
+        is_paid: true,
+        cart_status: "pending"
+      )
+
+      if @user_cart_order.save
+        # Deduct the amount from user's balance
+        withdraw_result = payment_method.withdraw(total_cost)
+
+        unless withdraw_result[:success]
+          raise ActiveRecord::Rollback
+        end
+
+        render :show, status: :created
+      else
+        render json: { errors: @user_cart_order.errors.full_messages }, status: :unprocessable_entity
+      end
     end
   end
 
