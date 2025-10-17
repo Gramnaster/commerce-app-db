@@ -952,6 +952,290 @@ Delete a warehouse order.
 
 ---
 
+## Transaction History (Receipts)
+
+### Overview
+
+The receipts system provides a complete audit trail of all financial transactions. Every deposit, withdrawal, and purchase creates a receipt record that tracks the amount, balance before/after the transaction, and associated details.
+
+**Transaction Types:**
+- **Deposit**: User adds funds to their account
+- **Withdraw**: User removes funds from their account (manual or automatic payment)
+- **Purchase**: Order completion record (automatically creates TWO receipts: one withdraw for payment, one purchase for order record)
+
+**Key Features:**
+- Balance tracking (before/after each transaction)
+- Complete order details for purchases (items, delivery address, products)
+- User filtering (users see only their own, admins see all)
+- Admin management capabilities (view all, filter, delete)
+
+---
+
+### User Receipts Endpoints
+
+#### GET /api/v1/receipts
+View your transaction history.
+- **Auth Required**: User JWT token
+- **Optional Query Parameters**:
+  - `transaction_type`: Filter by type (`deposit`, `withdraw`, or `purchase`)
+- **Returns**: Array of receipts ordered by most recent first
+
+**Example Request:**
+```bash
+curl -X GET http://localhost:3001/api/v1/receipts \
+  -H "Authorization: Bearer YOUR_USER_TOKEN"
+```
+
+**Example Response:**
+```json
+[
+  {
+    "id": 4,
+    "transaction_type": "purchase",
+    "amount": 286.8,
+    "balance_before": 666.5,
+    "balance_after": 379.7,
+    "description": "Purchase - Order #4",
+    "created_at": "2025-10-17T17:08:11.715Z",
+    "updated_at": "2025-10-17T17:08:11.715Z",
+    "user": {
+      "id": 18,
+      "email": "test17@test.com",
+      "first_name": "Bien",
+      "last_name": "Doe"
+    },
+    "order": {
+      "id": 4,
+      "cart_status": "pending",
+      "is_paid": true,
+      "total_cost": 286.8,
+      "items_count": 2,
+      "total_quantity": "5.0"
+    }
+  },
+  {
+    "id": 3,
+    "transaction_type": "withdraw",
+    "amount": 286.8,
+    "balance_before": 666.5,
+    "balance_after": 379.7,
+    "description": "Payment for Order #4",
+    "created_at": "2025-10-17T17:08:11.711Z",
+    "updated_at": "2025-10-17T17:08:11.711Z",
+    "user": {
+      "id": 18,
+      "email": "test17@test.com",
+      "first_name": "Bien",
+      "last_name": "Doe"
+    },
+    "order": null
+  }
+]
+```
+
+**Filter by Type:**
+```bash
+curl -X GET "http://localhost:3001/api/v1/receipts?transaction_type=purchase" \
+  -H "Authorization: Bearer YOUR_USER_TOKEN"
+```
+
+---
+
+#### GET /api/v1/receipts/:id
+View detailed information about a specific receipt.
+- **Auth Required**: User JWT token
+- **Authorization**: Users can only view their own receipts
+- **Returns**: Complete receipt details including full order information for purchases
+
+**Example Request:**
+```bash
+curl -X GET http://localhost:3001/api/v1/receipts/4 \
+  -H "Authorization: Bearer YOUR_USER_TOKEN"
+```
+
+**Example Response (Purchase Receipt):**
+```json
+{
+  "id": 4,
+  "transaction_type": "purchase",
+  "amount": 286.8,
+  "balance_before": 666.5,
+  "balance_after": 379.7,
+  "description": "Purchase - Order #4",
+  "created_at": "2025-10-17T17:08:11.715Z",
+  "updated_at": "2025-10-17T17:08:11.715Z",
+  "user": {
+    "id": 18,
+    "email": "test17@test.com",
+    "first_name": "Bien",
+    "last_name": "Doe",
+    "full_name": "Bien Doe"
+  },
+  "order": {
+    "id": 4,
+    "cart_status": "pending",
+    "is_paid": true,
+    "total_cost": 286.8,
+    "created_at": "2025-10-17T17:08:11.702Z",
+    "delivery_address": {
+      "id": 2,
+      "unit_no": "Unit 505",
+      "street_no": "456 Commerce Ave",
+      "address_line1": null,
+      "address_line2": null,
+      "city": "Manila",
+      "region": "NCR",
+      "zipcode": "1100",
+      "country": {
+        "id": 1,
+        "name": "Philippines",
+        "code": "PH"
+      }
+    },
+    "items": [
+      {
+        "id": 6,
+        "qty": "2.0",
+        "subtotal": "219.9",
+        "product": {
+          "id": 1,
+          "title": "Fjallraven - Foldsack No. 1 Backpack",
+          "description": "Your perfect pack for everyday use...",
+          "price": 109.95
+        }
+      },
+      {
+        "id": 7,
+        "qty": "3.0",
+        "subtotal": "66.9",
+        "product": {
+          "id": 2,
+          "title": "Mens Casual Premium Slim Fit T-Shirts",
+          "description": "Slim-fitting style...",
+          "price": 22.3
+        }
+      }
+    ],
+    "items_count": 2,
+    "total_quantity": "5.0"
+  }
+}
+```
+
+---
+
+### Admin Receipts Management (Management Admin Only)
+
+#### GET /api/v1/admin/receipts
+View all platform receipts with filtering and pagination.
+- **Auth Required**: Management Admin JWT token
+- **Optional Query Parameters**:
+  - `user_id`: Filter by specific user
+  - `transaction_type`: Filter by type (`deposit`, `withdraw`, or `purchase`)
+  - `start_date`: Filter receipts from this date
+  - `end_date`: Filter receipts to this date
+  - `page`: Page number (default: 1)
+  - `per_page`: Results per page (default: 20)
+- **Returns**: Object with receipts array and pagination metadata
+
+**Example Request:**
+```bash
+curl -X GET http://localhost:3001/api/v1/admin/receipts \
+  -H "Authorization: Bearer ADMIN_TOKEN"
+```
+
+**Filter by User:**
+```bash
+curl -X GET "http://localhost:3001/api/v1/admin/receipts?user_id=18" \
+  -H "Authorization: Bearer ADMIN_TOKEN"
+```
+
+**Filter by Type:**
+```bash
+curl -X GET "http://localhost:3001/api/v1/admin/receipts?transaction_type=purchase" \
+  -H "Authorization: Bearer ADMIN_TOKEN"
+```
+
+**Pagination:**
+```bash
+curl -X GET "http://localhost:3001/api/v1/admin/receipts?per_page=20&page=2" \
+  -H "Authorization: Bearer ADMIN_TOKEN"
+```
+
+**Example Response:**
+```json
+{
+  "receipts": [
+    {
+      "id": 4,
+      "transaction_type": "purchase",
+      "amount": 286.8,
+      "balance_before": 666.5,
+      "balance_after": 379.7,
+      "description": "Purchase - Order #4",
+      "created_at": "2025-10-17T17:08:11.715Z",
+      "updated_at": "2025-10-17T17:08:11.715Z",
+      "user": {
+        "id": 18,
+        "email": "test17@test.com",
+        "first_name": "Bien",
+        "last_name": "Doe"
+      },
+      "order": {
+        "id": 4,
+        "cart_status": "pending",
+        "is_paid": true,
+        "total_cost": 286.8,
+        "items_count": 2,
+        "total_quantity": "5.0"
+      }
+    }
+  ],
+  "pagination": {
+    "total_count": 4,
+    "current_page": 1,
+    "per_page": 20,
+    "total_pages": 1
+  }
+}
+```
+
+---
+
+#### GET /api/v1/admin/receipts/:id
+View detailed information about any receipt.
+- **Auth Required**: Management Admin JWT token
+- **Returns**: Complete receipt details (same structure as user show endpoint)
+
+**Example Request:**
+```bash
+curl -X GET http://localhost:3001/api/v1/admin/receipts/4 \
+  -H "Authorization: Bearer ADMIN_TOKEN"
+```
+
+---
+
+#### DELETE /api/v1/admin/receipts/:id
+Delete a receipt record.
+- **Auth Required**: Management Admin JWT token
+- **Returns**: Success message
+- **Note**: Use with caution - this is for correcting errors, not regular operation
+
+**Example Request:**
+```bash
+curl -X DELETE http://localhost:3001/api/v1/admin/receipts/1 \
+  -H "Authorization: Bearer ADMIN_TOKEN"
+```
+
+**Example Response:**
+```json
+{
+  "message": "Receipt deleted successfully"
+}
+```
+
+---
+
 ## Complete User Purchase Flow
 
 ### Step-by-Step Example
@@ -999,13 +1283,24 @@ curl -X POST http://localhost:3001/api/v1/user_cart_orders \
   -d '{"user_cart_order": {"user_address_id": 2}}'
 ```
 
-**7. Management Approves Order**
+**7. View Transaction History**
+```bash
+# View all receipts (deposit, withdraw, and purchase records)
+curl -X GET http://localhost:3001/api/v1/receipts \
+  -H "Authorization: Bearer YOUR_USER_TOKEN"
+
+# View specific purchase receipt with full order details
+curl -X GET http://localhost:3001/api/v1/receipts/4 \
+  -H "Authorization: Bearer YOUR_USER_TOKEN"
+```
+
+**8. Management Approves Order**
 ```bash
 curl -X PATCH http://localhost:3001/api/v1/user_cart_orders/2/approve \
   -H "Authorization: Bearer MANAGEMENT_TOKEN"
 ```
 
-**8. Management Creates Warehouse Order**
+**9. Management Creates Warehouse Order**
 ```bash
 curl -X POST http://localhost:3001/api/v1/warehouse_orders \
   -H "Authorization: Bearer MANAGEMENT_TOKEN" \
@@ -1013,7 +1308,7 @@ curl -X POST http://localhost:3001/api/v1/warehouse_orders \
   -d '{"warehouse_order": {"company_site_id": 2, "inventory_id": 13, "user_id": 18, "user_cart_order_id": 2, "qty": 2, "product_status": "storage"}}'
 ```
 
-**9. Warehouse Updates Status**
+**10. Warehouse Updates Status**
 ```bash
 curl -X PATCH http://localhost:3001/api/v1/warehouse_orders/1 \
   -H "Authorization: Bearer WAREHOUSE_TOKEN" \
