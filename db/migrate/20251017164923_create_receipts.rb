@@ -12,8 +12,9 @@ class CreateReceipts < ActiveRecord::Migration[8.0]
       t.timestamps
     end
 
-    add_index :receipts, :user_id
-    add_index :receipts, :transaction_type
-    add_index :receipts, :created_at
+    # Add indexes (with if_not_exists to avoid duplication issues)
+    add_index :receipts, :user_id, if_not_exists: true
+    add_index :receipts, :transaction_type, if_not_exists: true
+    add_index :receipts, :created_at, if_not_exists: true
   end
 end
