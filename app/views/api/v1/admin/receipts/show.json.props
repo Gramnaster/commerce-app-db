@@ -35,13 +35,13 @@ if @receipt.user_cart_order.present?
         
         if @receipt.user_cart_order.user_address.address.present?
           address = @receipt.user_cart_order.user_address.address
-          json.unit_number address.unit_number
-          json.street_number address.street_number
-          json.address_line_1 address.address_line_1
-          json.address_line_2 address.address_line_2
+          json.unit_no address.unit_no
+          json.street_no address.street_no
+          json.address_line1 address.address_line1
+          json.address_line2 address.address_line2
           json.city address.city
           json.region address.region
-          json.postal_code address.postal_code
+          json.zipcode address.zipcode
           
           if address.country.present?
             json.country do
@@ -61,10 +61,9 @@ if @receipt.user_cart_order.present?
       
       json.product do
         json.id item.product.id
-        json.product_name item.product.product_name
+        json.title item.product.title
         json.description item.product.description
         json.price item.product.price.to_f
-        json.sku item.product.sku
       end
     end
     
