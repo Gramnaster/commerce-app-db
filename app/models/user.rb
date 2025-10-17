@@ -41,5 +41,6 @@ class User < ApplicationRecord
     user_payment_methods.create(
       balance: 0.00
     ) if user_payment_methods.empty?
+    create_shopping_cart unless shopping_cart
   end
 end
