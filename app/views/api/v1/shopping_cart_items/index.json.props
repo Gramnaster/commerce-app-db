@@ -1,0 +1,20 @@
+json.status do
+  json.code 200
+  json.message "Shopping cart items fetched successfully"
+end
+
+json.data do
+  json.array! @shopping_cart_items do |item|
+    json.id item.id
+    json.qty item.qty
+    json.product do
+      json.id item.product.id
+      json.title item.product.title
+      json.price item.product.price
+      json.product_image_url item.product.product_image_url
+    end
+    json.subtotal (item.product.price.to_f * item.qty).round(2)
+    json.created_at item.created_at
+    json.updated_at item.updated_at
+  end
+end
