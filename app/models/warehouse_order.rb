@@ -7,5 +7,5 @@ class WarehouseOrder < ApplicationRecord
   validates :qty, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :product_status, presence: true
 
-  enum :product_status, { pending: "pending", shipped: "shipped", delivered: "delivered", cancelled: "cancelled" }
+  enum :product_status, { storage: "storage", progress: "progress", delivered: "delivered" }
 end
