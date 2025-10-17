@@ -55,16 +55,18 @@ if @receipt.user_cart_order.present?
     end
 
     # Order items
-    json.items @receipt.user_cart_order.shopping_cart.shopping_cart_items do |item|
-      json.id item.id
-      json.qty item.qty
-      json.subtotal (item.product.price.to_f * item.qty).round(2)
+    json.items do
+      json.array! @receipt.user_cart_order.shopping_cart.shopping_cart_items do |item|
+        json.id item.id
+        json.qty item.qty
+        json.subtotal (item.product.price.to_f * item.qty).round(2)
 
-      json.product do
-        json.id item.product.id
-        json.title item.product.title
-        json.description item.product.description
-        json.price item.product.price.to_f
+        json.product do
+          json.id item.product.id
+          json.title item.product.title
+          json.description item.product.description
+          json.price item.product.price.to_f
+        end
       end
     end
 
