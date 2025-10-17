@@ -7,7 +7,7 @@ json.array! @receipts do |receipt|
   json.description receipt.description
   json.created_at receipt.created_at
   json.updated_at receipt.updated_at
-  
+
   # User information
   json.user do
     json.id receipt.user.id
@@ -15,7 +15,7 @@ json.array! @receipts do |receipt|
     json.first_name receipt.user.user_detail&.first_name
     json.last_name receipt.user.user_detail&.last_name
   end
-  
+
   # Order information (if purchase)
   if receipt.user_cart_order.present?
     json.order do
@@ -23,7 +23,7 @@ json.array! @receipts do |receipt|
       json.cart_status receipt.user_cart_order.cart_status
       json.is_paid receipt.user_cart_order.is_paid
       json.total_cost receipt.user_cart_order.total_cost.to_f
-      
+
       # Order items summary
       json.items_count receipt.user_cart_order.shopping_cart.shopping_cart_items.count
       json.total_quantity receipt.user_cart_order.shopping_cart.shopping_cart_items.sum(:qty)

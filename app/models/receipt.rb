@@ -7,7 +7,7 @@ class Receipt < ApplicationRecord
   validates :amount, presence: true, numericality: { greater_than: 0 }
   validates :balance_before, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validates :balance_after, presence: true, numericality: { greater_than_or_equal_to: 0 }
-  
+
   # Enum for transaction types
   enum :transaction_type, {
     purchase: "purchase",

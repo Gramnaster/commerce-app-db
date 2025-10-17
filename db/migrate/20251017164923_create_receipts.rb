@@ -11,7 +11,7 @@ class CreateReceipts < ActiveRecord::Migration[8.0]
 
       t.timestamps
     end
-    
+
     add_index :receipts, :user_id
     add_index :receipts, :transaction_type
     add_index :receipts, :created_at

@@ -8,7 +8,7 @@ class Api::V1::ReceiptsController < ApplicationController
     authenticate_user!
 
     @receipts = current_user.receipts.includes(:user_cart_order).recent
-    
+
     # Optional filtering by transaction type
     if params[:transaction_type].present?
       @receipts = @receipts.where(transaction_type: params[:transaction_type])
@@ -20,7 +20,7 @@ class Api::V1::ReceiptsController < ApplicationController
     authenticate_user!
 
     unless @receipt.user_id == current_user.id
-      return render json: { error: "Access denied. You can only view your own receipts." }, status: :forbidden
+      render json: { error: "Access denied. You can only view your own receipts." }, status: :forbidden
     end
   end
 

@@ -9,7 +9,7 @@ class UserPaymentMethod < ApplicationRecord
 
     balance_before = self.balance
     self.balance += amount
-    
+
     if save
       # Create receipt for deposit
       Receipt.create!(
@@ -20,7 +20,7 @@ class UserPaymentMethod < ApplicationRecord
         balance_after: self.balance,
         description: description || "Deposit to account"
       )
-      
+
       { success: true, new_balance: balance }
     else
       { success: false, error: errors.full_messages.join(", ") }
@@ -34,7 +34,7 @@ class UserPaymentMethod < ApplicationRecord
 
     balance_before = self.balance
     self.balance -= amount
-    
+
     if save
       # Create receipt for withdrawal
       Receipt.create!(
@@ -45,7 +45,7 @@ class UserPaymentMethod < ApplicationRecord
         balance_after: self.balance,
         description: description || "Withdrawal from account"
       )
-      
+
       { success: true, new_balance: balance }
     else
       { success: false, error: errors.full_messages.join(", ") }
