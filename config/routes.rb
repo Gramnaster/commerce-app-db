@@ -55,6 +55,15 @@ Rails.application.routes.draw do
 
       # Warehouse orders (Management creates, Management & Warehouse update)
       resources :warehouse_orders, only: [ :index, :show, :create, :update, :destroy ]
+
+      # Receipts / Transaction History (Users only - view their own receipts)
+      resources :receipts, only: [ :index, :show ]
+
+      # Admin routes
+      namespace :admin do
+        # Admin receipts (Management only - view all, delete)
+        resources :receipts, only: [ :index, :show, :destroy ]
+      end
       # resources :stocks, only: [ :index, :show ]
       # resources :countries, only: [ :index, :show ]
       # resources :wallets, only: [ :index, :show ] do

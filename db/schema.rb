@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_17_160733) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_17_164923) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -183,6 +183,22 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_17_160733) do
     t.index ["promotions_id"], name: "index_promotions_categories_on_promotions_id"
   end
 
+  create_table "receipts", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "user_cart_order_id"
+    t.string "transaction_type", null: false
+    t.decimal "amount", precision: 15, scale: 2, null: false
+    t.decimal "balance_before", precision: 15, scale: 2, null: false
+    t.decimal "balance_after", precision: 15, scale: 2, null: false
+    t.text "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_at"], name: "index_receipts_on_created_at"
+    t.index ["transaction_type"], name: "index_receipts_on_transaction_type"
+    t.index ["user_cart_order_id"], name: "index_receipts_on_user_cart_order_id"
+    t.index ["user_id"], name: "index_receipts_on_user_id"
+  end
+
   create_table "shopping_cart_items", force: :cascade do |t|
     t.bigint "shopping_cart_id", null: false
     t.bigint "product_id", null: false
@@ -295,6 +311,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_17_160733) do
   add_foreign_key "products", "promotions"
   add_foreign_key "promotions_categories", "product_categories", column: "product_categories_id"
   add_foreign_key "promotions_categories", "promotions", column: "promotions_id"
+  add_foreign_key "receipts", "user_cart_orders"
+  add_foreign_key "receipts", "users"
   add_foreign_key "shopping_cart_items", "products"
   add_foreign_key "shopping_cart_items", "shopping_carts"
   add_foreign_key "shopping_carts", "users"
