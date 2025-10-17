@@ -41,6 +41,11 @@ Rails.application.routes.draw do
       # Shopping cart items (Users only - manage their own cart)
       resources :shopping_cart_items, only: [ :index, :show, :create, :update, :destroy ]
 
+      # User payment methods (Users only - manage their own balance)
+      get "user_payment_methods/balance", to: "user_payment_methods#balance"
+      post "user_payment_methods/deposit", to: "user_payment_methods#deposit"
+      post "user_payment_methods/withdraw", to: "user_payment_methods#withdraw"
+
       # User cart orders (Users create, Management views/approves)
       resources :user_cart_orders, only: [ :index, :show, :create, :update ] do
         member do
