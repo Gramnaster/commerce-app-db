@@ -5,7 +5,7 @@ class UserCartOrder < ApplicationRecord
 
   # Validations
   validates :total_cost, presence: true, numericality: { greater_than_or_equal_to: 0 }
-  validates :is_paid, inclusion: { in: [true, false] }
+  validates :is_paid, inclusion: { in: [ true, false ] }
   validates :cart_status, presence: true
 
   # Enum for cart_status - use hash syntax for Rails 8.0
