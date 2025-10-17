@@ -15,23 +15,22 @@ class Inventory < ApplicationRecord
 
   private
 
-  def generate_sku
-    # Only generate if SKU is not provided
-    return if sku.present?
+def generate_sku
+  return if sku.present?
 
-    loop do
-      # Generate a 12-digit UPC-like code
-      # Format: 3 digits (company_site) + 6 digits (product) + 3 digits (random)
-      site_code = company_site_id.to_s.rjust(3, "0")
-      product_code = product_id.to_s.rjust(6, "0")
-      random_code = SecureRandom.random_number(1000).to_s.rjust(3, "0")
+  loop do
+    # Get related IDs and encode as base36 (upcase for letters)
+    category_code = product.product_category_id.to_s(36).upcase.rjust(3, "0")
+    producer_code = product.producer_id.to_s(36).upcase.rjust(3, "0")
+    product_code  = product_id.to_s(36).upcase.rjust(3, "0")
+    random_code   = SecureRandom.random_number(1000).to_s.rjust(3, "0")
 
-      self.sku = "#{site_code}#{product_code}#{random_code}"
+    # Format: XXXYYYZZZ999 (letters+digits)
+    self.sku = "#{category_code}#{producer_code}#{product_code}#{random_code}"
 
-      # Break if SKU is unique, otherwise regenerate
-      break unless Inventory.exists?(sku: sku)
-    end
+    break unless Inventory.exists?(sku: sku)
   end
+end
 
   def company_site_must_be_warehouse
     if company_site && company_site.site_type != "warehouse"
