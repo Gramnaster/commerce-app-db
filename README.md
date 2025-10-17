@@ -626,3 +626,431 @@ Soft delete (disable) an admin user when they leave the company:
 - Sets `deleted_at` timestamp using `acts_as_paranoid`
 - Admin can be restored later if needed
 - Returns: `{"message": "Admin user disabled successfully"}`
+
+---
+
+## User Payment Methods & Shopping Cart System
+
+### User Payment Methods (User Only)
+
+Users have a payment method with a balance that can be used to purchase items. All payment operations require user authentication.
+
+#### GET /api/v1/user_payment_methods/balance
+Check current balance.
+- **Auth Required**: User JWT token
+- **Returns**: Current balance, user ID, and email
+
+**Example Response**:
+```json
+{
+  "balance": "900.0",
+  "user_id": 18,
+  "email": "test17@test.com"
+}
+```
+
+#### POST /api/v1/user_payment_methods/deposit
+Deposit funds into account.
+- **Auth Required**: User JWT token
+- **Body**:
+```json
+{
+  "amount": 1000
+}
+```
+- **Validation**: Amount must be greater than zero
+- **Returns**: Confirmation with new balance
+
+**Example Response**:
+```json
+{
+  "message": "Deposit successful",
+  "amount_deposited": 1000.0,
+  "new_balance": "1000.0"
+}
+```
+
+#### POST /api/v1/user_payment_methods/withdraw
+Withdraw funds from account.
+- **Auth Required**: User JWT token
+- **Body**:
+```json
+{
+  "amount": 100
+}
+```
+- **Validation**: 
+  - Amount must be greater than zero
+  - Must have sufficient balance
+- **Returns**: Confirmation with new balance or error if insufficient funds
+
+**Example Response (Success)**:
+```json
+{
+  "message": "Withdrawal successful",
+  "amount_withdrawn": 100.0,
+  "new_balance": "900.0"
+}
+```
+
+**Example Response (Insufficient Funds)**:
+```json
+{
+  "error": "Insufficient funds"
+}
+```
+
+---
+
+### Shopping Cart Items (User Only)
+
+Users can add, view, update, and remove items from their shopping cart. Each user has their own cart created automatically on signup.
+
+#### GET /api/v1/shopping_cart_items
+View all items in your cart.
+- **Auth Required**: User JWT token
+- **Returns**: Array of cart items with product details and subtotals
+
+**Example Response**:
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Shopping cart items fetched successfully"
+  },
+  "data": [
+    {
+      "id": 3,
+      "qty": "2.0",
+      "product": {
+        "id": 1,
+        "title": "Fjallraven - Foldsack No. 1 Backpack, Fits 15 Laptops",
+        "price": "109.95",
+        "product_image_url": "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_t.png"
+      },
+      "subtotal": "219.9",
+      "created_at": "2025-10-17T16:26:34.596Z",
+      "updated_at": "2025-10-17T16:26:34.596Z"
+    }
+  ]
+}
+```
+
+#### GET /api/v1/shopping_cart_items/:id
+View a specific cart item.
+- **Auth Required**: User JWT token
+- **Returns**: Single cart item with full product details
+
+#### POST /api/v1/shopping_cart_items
+Add an item to your cart.
+- **Auth Required**: User JWT token
+- **Body**:
+```json
+{
+  "shopping_cart_item": {
+    "product_id": 1,
+    "qty": 2
+  }
+}
+```
+- **Validation**:
+  - `qty` must be greater than 0
+  - Product must not already exist in cart
+- **Returns**: Created cart item with product details
+
+#### PATCH /api/v1/shopping_cart_items/:id
+Update the quantity of a cart item.
+- **Auth Required**: User JWT token
+- **Body**:
+```json
+{
+  "shopping_cart_item": {
+    "qty": 5
+  }
+}
+```
+- **Validation**: `qty` must be greater than 0
+- **Returns**: Updated cart item
+
+#### DELETE /api/v1/shopping_cart_items/:id
+Remove an item from your cart.
+- **Auth Required**: User JWT token
+- **Returns**: `{"message": "Item removed from cart successfully"}`
+
+---
+
+### User Cart Orders
+
+Users submit their shopping cart as an order. The system automatically:
+1. Calculates total cost from all cart items
+2. Checks if user has sufficient balance
+3. Deducts the cost from user's payment method
+4. Creates the order with `is_paid: true` and `cart_status: pending`
+
+Management admins can view and approve paid orders.
+
+#### POST /api/v1/user_cart_orders (User Only)
+Submit your shopping cart as an order.
+- **Auth Required**: User JWT token
+- **Body**:
+```json
+{
+  "user_cart_order": {
+    "user_address_id": 2
+  }
+}
+```
+- **Requirements**:
+  - Cart must not be empty
+  - User must have sufficient balance
+- **Automatic Actions**:
+  - Calculates total cost
+  - Validates sufficient funds
+  - Deducts payment from balance
+  - Sets `is_paid: true`
+  - Sets `cart_status: pending`
+
+**Example Response (Success)**:
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "User cart order fetched successfully"
+  },
+  "data": {
+    "id": 2,
+    "total_cost": "286.8",
+    "is_paid": true,
+    "cart_status": "pending",
+    "user_address": {
+      "id": 2,
+      "address": {
+        "unit_no": "Unit 505",
+        "street_no": "456 Commerce Ave",
+        "city": "Manila",
+        "region": "NCR",
+        "zipcode": "1100"
+      }
+    },
+    "items": [
+      {
+        "product_id": 1,
+        "product_title": "Fjallraven - Foldsack No. 1 Backpack, Fits 15 Laptops",
+        "qty": "2.0",
+        "price": "109.95",
+        "subtotal": "219.9"
+      }
+    ],
+    "warehouse_orders_count": 0,
+    "created_at": "2025-10-17T16:27:19.531Z",
+    "updated_at": "2025-10-17T16:27:19.531Z"
+  }
+}
+```
+
+**Example Response (Insufficient Funds)**:
+```json
+{
+  "error": "Insufficient funds",
+  "required": "846.7",
+  "current_balance": "613.2",
+  "shortfall": "233.5"
+}
+```
+
+**Note**: If payment fails due to insufficient funds, the cart items remain in the cart so the user can deposit more funds and try again later.
+
+#### GET /api/v1/user_cart_orders (Management Only)
+View all user orders.
+- **Auth Required**: Management Admin JWT token
+- **Returns**: Array of all orders with user address and item details
+
+#### GET /api/v1/user_cart_orders/:id (Management Only)
+View a specific order.
+- **Auth Required**: Management Admin JWT token
+- **Returns**: Full order details with items and delivery address
+
+#### PATCH /api/v1/user_cart_orders/:id/approve (Management Only)
+Approve a paid order.
+- **Auth Required**: Management Admin JWT token
+- **Requirement**: Order must have `is_paid: true`
+- **Action**: Updates `cart_status` to "approved"
+- **Returns**: Updated order details
+
+**Example Request**:
+```bash
+curl -X PATCH http://localhost:3001/api/v1/user_cart_orders/2/approve \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
+```
+
+#### PATCH /api/v1/user_cart_orders/:id (Management Only)
+Update order payment status or reject order.
+- **Auth Required**: Management Admin JWT token
+- **Body**:
+```json
+{
+  "user_cart_order": {
+    "is_paid": true,
+    "cart_status": "rejected"
+  }
+}
+```
+
+---
+
+### Warehouse Orders (Management & Warehouse Admin)
+
+Management creates warehouse orders for approved user orders. Warehouse admins can view and update order status.
+
+#### GET /api/v1/warehouse_orders
+View all warehouse orders.
+- **Auth Required**: Management or Warehouse Admin JWT token
+- **Returns**: Array of warehouse orders with inventory and site details
+
+#### GET /api/v1/warehouse_orders/:id
+View a specific warehouse order.
+- **Auth Required**: Management or Warehouse Admin JWT token
+- **Returns**: Full order details including user and inventory information
+
+#### POST /api/v1/warehouse_orders (Management Only)
+Create a warehouse order.
+- **Auth Required**: Management Admin JWT token
+- **Body**:
+```json
+{
+  "warehouse_order": {
+    "company_site_id": 2,
+    "inventory_id": 13,
+    "user_id": 1,
+    "user_cart_order_id": 2,
+    "qty": 5,
+    "product_status": "storage"
+  }
+}
+```
+- **Product Status Options**: `storage`, `progress`, `delivered`
+- **Automatic Action**: Deducts quantity from inventory
+
+#### PATCH /api/v1/warehouse_orders/:id
+Update warehouse order status.
+- **Auth Required**: Management or Warehouse Admin JWT token
+- **Body**:
+```json
+{
+  "warehouse_order": {
+    "product_status": "progress"
+  }
+}
+```
+- **Status Flow**: `storage` → `progress` → `delivered`
+
+#### DELETE /api/v1/warehouse_orders/:id (Management Only)
+Delete a warehouse order.
+- **Auth Required**: Management Admin JWT token
+- **Automatic Action**: Returns inventory quantity if status is `pending`
+- **Returns**: `{"message": "Warehouse order deleted successfully"}`
+
+---
+
+## Complete User Purchase Flow
+
+### Step-by-Step Example
+
+**1. User Login**
+```bash
+curl -X POST http://localhost:3001/api/v1/users/login \
+  -H "Content-Type: application/json" \
+  -d '{"user": {"email": "test17@test.com", "password": "test1234567"}}'
+```
+
+**2. Check Balance**
+```bash
+curl -X GET http://localhost:3001/api/v1/user_payment_methods/balance \
+  -H "Authorization: Bearer YOUR_USER_TOKEN"
+```
+
+**3. Deposit Funds**
+```bash
+curl -X POST http://localhost:3001/api/v1/user_payment_methods/deposit \
+  -H "Authorization: Bearer YOUR_USER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"amount": 1000}'
+```
+
+**4. Add Items to Cart**
+```bash
+curl -X POST http://localhost:3001/api/v1/shopping_cart_items \
+  -H "Authorization: Bearer YOUR_USER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"shopping_cart_item": {"product_id": 1, "qty": 2}}'
+```
+
+**5. View Cart**
+```bash
+curl -X GET http://localhost:3001/api/v1/shopping_cart_items \
+  -H "Authorization: Bearer YOUR_USER_TOKEN"
+```
+
+**6. Submit Order (Auto-Payment)**
+```bash
+curl -X POST http://localhost:3001/api/v1/user_cart_orders \
+  -H "Authorization: Bearer YOUR_USER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"user_cart_order": {"user_address_id": 2}}'
+```
+
+**7. Management Approves Order**
+```bash
+curl -X PATCH http://localhost:3001/api/v1/user_cart_orders/2/approve \
+  -H "Authorization: Bearer MANAGEMENT_TOKEN"
+```
+
+**8. Management Creates Warehouse Order**
+```bash
+curl -X POST http://localhost:3001/api/v1/warehouse_orders \
+  -H "Authorization: Bearer MANAGEMENT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"warehouse_order": {"company_site_id": 2, "inventory_id": 13, "user_id": 18, "user_cart_order_id": 2, "qty": 2, "product_status": "storage"}}'
+```
+
+**9. Warehouse Updates Status**
+```bash
+curl -X PATCH http://localhost:3001/api/v1/warehouse_orders/1 \
+  -H "Authorization: Bearer WAREHOUSE_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"warehouse_order": {"product_status": "progress"}}'
+```
+
+---
+
+## Test Credentials
+
+### Regular User
+```json
+{
+  "user": {
+    "email": "test17@test.com",
+    "password": "test1234567"
+  }
+}
+```
+
+### Management Admin
+```json
+{
+  "admin_user": {
+    "email": "admin@admin.com",
+    "password": "admin123456"
+  }
+}
+```
+
+### Warehouse Admin
+```json
+{
+  "admin_user": {
+    "email": "warehouse@admin.com",
+    "password": "warehouse123456"
+  }
+}
+```
