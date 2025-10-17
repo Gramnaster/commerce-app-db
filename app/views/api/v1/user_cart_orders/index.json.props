@@ -1,0 +1,26 @@
+json.status do
+  json.code 200
+  json.message "User cart orders fetched successfully"
+end
+
+json.data do
+  json.array! @user_cart_orders do |order|
+    json.id order.id
+    json.total_cost order.total_cost
+    json.is_paid order.is_paid
+    json.cart_status order.cart_status
+    json.user_address do
+      json.id order.user_address.id
+      json.address do
+        json.unit_no order.user_address.address.unit_no
+        json.street_no order.user_address.address.street_no
+        json.city order.user_address.address.city
+        json.region order.user_address.address.region
+        json.zipcode order.user_address.address.zipcode
+      end
+    end
+    json.items_count order.shopping_cart.shopping_cart_items.count
+    json.created_at order.created_at
+    json.updated_at order.updated_at
+  end
+end

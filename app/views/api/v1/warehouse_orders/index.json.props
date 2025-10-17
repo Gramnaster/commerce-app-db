@@ -1,0 +1,25 @@
+json.status do
+  json.code 200
+  json.message "Warehouse orders fetched successfully"
+end
+
+json.data do
+  json.array! @warehouse_orders do |order|
+    json.id order.id
+    json.qty order.qty
+    json.product_status order.product_status
+    json.company_site do
+      json.id order.company_site.id
+      json.title order.company_site.title
+      json.site_type order.company_site.site_type
+    end
+    json.inventory do
+      json.id order.inventory.id
+      json.sku order.inventory.sku
+      json.product_id order.inventory.product_id
+    end
+    json.user_cart_order_id order.user_cart_order_id
+    json.created_at order.created_at
+    json.updated_at order.updated_at
+  end
+end

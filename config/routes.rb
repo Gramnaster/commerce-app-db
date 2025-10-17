@@ -37,6 +37,24 @@ Rails.application.routes.draw do
       resources :promotions, only: [ :index, :show, :create, :update, :destroy ]
       resources :promotions_categories, only: [ :index, :show, :create, :destroy ]
       resources :inventories, only: [ :index, :show, :create, :update, :destroy ]
+
+      # Shopping cart items (Users only - manage their own cart)
+      resources :shopping_cart_items, only: [ :index, :show, :create, :update, :destroy ]
+
+      # User payment methods (Users only - manage their own balance)
+      get "user_payment_methods/balance", to: "user_payment_methods#balance"
+      post "user_payment_methods/deposit", to: "user_payment_methods#deposit"
+      post "user_payment_methods/withdraw", to: "user_payment_methods#withdraw"
+
+      # User cart orders (Users create, Management views/approves)
+      resources :user_cart_orders, only: [ :index, :show, :create, :update ] do
+        member do
+          patch :approve
+        end
+      end
+
+      # Warehouse orders (Management creates, Management & Warehouse update)
+      resources :warehouse_orders, only: [ :index, :show, :create, :update, :destroy ]
       # resources :stocks, only: [ :index, :show ]
       # resources :countries, only: [ :index, :show ]
       # resources :wallets, only: [ :index, :show ] do

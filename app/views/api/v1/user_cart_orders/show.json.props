@@ -1,0 +1,36 @@
+json.status do
+  json.code 200
+  json.message "User cart order fetched successfully"
+end
+
+json.data do
+  json.id @user_cart_order.id
+  json.total_cost @user_cart_order.total_cost
+  json.is_paid @user_cart_order.is_paid
+  json.cart_status @user_cart_order.cart_status
+
+  json.user_address do
+    json.id @user_cart_order.user_address.id
+    json.address do
+      json.unit_no @user_cart_order.user_address.address.unit_no
+      json.street_no @user_cart_order.user_address.address.street_no
+      json.city @user_cart_order.user_address.address.city
+      json.region @user_cart_order.user_address.address.region
+      json.zipcode @user_cart_order.user_address.address.zipcode
+    end
+  end
+
+  json.items do
+    json.array! @user_cart_order.shopping_cart.shopping_cart_items do |item|
+      json.product_id item.product.id
+      json.product_title item.product.title
+      json.qty item.qty
+      json.price item.product.price
+      json.subtotal (item.product.price.to_f * item.qty).round(2)
+    end
+  end
+
+  json.warehouse_orders_count @user_cart_order.warehouse_orders.count
+  json.created_at @user_cart_order.created_at
+  json.updated_at @user_cart_order.updated_at
+end

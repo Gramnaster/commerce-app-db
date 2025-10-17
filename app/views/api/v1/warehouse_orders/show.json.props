@@ -1,0 +1,32 @@
+json.status do
+  json.code 200
+  json.message "Warehouse order fetched successfully"
+end
+
+json.data do
+  json.id @warehouse_order.id
+  json.qty @warehouse_order.qty
+  json.product_status @warehouse_order.product_status
+
+  json.company_site do
+    json.id @warehouse_order.company_site.id
+    json.title @warehouse_order.company_site.title
+    json.site_type @warehouse_order.company_site.site_type
+  end
+
+  json.inventory do
+    json.id @warehouse_order.inventory.id
+    json.sku @warehouse_order.inventory.sku
+    json.qty_in_stock @warehouse_order.inventory.qty_in_stock
+    json.product_id @warehouse_order.inventory.product_id
+  end
+
+  json.user do
+    json.id @warehouse_order.user.id
+    json.email @warehouse_order.user.email
+  end
+
+  json.user_cart_order_id @warehouse_order.user_cart_order_id
+  json.created_at @warehouse_order.created_at
+  json.updated_at @warehouse_order.updated_at
+end
