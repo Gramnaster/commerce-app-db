@@ -59,11 +59,25 @@ class Api::V1::UserCartOrdersController < ApplicationController
 
       if @user_cart_order.save
         # Deduct the amount from user's balance
-        withdraw_result = payment_method.withdraw(total_cost)
+        withdraw_result = payment_method.withdraw(
+          total_cost,
+          description: "Payment for Order ##{@user_cart_order.id}"
+        )
 
         unless withdraw_result[:success]
           raise ActiveRecord::Rollback
         end
+
+        # Create receipt for the purchase
+        Receipt.create!(
+          user: current_user,
+          user_cart_order: @user_cart_order,
+          transaction_type: "purchase",
+          amount: total_cost,
+          balance_before: payment_method.balance + total_cost, # Balance before withdrawal
+          balance_after: payment_method.balance,
+          description: "Purchase - Order ##{@user_cart_order.id}"
+        )
 
         render :show, status: :created
       else
