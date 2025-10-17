@@ -10,13 +10,14 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_16_151122) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_17_155254) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   # Custom types defined in this database.
   # Note that some types may not work with other database engines. Be careful if changing database.
   create_enum "admin_role", ["management", "warehouse"]
+  create_enum "cart_status", ["rejected", "pending", "approved"]
   create_enum "phone_type", ["mobile", "home", "work"]
   create_enum "product_status", ["storage", "progress", "delivered"]
   create_enum "site_type", ["management", "warehouse"]
@@ -209,6 +210,18 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_16_151122) do
     t.index ["user_id"], name: "index_user_addresses_on_user_id"
   end
 
+  create_table "user_cart_orders", force: :cascade do |t|
+    t.bigint "shopping_cart_item_id", null: false
+    t.bigint "user_address_id", null: false
+    t.boolean "is_paid", default: false, null: false
+    t.enum "cart_status", default: "pending", null: false, enum_type: "cart_status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cart_status"], name: "index_user_cart_orders_on_cart_status"
+    t.index ["shopping_cart_item_id"], name: "index_user_cart_orders_on_shopping_cart_item_id"
+    t.index ["user_address_id"], name: "index_user_cart_orders_on_user_address_id"
+  end
+
   create_table "user_details", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "first_name", null: false
@@ -257,8 +270,10 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_16_151122) do
     t.enum "product_status", null: false, enum_type: "product_status"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "user_cart_order_id", null: false
     t.index ["company_site_id"], name: "index_warehouse_orders_on_company_site_id"
     t.index ["inventory_id"], name: "index_warehouse_orders_on_inventory_id"
+    t.index ["user_cart_order_id"], name: "index_warehouse_orders_on_user_cart_order_id"
     t.index ["user_id"], name: "index_warehouse_orders_on_user_id"
   end
 
@@ -284,9 +299,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_16_151122) do
   add_foreign_key "shopping_carts", "users"
   add_foreign_key "user_addresses", "addresses"
   add_foreign_key "user_addresses", "users"
+  add_foreign_key "user_cart_orders", "shopping_cart_items"
+  add_foreign_key "user_cart_orders", "user_addresses"
   add_foreign_key "user_details", "users"
   add_foreign_key "user_payment_methods", "users"
   add_foreign_key "warehouse_orders", "company_sites"
   add_foreign_key "warehouse_orders", "inventories"
+  add_foreign_key "warehouse_orders", "user_cart_orders"
   add_foreign_key "warehouse_orders", "users"
 end
