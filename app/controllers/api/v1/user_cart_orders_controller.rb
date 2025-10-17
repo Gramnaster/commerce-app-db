@@ -1,13 +1,13 @@
 class Api::V1::UserCartOrdersController < ApplicationController
-  before_action :set_user_cart_order, only: [:show, :update, :approve]
-  
+  before_action :set_user_cart_order, only: [ :show, :update, :approve ]
+
   respond_to :json
 
   # GET /api/v1/user_cart_orders (Management only - view all orders)
   def index
     authenticate_admin_user!
     authorize_management!
-    
+
     @user_cart_orders = UserCartOrder.includes(:shopping_cart, :user_address, :warehouse_orders).all
   end
 
@@ -20,9 +20,9 @@ class Api::V1::UserCartOrdersController < ApplicationController
   # POST /api/v1/user_cart_orders (Users only - submit their cart as an order)
   def create
     authenticate_user!
-    
+
     shopping_cart = current_user.shopping_cart
-    
+
     unless shopping_cart && shopping_cart.shopping_cart_items.any?
       return render json: { error: "Cart is empty" }, status: :unprocessable_entity
     end
@@ -79,7 +79,7 @@ class Api::V1::UserCartOrdersController < ApplicationController
     @user_cart_order = UserCartOrder.includes(
       shopping_cart: { shopping_cart_items: :product },
       user_address: { address: :country },
-      warehouse_orders: [:inventory, :company_site]
+      warehouse_orders: [ :inventory, :company_site ]
     ).find(params[:id])
   rescue ActiveRecord::RecordNotFound
     render json: { error: "Order not found" }, status: :not_found

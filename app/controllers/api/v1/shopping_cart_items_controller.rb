@@ -1,7 +1,7 @@
 class Api::V1::ShoppingCartItemsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_shopping_cart
-  before_action :set_shopping_cart_item, only: [:show, :update, :destroy]
+  before_action :set_shopping_cart_item, only: [ :show, :update, :destroy ]
 
   respond_to :json
 
@@ -47,7 +47,7 @@ class Api::V1::ShoppingCartItemsController < ApplicationController
 
   def set_shopping_cart
     @shopping_cart = current_user.shopping_cart
-    
+
     unless @shopping_cart
       render json: { error: "Shopping cart not found" }, status: :not_found
     end

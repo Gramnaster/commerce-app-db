@@ -8,6 +8,6 @@ class UserCartOrder < ApplicationRecord
   validates :is_paid, inclusion: { in: [true, false] }
   validates :cart_status, presence: true
 
-  # Enum for cart_status
-  enum cart_status: { pending: "pending", approved: "approved", rejected: "rejected" }
+  # Enum for cart_status - use hash syntax for Rails 8.0
+  enum :cart_status, { pending: "pending", approved: "approved", rejected: "rejected" }
 end

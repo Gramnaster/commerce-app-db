@@ -1,6 +1,6 @@
 class Api::V1::WarehouseOrdersController < ApplicationController
   before_action :authenticate_admin_user!
-  before_action :set_warehouse_order, only: [:show, :update, :destroy]
+  before_action :set_warehouse_order, only: [ :show, :update, :destroy ]
 
   respond_to :json
 

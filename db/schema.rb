@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_17_155254) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_17_160733) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -211,14 +211,15 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_17_155254) do
   end
 
   create_table "user_cart_orders", force: :cascade do |t|
-    t.bigint "shopping_cart_item_id", null: false
     t.bigint "user_address_id", null: false
     t.boolean "is_paid", default: false, null: false
     t.enum "cart_status", default: "pending", null: false, enum_type: "cart_status"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "shopping_cart_id", null: false
+    t.decimal "total_cost", precision: 10, scale: 2, default: "0.0", null: false
     t.index ["cart_status"], name: "index_user_cart_orders_on_cart_status"
-    t.index ["shopping_cart_item_id"], name: "index_user_cart_orders_on_shopping_cart_item_id"
+    t.index ["shopping_cart_id"], name: "index_user_cart_orders_on_shopping_cart_id"
     t.index ["user_address_id"], name: "index_user_cart_orders_on_user_address_id"
   end
 
@@ -299,7 +300,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_17_155254) do
   add_foreign_key "shopping_carts", "users"
   add_foreign_key "user_addresses", "addresses"
   add_foreign_key "user_addresses", "users"
-  add_foreign_key "user_cart_orders", "shopping_cart_items"
+  add_foreign_key "user_cart_orders", "shopping_carts"
   add_foreign_key "user_cart_orders", "user_addresses"
   add_foreign_key "user_details", "users"
   add_foreign_key "user_payment_methods", "users"

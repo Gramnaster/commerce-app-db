@@ -37,17 +37,17 @@ Rails.application.routes.draw do
       resources :promotions, only: [ :index, :show, :create, :update, :destroy ]
       resources :promotions_categories, only: [ :index, :show, :create, :destroy ]
       resources :inventories, only: [ :index, :show, :create, :update, :destroy ]
-      
+
       # Shopping cart items (Users only - manage their own cart)
       resources :shopping_cart_items, only: [ :index, :show, :create, :update, :destroy ]
-      
+
       # User cart orders (Users create, Management views/approves)
       resources :user_cart_orders, only: [ :index, :show, :create, :update ] do
         member do
           patch :approve
         end
       end
-      
+
       # Warehouse orders (Management creates, Management & Warehouse update)
       resources :warehouse_orders, only: [ :index, :show, :create, :update, :destroy ]
       # resources :stocks, only: [ :index, :show ]
