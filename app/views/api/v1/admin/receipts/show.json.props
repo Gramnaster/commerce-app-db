@@ -11,7 +11,7 @@ json.updated_at @receipt.updated_at
 json.user do
   json.id @receipt.user.id
   json.email @receipt.user.email
-
+  
   if @receipt.user.user_detail.present?
     json.first_name @receipt.user.user_detail.first_name
     json.last_name @receipt.user.user_detail.last_name
@@ -27,12 +27,12 @@ if @receipt.user_cart_order.present?
     json.is_paid @receipt.user_cart_order.is_paid
     json.total_cost @receipt.user_cart_order.total_cost.to_f
     json.created_at @receipt.user_cart_order.created_at
-
+    
     # Delivery address
     if @receipt.user_cart_order.user_address.present?
       json.delivery_address do
         json.id @receipt.user_cart_order.user_address.id
-
+        
         if @receipt.user_cart_order.user_address.address.present?
           address = @receipt.user_cart_order.user_address.address
           json.unit_number address.unit_number
@@ -42,7 +42,7 @@ if @receipt.user_cart_order.present?
           json.city address.city
           json.region address.region
           json.postal_code address.postal_code
-
+          
           if address.country.present?
             json.country do
               json.id address.country.id
@@ -52,13 +52,13 @@ if @receipt.user_cart_order.present?
         end
       end
     end
-
+    
     # Order items
     json.items @receipt.user_cart_order.shopping_cart.shopping_cart_items do |item|
       json.id item.id
       json.qty item.qty
       json.subtotal (item.product.price.to_f * item.qty).round(2)
-
+      
       json.product do
         json.id item.product.id
         json.product_name item.product.product_name
@@ -67,7 +67,7 @@ if @receipt.user_cart_order.present?
         json.sku item.product.sku
       end
     end
-
+    
     json.items_count @receipt.user_cart_order.shopping_cart.shopping_cart_items.count
     json.total_quantity @receipt.user_cart_order.shopping_cart.shopping_cart_items.sum(:qty)
   end
