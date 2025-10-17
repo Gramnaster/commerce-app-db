@@ -15,15 +15,31 @@ class Api::V1::InventoriesController < ApplicationController
   def show
   end
 
-  def create
-    @inventory = Inventory.new(inventory_params)
+def create
+  product_id = inventory_params[:product_id]
+  company_site_id = inventory_params[:company_site_id]
+  qty = inventory_params[:qty_in_stock].to_i
 
+  # Checks if the inventory already exists as a product in a company site
+  existing_inventory = Inventory.find_by(product_id: product_id, company_site_id: company_site_id)
+
+  if existing_inventory
+    existing_inventory.qty_in_stock += qty
+    if existing_inventory.save
+      @inventory = existing_inventory
+      render :show, status: :ok
+    else
+      render json: { errors: existing_inventory.errors.full_messages }, status: :unprocessable_content
+    end
+  else
+    @inventory = Inventory.new(inventory_params)
     if @inventory.save
       render :show, status: :created
     else
-      render json: { errors: @inventory.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @inventory.errors.full_messages }, status: :unprocessable_content
     end
   end
+end
 
   def update
     if @inventory.update(inventory_params)
