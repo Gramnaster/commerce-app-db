@@ -64,8 +64,9 @@ if @receipt.user_cart_order.present?
         json.product do
           json.id item.product.id
           json.title item.product.title
-        json.description item.product.description
-        json.price item.product.price.to_f
+          json.description item.product.description
+          json.price item.product.price.to_f
+        end
       end
     end
 
