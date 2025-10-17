@@ -1,4 +1,25 @@
+
 # README
+
+## Table of Contents
+
+- [API Documentation](#api-documentation)
+  - [Product Categories](#product-categories-management-admin-only)
+  - [Producers](#producers-management-admin-only)
+  - [Promotions](#promotions-management-admin-only)
+  - [Promotions Categories](#promotions-categories-join-table---management-admin-only)
+  - [Products](#products-public-read-management-crud)
+  - [User Payment Methods & Shopping Cart System](#user-payment-methods--shopping-cart-system)
+    - [User Payment Methods](#user-payment-methods-user-only)
+    - [Shopping Cart Items](#shopping-cart-items-user-only)
+    - [User Cart Orders](#user-cart-orders-user-only)
+    - [Order Approval & Fulfillment (Admin/Warehouse)](#order-approval--fulfillment-management-admin--warehouse)
+  - [Transaction History (Receipts)](#transaction-history-receipts)
+    - [User Receipts Endpoints](#user-receipts-endpoints)
+    - [Admin Receipts Management](#admin-receipts-management-management-admin-only)
+  - [Complete User Purchase Flow](#complete-user-purchase-flow)
+  - [Test Credentials](#test-credentials)
+
 
 This README would normally document whatever steps are necessary to get the
 application up and running.
