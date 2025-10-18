@@ -3,5 +3,5 @@ class Promotion < ApplicationRecord
   has_many :promotions_categories, foreign_key: :promotions_id, dependent: :destroy
   has_many :product_categories, through: :promotions_categories
 
-  validates :discount_amount, presence: true, numericality: { greater_than: 0 }
+  validates :discount_amount, presence: true, numericality: { greater_than: 0, less_than_or_equal_to: 100 }
 end
