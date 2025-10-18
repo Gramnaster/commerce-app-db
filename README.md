@@ -7,6 +7,7 @@
   - [Product Categories](#product-categories-management-admin-only)
   - [Producers](#producers-management-admin-only)
   - [Promotions](#promotions-management-admin-only)
+    - [How Product Promotions Are Displayed](#how-product-promotions-are-displayed)
   - [Promotions Categories](#promotions-categories-join-table---management-admin-only)
   - [Products](#products-public-read-management-crud)
   - [User Payment Methods & Shopping Cart System](#user-payment-methods--shopping-cart-system)
@@ -176,6 +177,18 @@ Delete a producer.
 
 ### Promotions (Management Admin Only)
 
+**Overview:**
+Promotions use **percentage-based discounts** (1-100%). When applied to products or categories, the discount percentage is calculated from the original price.
+
+**How it works:**
+- Direct product promotions take precedence over category promotions
+- All products in a promoted category automatically receive the discount
+- Final price = Original price × (1 - discount_percentage / 100)
+
+**Example:**
+- 60% discount on $100 product = $40 final price (saves $60)
+- 30% discount on $50 product = $35 final price (saves $15)
+
 #### GET /api/v1/promotions
 List all promotions.
 - **Auth Required**: Management Admin JWT token
@@ -193,11 +206,37 @@ Create a new promotion.
 ```json
 {
   "promotion": {
-    "discount_amount": 15.50
+    "discount_amount": 60
   }
 }
 ```
-- **Note**: `discount_amount` must be greater than 0
+- **Note**: `discount_amount` must be between 1 and 100 (percentage)
+- **Example**: `60` = 60% discount
+
+**Example Request:**
+```bash
+curl -X POST http://localhost:3001/api/v1/promotions \
+  -H "Authorization: Bearer ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"promotion":{"discount_amount":60}}'
+```
+
+**Example Response:**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Promotion fetched successfully"
+  },
+  "data": {
+    "id": 7,
+    "discount_amount": "60.0",
+    "products_count": 0,
+    "product_categories": [],
+    "products": []
+  }
+}
+```
 
 #### PATCH /api/v1/promotions/:id
 Update a promotion.
@@ -206,10 +245,11 @@ Update a promotion.
 ```json
 {
   "promotion": {
-    "discount_amount": 20.00
+    "discount_amount": 30
   }
 }
 ```
+- **Note**: `discount_amount` must be between 1 and 100 (percentage)
 
 #### DELETE /api/v1/promotions/:id
 Delete a promotion.
@@ -219,9 +259,86 @@ Delete a promotion.
 
 ---
 
+### How Product Promotions Are Displayed
+
+When a product has a promotion (either direct or via category), the API automatically calculates and returns discount information:
+
+**Product Response Fields:**
+- `price` - Original price
+- `final_price` - Price after discount applied
+- `discount_percentage` - The percentage discount (0-100)
+- `discount_amount_dollars` - Dollar amount saved
+- `promotion` - Promotion object with details
+
+**Example Product with 60% Promotion:**
+```json
+{
+  "data": {
+    "id": 1,
+    "title": "Fjallraven Backpack",
+    "price": "109.95",
+    "final_price": "43.98",
+    "discount_percentage": "60.0",
+    "discount_amount_dollars": "65.97",
+    "promotion": {
+      "id": 7,
+      "discount_amount": "60.0"
+    }
+  }
+}
+```
+
+**Example Product with Category Promotion (30% off Jewelery):**
+```json
+{
+  "data": {
+    "id": 5,
+    "title": "Gold Plated Necklace",
+    "price": "695.0",
+    "final_price": "486.5",
+    "discount_percentage": "30.0",
+    "discount_amount_dollars": "208.5",
+    "product_category": {
+      "id": 3,
+      "title": "jewelery"
+    }
+  }
+}
+```
+
+**Shopping Cart with Promotions:**
+Shopping cart items automatically display discounted prices. The `subtotal` is calculated using `final_price` not original `price`.
+
+```json
+{
+  "data": [
+    {
+      "id": 101,
+      "product_id": 1,
+      "qty": 2,
+      "subtotal": "87.96",
+      "product": {
+        "title": "Fjallraven Backpack",
+        "price": "109.95",
+        "final_price": "43.98",
+        "discount_percentage": "60.0",
+        "discount_amount_dollars": "65.97"
+      }
+    }
+  ]
+}
+```
+
+**Order Processing:**
+When a user creates an order, the `total_cost` is calculated using `final_price` (with promotions applied), not the original price.
+
+---
+
 ### Promotions Categories (Join Table - Management Admin Only)
 
-Manage associations between promotions and product categories.
+Manage associations between promotions and product categories. When a promotion is linked to a category, **all products** in that category automatically receive the discount.
+
+**Use Case:** Apply a site-wide "30% off all Jewelery" promotion without updating individual products.
 
 #### GET /api/v1/promotions_categories
 List all promotion-category associations.

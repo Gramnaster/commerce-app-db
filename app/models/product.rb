@@ -17,7 +17,7 @@ class Product < ApplicationRecord
     discount_percentage = applicable_discount_percentage
     return price if discount_percentage.zero?
 
-    # Calculate discounted price: price * (1 - discount_percentage / 100)
+    # Calculate discounted price
     discounted = price * (1 - discount_percentage / 100.0)
     discounted < 0 ? 0 : discounted.round(2)
   end
