@@ -12,7 +12,8 @@ json.data do
       json.title item.product.title
       json.price item.product.price
       json.final_price item.product.final_price
-      json.discount_amount item.product.applicable_discount
+      json.discount_percentage item.product.applicable_discount_percentage
+      json.discount_amount_dollars item.product.discount_amount_dollars
       json.product_image_url item.product.product_image_url
     end
     json.subtotal (item.product.final_price.to_f * item.qty).round(2)

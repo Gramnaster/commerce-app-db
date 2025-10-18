@@ -11,7 +11,8 @@ json.data do
     json.title @shopping_cart_item.product.title
     json.price @shopping_cart_item.product.price
     json.final_price @shopping_cart_item.product.final_price
-    json.discount_amount @shopping_cart_item.product.applicable_discount
+    json.discount_percentage @shopping_cart_item.product.applicable_discount_percentage
+    json.discount_amount_dollars @shopping_cart_item.product.discount_amount_dollars
     json.description @shopping_cart_item.product.description
     json.product_image_url @shopping_cart_item.product.product_image_url
   end
