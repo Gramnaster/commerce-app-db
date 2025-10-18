@@ -10,10 +10,12 @@ json.data do
     json.id @shopping_cart_item.product.id
     json.title @shopping_cart_item.product.title
     json.price @shopping_cart_item.product.price
+    json.final_price @shopping_cart_item.product.final_price
+    json.discount_amount @shopping_cart_item.product.applicable_discount
     json.description @shopping_cart_item.product.description
     json.product_image_url @shopping_cart_item.product.product_image_url
   end
-  json.subtotal (@shopping_cart_item.product.price.to_f * @shopping_cart_item.qty).round(2)
+  json.subtotal (@shopping_cart_item.product.final_price.to_f * @shopping_cart_item.qty).round(2)
   json.created_at @shopping_cart_item.created_at
   json.updated_at @shopping_cart_item.updated_at
 end
