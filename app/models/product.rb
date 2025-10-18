@@ -14,15 +14,16 @@ class Product < ApplicationRecord
 
   # Calculate final price with promotion discount applied
   def final_price
-    discount = applicable_discount
-    return price if discount.zero?
+    discount_percentage = applicable_discount_percentage
+    return price if discount_percentage.zero?
 
-    discounted = price - discount
-    discounted < 0 ? 0 : discounted
+    # Calculate discounted price: price * (1 - discount_percentage / 100)
+    discounted = price * (1 - discount_percentage / 100.0)
+    discounted < 0 ? 0 : discounted.round(2)
   end
 
-  # Get the applicable discount amount (from direct promotion or category promotion)
-  def applicable_discount
+  # Get the applicable discount percentage (from direct promotion or category promotion)
+  def applicable_discount_percentage
     # Direct product promotion takes precedence
     return promotion.discount_amount if promotion.present?
 
@@ -31,6 +32,11 @@ class Product < ApplicationRecord
     return category_promotion.discount_amount if category_promotion.present?
 
     0
+  end
+
+  # Get the actual discount amount in dollars
+  def discount_amount_dollars
+    price - final_price
   end
 
   # Check if product has any promotion
