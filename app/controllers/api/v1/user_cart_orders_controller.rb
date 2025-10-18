@@ -27,8 +27,8 @@ class Api::V1::UserCartOrdersController < ApplicationController
       return render json: { error: "Cart is empty" }, status: :unprocessable_entity
     end
 
-    # Calculate total cost
-    total_cost = shopping_cart.shopping_cart_items.sum { |item| item.product.price.to_f * item.qty }
+    # Calculate total cost with promotions applied
+    total_cost = shopping_cart.shopping_cart_items.sum { |item| item.product.final_price.to_f * item.qty }
 
     # Get user's payment method
     payment_method = current_user.user_payment_methods.first
