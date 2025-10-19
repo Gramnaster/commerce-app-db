@@ -20,7 +20,7 @@ class Api::V1::ProductsController < ApplicationController
     @product = Product.new(product_params)
 
     if @product.save
-      render :show, status: :created
+      render :create, status: :created
     else
       render json: { errors: @product.errors.full_messages }, status: :unprocessable_entity
     end
@@ -28,7 +28,7 @@ class Api::V1::ProductsController < ApplicationController
 
   def update
     if @product.update(product_params)
-      render :show
+      render :update
     else
       render json: { errors: @product.errors.full_messages }, status: :unprocessable_entity
     end
