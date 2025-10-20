@@ -1,7 +1,7 @@
 class Api::V1::ProducersController < ApplicationController
-  before_action :authenticate_admin_user!
-  before_action :authorize_management!
-  before_action :set_producer, only: [ :show, :update, :destroy ]
+  before_action :authenticate_admin_user!, except: [ :index, :show ]
+  before_action :authorize_management!, except: [ :index, :show ]
+  before_action :set_producer, only: [ :update, :destroy ]
 
   respond_to :json
 
@@ -24,7 +24,7 @@ class Api::V1::ProducersController < ApplicationController
     if @producer.save
       render :show, status: :created
     else
-      render json: { errors: @producer.errors.full_messages }, status: :unprocessable_entity
+      render :error, status: :not_found, locals: { error_message: "Custom error message" }
     end
   end
 
@@ -32,7 +32,7 @@ class Api::V1::ProducersController < ApplicationController
     if @producer.update(producer_params)
       render :show
     else
-      render json: { errors: @producer.errors.full_messages }, status: :unprocessable_entity
+      render :error, status: :not_found, locals: { error_message: "Custom error message" }
     end
   end
 
@@ -40,7 +40,7 @@ class Api::V1::ProducersController < ApplicationController
     if @producer.destroy
       render json: { message: "Producer deleted successfully" }, status: :ok
     else
-      render json: { errors: @producer.errors.full_messages }, status: :unprocessable_entity
+      render :error, status: :not_found, locals: { error_message: "Custom error message" }
     end
   end
 

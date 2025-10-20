@@ -1,0 +1,4 @@
+json.status do
+  json.code 404
+  json.message @error_message || "Producer not found"
+end
