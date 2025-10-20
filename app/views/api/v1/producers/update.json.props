@@ -1,0 +1,26 @@
+json.status do
+  json.code 201
+  json.message "Producer updated successfully"
+end
+
+json.data do
+  json.id @producer.id
+  json.title @producer.title
+  json.products_count @producer.products.count
+
+  json.address do
+    json.id @producer.address.id
+    json.unit_no @producer.address.unit_no
+    json.street_no @producer.address.street_no
+    json.address_line1 @producer.address.address_line1
+    json.address_line2 @producer.address.address_line2
+    json.city @producer.address.city
+    json.region @producer.address.region
+    json.zipcode @producer.address.zipcode
+    json.country_id @producer.address.country_id
+    json.country @producer.address.country.name if @producer.address.country
+  end
+
+  json.created_at @producer.created_at
+  json.updated_at @producer.updated_at
+end
