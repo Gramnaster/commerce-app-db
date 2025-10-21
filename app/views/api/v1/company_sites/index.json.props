@@ -1,0 +1,15 @@
+json.status do
+  json.code 200
+  json.message "Fetched all company sites successfully"
+end
+
+json.data do
+  json.array! @company_sites do |company_site|
+    json.id company_site.id
+    json.title company_site.title
+    json.site_type company_site.site_type
+    json.address_id company_site.address_id
+    json.created_at company_site.created_at
+    json.updated_at company_site.updated_at
+  end
+end
