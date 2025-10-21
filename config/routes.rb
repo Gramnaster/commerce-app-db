@@ -37,6 +37,7 @@ Rails.application.routes.draw do
       resources :promotions, only: [ :index, :show, :create, :update, :destroy ]
       resources :promotions_categories, only: [ :index, :show, :create, :destroy ]
       resources :inventories, only: [ :index, :show, :create, :update, :destroy ]
+      resources :company_sites, only: [ :index ]
 
       # Shopping cart items (Users only - manage their own cart)
       resources :shopping_cart_items, only: [ :index, :show, :create, :update, :destroy ]
