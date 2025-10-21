@@ -7,6 +7,7 @@ json.data do
   # Basic identity
   json.id resource.id
   json.email resource.email
+  json.admin_role resource.admin_role
   # JWT token identifier (if using JWT)
-  # json.jti resource.jti
+  json.jti resource.jti
 end
