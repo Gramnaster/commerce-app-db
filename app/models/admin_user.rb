@@ -22,7 +22,7 @@ class AdminUser < ApplicationRecord
   enum :admin_role, { management: "management", warehouse: "warehouse" }
 
   # Nested attributes
-  accepts_nested_attributes_for :admin_detail, allow_destroy: true, update_only: true
+  accepts_nested_attributes_for :admin_detail, allow_destroy: true
 
   accepts_nested_attributes_for :admin_phones, allow_destroy: true, reject_if: :all_blank
 
@@ -30,16 +30,6 @@ class AdminUser < ApplicationRecord
 
   accepts_nested_attributes_for :admin_users_company_sites, allow_destroy: true, reject_if: :all_blank
 
-  # Skip auto-building admin_detail during seeding
-  attr_accessor :skip_detail_build
-
-  # Build admin_detail before validation if it doesn't exist
-  # This allows nested attributes to work properly
-  before_validation :build_default_admin_detail, on: :create, unless: :skip_detail_build
-
-  private
-
-  def build_default_admin_detail
-    build_admin_detail if admin_detail.nil?
-  end
+  # Validation: admin_detail must be present
+  validates :admin_detail, presence: true
 end

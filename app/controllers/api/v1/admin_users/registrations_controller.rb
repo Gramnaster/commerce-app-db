@@ -35,7 +35,7 @@ class Api::V1::AdminUsers::RegistrationsController < Devise::RegistrationsContro
 
   def sign_up_params
     params.require(:admin_user).permit(
-      :email, :password, :password_confirmation,
+      :email, :password, :password_confirmation, :admin_role,
       admin_detail_attributes: [ :first_name, :middle_name, :last_name, :dob, :_destroy ],
       admin_phones_attributes: [ :id, :phone_no, :phone_type, :_destroy ],
       admin_addresses_attributes: [

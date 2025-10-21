@@ -4,6 +4,9 @@
 ## Table of Contents
 
 - [API Documentation](#api-documentation)
+  - [Admin Users](#admin-users-management--warehouse)
+    - [Admin Authentication](#admin-authentication)
+    - [Admin User Management](#admin-user-management)
   - [Product Categories](#product-categories-management-admin-only)
   - [Producers](#producers-management-admin-only)
   - [Promotions](#promotions-management-admin-only)
@@ -47,6 +50,322 @@ Things you may want to cover:
 # commerce-app-db
 
 ## API Documentation
+
+### Admin Users (Management & Warehouse)
+
+The system has two types of admin users:
+- **Management**: Full access - can view/manage all admin users, products, orders, and system resources
+- **Warehouse**: Limited access - can view/update warehouse orders and their own profile only
+
+Admin users require JWT authentication with `admin_user` scope. All admin endpoints use the `Authorization: Bearer <token>` header.
+
+---
+
+### Admin Authentication
+
+#### POST /api/v1/admin_users/login
+Admin user login (Management or Warehouse).
+- **Auth Required**: None
+- **Body**:
+```json
+{
+  "admin_user": {
+    "email": "admin@admin.com",
+    "password": "admin123456"
+  }
+}
+```
+
+**Example Response:**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Logged in successfully.",
+    "data": {
+      "admin_user": {
+        "id": 1,
+        "email": "admin@admin.com",
+        "admin_role": "management"
+      }
+    }
+  }
+}
+```
+- **Note**: JWT token is returned in the `Authorization` response header as `Bearer <token>`
+
+#### DELETE /api/v1/admin_users/logout
+Admin user logout.
+- **Auth Required**: Admin JWT token
+- **Returns**: `{"message": "Logged out successfully"}`
+
+#### POST /api/v1/admin_users/signup
+Create a new admin user account (self-registration).
+- **Auth Required**: None
+- **Body**:
+```json
+{
+  "admin_user": {
+    "email": "newadmin@company.com",
+    "password": "password123",
+    "password_confirmation": "password123",
+    "admin_role": "warehouse",
+    "admin_detail_attributes": {
+      "first_name": "John",
+      "middle_name": "Paul",
+      "last_name": "Doe",
+      "dob": "1990-05-15"
+    }
+  }
+}
+```
+- **Admin Roles**: `management` or `warehouse`
+- **Required Fields**: `email`, `password`, `password_confirmation`, `admin_role`, and `admin_detail_attributes` (with `first_name`, `last_name`, and `dob`)
+- **Note**: Account requires email confirmation before login
+
+**Example Response:**
+```json
+{
+  "status": {
+    "code": 201,
+    "message": "Signed up successfully."
+  },
+  "data": {
+    "id": 6,
+    "email": "newadmin@company.com",
+    "admin_role": "warehouse"
+  }
+}
+```
+
+---
+
+### Admin User Management
+
+#### GET /api/v1/admin_users
+List all admin users (Management Only).
+- **Auth Required**: Management Admin JWT token
+- **Returns**: Array of all admin users with details, phones, addresses, and company sites
+
+**Example Response:**
+```json
+{
+  "admin_users": {
+    "1": {
+      "id": 1,
+      "email": "admin@admin.com",
+      "admin_role": "management",
+      "confirmed_at": "2025-01-16T10:00:00.000Z",
+      "created_at": "2025-01-16T10:00:00.000Z",
+      "updated_at": "2025-01-16T10:00:00.000Z",
+      "admin_detail": {
+        "first_name": "Admin",
+        "middle_name": null,
+        "last_name": "User",
+        "dob": "1990-01-01"
+      },
+      "admin_phones": [
+        {
+          "id": 1,
+          "phone_no": "+1234567890",
+          "phone_type": "mobile"
+        }
+      ],
+      "admin_addresses": [
+        {
+          "id": 1,
+          "is_default": true,
+          "address": {
+            "id": 1,
+            "unit_no": "Suite 100",
+            "street_no": "123",
+            "address_line1": "Main Street",
+            "address_line2": null,
+            "city": "New York",
+            "region": "NY",
+            "zipcode": "10001",
+            "country_id": 1
+          }
+        }
+      ],
+      "company_sites": [
+        {
+          "id": 1,
+          "title": "JPB Headquarters",
+          "site_type": "headquarters"
+        }
+      ]
+    }
+  }
+}
+```
+
+#### GET /api/v1/admin_users/:id
+Get a specific admin user.
+- **Auth Required**: Admin JWT token
+- **Authorization**:
+  - **Management**: Can view any admin user
+  - **Warehouse**: Can only view their own profile
+- **Returns**: Full admin user details including personal info, phones, addresses, and company sites
+
+**Example Response:**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Admin user was retrieved successfully."
+  },
+  "data": {
+    "id": 1,
+    "email": "admin@admin.com",
+    "admin_role": "management",
+    "created_at": "2025-01-16T10:00:00.000Z",
+    "updated_at": "2025-01-16T10:00:00.000Z",
+    "admin_detail": {
+      "id": 1,
+      "first_name": "Admin",
+      "middle_name": null,
+      "last_name": "User",
+      "dob": "1990-01-01"
+    },
+    "admin_phones": [
+      {
+        "id": 1,
+        "phone_no": "+1234567890",
+        "phone_type": "mobile"
+      }
+    ],
+    "admin_addresses": [
+      {
+        "id": 1,
+        "is_default": true,
+        "address": {
+          "id": 1,
+          "unit_no": "Suite 100",
+          "street_no": "123",
+          "address_line1": "Main Street",
+          "address_line2": null,
+          "city": "New York",
+          "region": "NY",
+          "zipcode": "10001",
+          "country_id": 1
+        }
+      }
+    ],
+    "company_sites": [
+      {
+        "id": 1,
+        "title": "JPB Headquarters",
+        "site_type": "headquarters",
+        "address": {
+          "city": "New York",
+          "region": "NY"
+        }
+      }
+    ]
+  }
+}
+```
+
+#### PATCH /api/v1/admin_users/:id
+Update an admin user.
+- **Auth Required**: Admin JWT token
+- **Authorization**:
+  - **Management**: Can update any admin user
+  - **Warehouse**: Can only update their own profile
+- **Body** (update personal details):
+```json
+{
+  "admin_user": {
+    "admin_detail_attributes": {
+      "id": 1,
+      "first_name": "John",
+      "middle_name": "Paul",
+      "last_name": "Doe",
+      "dob": "1985-05-15"
+    }
+  }
+}
+```
+
+**Body** (add/update phone):
+```json
+{
+  "admin_user": {
+    "admin_phones_attributes": [
+      {
+        "id": 1,
+        "phone_no": "+1987654321",
+        "phone_type": "work"
+      }
+    ]
+  }
+}
+```
+
+**Body** (add/update address):
+```json
+{
+  "admin_user": {
+    "admin_addresses_attributes": [
+      {
+        "is_default": true,
+        "address_attributes": {
+          "unit_no": "Apt 5B",
+          "street_no": "456",
+          "address_line1": "Oak Avenue",
+          "address_line2": null,
+          "city": "Los Angeles",
+          "region": "CA",
+          "zipcode": "90001",
+          "country_id": 1
+        }
+      }
+    ]
+  }
+}
+```
+
+**Body** (delete phone - set `_destroy: true`):
+```json
+{
+  "admin_user": {
+    "admin_phones_attributes": [
+      {
+        "id": 1,
+        "_destroy": true
+      }
+    ]
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Admin user updated successfully"
+  },
+  "data": {
+    "id": 1,
+    "email": "admin@admin.com",
+    "admin_role": "management",
+    "admin_detail": {
+      "first_name": "John",
+      "last_name": "Doe"
+    }
+  }
+}
+```
+
+#### DELETE /api/v1/admin_users/:id
+Soft delete an admin user (disable account).
+- **Auth Required**: Management Admin JWT token
+- **Returns**: `{"message": "Admin user disabled successfully"}`
+- **Note**: This performs a soft delete (sets `deleted_at` timestamp). The admin user account is disabled but data is preserved. Used when an admin leaves the company.
+
+---
 
 ### Product Categories (Management Admin Only)
 
