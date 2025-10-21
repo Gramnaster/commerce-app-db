@@ -30,6 +30,9 @@ class AdminUser < ApplicationRecord
 
   accepts_nested_attributes_for :admin_users_company_sites, allow_destroy: true, reject_if: :all_blank
 
-  # Validation: admin_detail must be present
-  validates :admin_detail, presence: true
+  # Attribute to skip validation during seeding
+  attr_accessor :skip_detail_validation
+
+  # Validation: admin_detail must be present (skip during seeding)
+  validates :admin_detail, presence: true, unless: :skip_detail_validation
 end
