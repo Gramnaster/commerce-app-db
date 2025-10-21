@@ -2,6 +2,7 @@ class Api::V1::AdminUsersController < ApplicationController
   before_action :authenticate_admin_user!
   before_action :set_admin_user, only: [ :show, :update, :destroy ]
   before_action :authorize_admin_user!, only: [ :show, :update ]
+  before_action :authorize_management!, only: [ :destroy ]
 
   respond_to :json
 
@@ -114,6 +115,12 @@ class Api::V1::AdminUsersController < ApplicationController
     # Warehouse role can only view themselves
     unless current_admin_user.id == @admin_user.id
       render json: { error: "Unauthorized. You can only view your own profile." }, status: :forbidden
+    end
+  end
+
+  def authorize_management!
+    unless current_admin_user.management?
+      render json: { error: "Unauthorized. Management role required." }, status: :forbidden
     end
   end
 
