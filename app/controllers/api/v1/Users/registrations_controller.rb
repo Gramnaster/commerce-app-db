@@ -14,10 +14,9 @@ class Api::V1::Users::RegistrationsController < Devise::RegistrationsController
     resource.save
     if resource.persisted?
       # Send confirmation email asynchronously via SolidQueue
-      if resource.class.devise_modules.include?(:confirmable)
-        # Generate token and send email async
-        resource.generate_confirmation_token! unless resource.confirmation_token
-        Devise::Mailer.confirmation_instructions(resource, resource.confirmation_token).deliver_later
+      if resource.class.devise_modules.include?(:confirmable) && !resource.confirmed?
+        # Use Devise's built-in method to generate token and send email async
+        resource.send_confirmation_instructions
       end
 
       # TODO: Enable welcome email when ready
