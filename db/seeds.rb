@@ -85,11 +85,23 @@ unless Rails.env.test?
       puts "Populating products table"
       url = URI.parse('https://fakestoreapi.com/products')
       response = Net::HTTP.get(url)
-      if response.lstrip.start_with?('<!DOCTYPE', '<html')
-        puts "Failed to seed products. Error: API returned HTML instead of JSON. Skipping product seeding."
-        raise ActiveRecord::Rollback
+
+      # Check if response is HTML instead of JSON
+      if response.lstrip.start_with?('<!DOCTYPE', '<html', '<HTML')
+        puts "Warning: API returned HTML instead of JSON. Skipping product seeding."
+        puts "This is expected in production if the API is blocked. Products can be added manually via the API."
+        # Don't raise error, just skip product seeding gracefully
+        next
       end
-      products = JSON.parse(response)
+
+      # Try to parse JSON
+      begin
+        products = JSON.parse(response)
+      rescue JSON::ParserError => e
+        puts "Warning: Failed to parse API response as JSON. Skipping product seeding."
+        puts "This is expected in production if the API is blocked. Products can be added manually via the API."
+        next
+      end
 
       # Get a producer to assign to products
       producer = Producer.first
@@ -165,7 +177,7 @@ unless Rails.env.test?
         admin.password = admin_password
         admin.password_confirmation = admin_password
         admin.admin_role = 'management'
-        # admin.skip_detail_build = true  # Skip auto-building during seed
+        admin.skip_detail_validation = true  # Skip validation during seed
         admin.confirmed_at = Time.current  # Auto-confirm admin users
       end
 
@@ -196,7 +208,7 @@ unless Rails.env.test?
         admin.password = warehouse_password
         admin.password_confirmation = warehouse_password
         admin.admin_role = 'warehouse'
-        # admin.skip_detail_build = true  # Skip auto-building during seed
+        admin.skip_detail_validation = true  # Skip validation during seed
         admin.confirmed_at = Time.current  # Auto-confirm admin users
       end
 
