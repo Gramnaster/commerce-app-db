@@ -28,7 +28,7 @@
         </div>
         
         <div style="text-align: center;">
-          <%= link_to 'Confirm My Email Address', confirmation_url(@resource, confirmation_token: @token), class: 'button' %>
+          <%= link_to 'Confirm My Email Address', @confirmation_url, class: 'button' %>
         </div>
         
         <p><strong>What happens after confirmation?</strong></p>
@@ -41,7 +41,7 @@
         
         <p style="color: #666; font-size: 14px;">
           <strong>Trouble with the button?</strong> Copy and paste this link into your browser:<br>
-          <%= confirmation_url(@resource, confirmation_token: @token) %>
+          <%= @confirmation_url %>
         </p>
         
         <p>If you didn't create an account with us, please ignore this email.</p>
