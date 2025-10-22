@@ -6,6 +6,7 @@ class DeviseMailer < Devise::Mailer
     # Build frontend confirmation URL
     frontend_url = "#{ENV.fetch('FRONTEND_URL', 'http://localhost:5173')}/users/confirmation?confirmation_token=#{token}"
     opts[:confirmation_url] = frontend_url
+    @confirmation_url = frontend_url
     super
   end
 end
