@@ -1,8 +1,8 @@
 class UserMailer < ApplicationMailer
   def customer_approval_notification(user)
+    Rails.logger.debug "[UserMailer] customer_approval_notification: user=#{user.inspect}"
     @user = user
     @app_name = "Commerce App"
-
     mail(
       to: @user.email,
       subject: "Your Account Has Been Verified!"
@@ -10,9 +10,9 @@ class UserMailer < ApplicationMailer
   end
 
   def customer_rejection_notification(user)
+    Rails.logger.debug "[UserMailer] customer_rejection_notification: user=#{user.inspect}"
     @user = user
     @app_name = "Commerce App"
-
     mail(
       to: @user.email,
       subject: "Update on Your Commerce Account Application"
@@ -20,9 +20,9 @@ class UserMailer < ApplicationMailer
   end
 
   def signup_confirmation(user)
+    Rails.logger.debug "[UserMailer] signup_confirmation: user=#{user.inspect}"
     @user = user
     @app_name = "Commerce App"
-
     mail(
       to: @user.email,
       subject: "Welcome to Commerce App - Please Confirm Your Email"
@@ -30,10 +30,10 @@ class UserMailer < ApplicationMailer
   end
 
   def admin_new_customer_notification(user, admin_email = nil)
+    Rails.logger.debug "[UserMailer] admin_new_customer_notification: user=#{user.inspect}, admin_email=#{admin_email.inspect}"
     @user = user
     @app_name = "Commerce App"
     @admin_email = admin_email || ENV["ADMIN_EMAIL"] || "admin@commerce.com"
-
     mail(
       to: @admin_email,
       subject: "New Trader Registration Pending Approval"

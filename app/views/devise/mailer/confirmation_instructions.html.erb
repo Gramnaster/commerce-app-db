@@ -27,9 +27,13 @@
           <p>Click the button below to verify your email address and activate your account:</p>
         </div>
         
-        <div style="text-align: center;">
-          <a href="<%= @confirmation_url %>" class="button">Confirm My Email Address</a>
-        </div>
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
+          <tr>
+            <td>
+              <a href="<%= @confirmation_url %>" style="background:#007bff;color:#fff;padding:12px 24px;text-decoration:none;border-radius:5px;display:inline-block;font-weight:bold;">Confirm My Email Address</a>
+            </td>
+          </tr>
+        </table>
         
         <p><strong>What happens after confirmation?</strong></p>
         <ol>
