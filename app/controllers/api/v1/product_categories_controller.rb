@@ -1,6 +1,6 @@
 class Api::V1::ProductCategoriesController < ApplicationController
-  before_action :authenticate_admin_user!
-  before_action :authorize_management!
+  before_action :authenticate_admin_user!, except: [ :index, :show ]
+  before_action :authorize_management!, except: [ :index, :show ]
   before_action :set_product_category, only: [ :show, :update, :destroy ]
 
   respond_to :json
