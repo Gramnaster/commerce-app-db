@@ -1,7 +1,6 @@
 class DeviseMailer < Devise::Mailer
   helper :application # gives access to all helpers defined within `application_helper`.
   default template_path: "devise/mailer" # to use the devise views
-  retry_on StandardError, attempts: 1
 
   def confirmation_instructions(record, token, opts = {})
     Rails.logger.debug "[DeviseMailer] === confirmation_instructions called ==="
