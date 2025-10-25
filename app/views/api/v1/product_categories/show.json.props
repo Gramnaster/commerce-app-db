@@ -9,4 +9,17 @@ json.data do
   json.products_count @product_category.products.count
   json.created_at @product_category.created_at
   json.updated_at @product_category.updated_at
+
+  json.products do
+    json.array! @product_category.products do |product|
+      json.id product.id
+      json.title product.title
+      json.description product.description
+      json.price product.price
+      json.final_price product.final_price
+      json.discount_percentage product.applicable_discount_percentage
+      json.discount_amount_dollars product.discount_amount_dollars
+      json.product_image_url product.product_image_url
+    end
+  end
 end
