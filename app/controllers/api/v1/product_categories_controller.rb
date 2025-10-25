@@ -82,10 +82,10 @@ class Api::V1::ProductCategoriesController < ApplicationController
   end
 
   def set_product_category
-    @product_category = ProductCategory.find(params[:id])
+    @product_category = ProductCategory.includes(:products).find(params[:id])
   end
 
   def product_category_params
-    params.require(:product_category).permit(:title)
+    params.require(:product_category).permit(:title, :products_id)
   end
 end
