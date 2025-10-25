@@ -16,7 +16,7 @@ gem "omniauth-facebook"
 gem "omniauth-google-oauth2"
 
 gem "dotenv-rails"
-gem "acts_as_paranoid", "~> 0.10.3"
+gem "acts_as_paranoid", "~> 0.11.0"
 gem "rack-cors"
 gem "rack-attack"
 gem "will_paginate", "~> 4.0"
