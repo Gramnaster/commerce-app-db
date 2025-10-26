@@ -10,7 +10,11 @@ class Api::V1::ProductsController < ApplicationController
   end
 
   def index
-    @products = Product.includes(:product_category, :producer, :promotion).all
+    @products = Product.includes(
+      { producer: { address: :country } },
+      :promotion,
+      product_category: :promotions
+    ).all
   end
 
   def show
@@ -22,7 +26,7 @@ class Api::V1::ProductsController < ApplicationController
     if @product.save
       render :create, status: :created
     else
-      render json: { errors: @product.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @product.errors.full_messages }, status: :unprocessable_content
     end
   end
 
@@ -30,7 +34,7 @@ class Api::V1::ProductsController < ApplicationController
     if @product.update(product_params)
       render :update
     else
-      render json: { errors: @product.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @product.errors.full_messages }, status: :unprocessable_content
     end
   end
 
@@ -38,7 +42,7 @@ class Api::V1::ProductsController < ApplicationController
     if @product.destroy
       render json: { message: "Product deleted successfully" }, status: :ok
     else
-      render json: { errors: @product.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @product.errors.full_messages }, status: :unprocessable_content
     end
   end
 
@@ -80,7 +84,11 @@ class Api::V1::ProductsController < ApplicationController
   end
 
   def set_product
-    @product = Product.includes(:product_category, :producer, :promotion).find(params[:id])
+    @product = Product.includes(
+      { producer: { address: :country } },
+      :promotion,
+      product_category: :promotions
+    ).find(params[:id])
   end
 
   def product_params
