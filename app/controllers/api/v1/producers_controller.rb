@@ -82,7 +82,7 @@ class Api::V1::ProducersController < ApplicationController
   end
 
   def set_producer
-    @producer = Producer.includes(:address).find(params[:id])
+  @producer = Producer.includes(:products, address: :country).find(params[:id])
   end
 
   def producer_params
