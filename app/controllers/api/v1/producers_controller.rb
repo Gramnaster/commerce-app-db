@@ -10,7 +10,7 @@ class Api::V1::ProducersController < ApplicationController
   end
 
   def index
-    @producers = Producer.includes(:address).all
+  @producers = Producer.includes(:products, address: :country).all
     render :index
   end
 
