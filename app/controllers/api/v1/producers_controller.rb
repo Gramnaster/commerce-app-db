@@ -1,7 +1,7 @@
 class Api::V1::ProducersController < ApplicationController
   before_action :authenticate_admin_user!, except: [ :index, :show ]
   before_action :authorize_management!, except: [ :index, :show ]
-  before_action :set_producer, only: [ :update, :destroy ]
+  before_action :set_producer, only: [ :show, :update, :destroy ]
 
   respond_to :json
 
