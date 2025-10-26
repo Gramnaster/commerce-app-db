@@ -10,7 +10,7 @@ class Api::V1::PromotionsController < ApplicationController
   end
 
   def index
-    @promotions = Promotion.includes(:product_categories, :products).all
+  @promotions = Promotion.includes(:product_categories, :products).all
     render :index
   end
 
@@ -82,7 +82,7 @@ class Api::V1::PromotionsController < ApplicationController
   end
 
   def set_promotion
-    @promotion = Promotion.includes(:product_categories, :products).find(params[:id])
+  @promotion = Promotion.includes(:product_categories, :products).find(params[:id])
   end
 
   def promotion_params

@@ -10,8 +10,8 @@ class Api::V1::ProductCategoriesController < ApplicationController
   end
 
   def index
-    @product_categories = ProductCategory.all
-    render :index
+  @product_categories = ProductCategory.includes(:products).all
+  render :index
   end
 
   def show
@@ -24,7 +24,7 @@ class Api::V1::ProductCategoriesController < ApplicationController
     if @product_category.save
       render :show, status: :created
     else
-      render json: { errors: @product_category.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @product_category.errors.full_messages }, status: :unprocessable_content
     end
   end
 
@@ -32,7 +32,7 @@ class Api::V1::ProductCategoriesController < ApplicationController
     if @product_category.update(product_category_params)
       render :show
     else
-      render json: { errors: @product_category.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @product_category.errors.full_messages }, status: :unprocessable_content
     end
   end
 
@@ -40,7 +40,7 @@ class Api::V1::ProductCategoriesController < ApplicationController
     if @product_category.destroy
       render json: { message: "Product category deleted successfully" }, status: :ok
     else
-      render json: { errors: @product_category.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @product_category.errors.full_messages }, status: :unprocessable_content
     end
   end
 
@@ -82,7 +82,7 @@ class Api::V1::ProductCategoriesController < ApplicationController
   end
 
   def set_product_category
-    @product_category = ProductCategory.includes(:products).find(params[:id])
+  @product_category = ProductCategory.includes(:products).find(params[:id])
   end
 
   def product_category_params
