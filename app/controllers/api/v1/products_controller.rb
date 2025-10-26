@@ -20,6 +20,15 @@ class Api::V1::ProductsController < ApplicationController
   def show
   end
 
+  def top_newest
+    @products = Product.includes(
+      :producer,
+      :promotion,
+      product_category: :promotions
+    ).order(created_at: :desc).limit(4)
+    render :top_newest
+  end
+
   def create
     @product = Product.new(product_params)
 
