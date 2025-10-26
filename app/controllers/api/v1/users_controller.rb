@@ -12,7 +12,7 @@ class Api::V1::UsersController < Api::V1::BaseController
       return render json: { error: "Unauthorized. Management role required." }, status: :forbidden
     end
 
-  @users = User.includes(:user_detail, :phones, { user_addresses: :address }, :addresses).all
+  @users = User.includes(:user_detail, :phones, { user_addresses: :address }, :user_payment_methods).all
     render :index
   end
 
