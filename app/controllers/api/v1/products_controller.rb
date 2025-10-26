@@ -11,7 +11,7 @@ class Api::V1::ProductsController < ApplicationController
 
   def index
     @products = Product.includes(
-      { producer: { address: :country } },
+      :producer,
       :promotion,
       product_category: :promotions
     ).all

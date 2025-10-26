@@ -1,7 +1,7 @@
 class Api::V1::ProducersController < ApplicationController
   before_action :authenticate_admin_user!, except: [ :index, :show ]
   before_action :authorize_management!, except: [ :index, :show ]
-  before_action :set_producer, only: [ :update, :destroy ]
+  before_action :set_producer, only: [ :show, :update, :destroy ]
 
   respond_to :json
 
@@ -10,7 +10,7 @@ class Api::V1::ProducersController < ApplicationController
   end
 
   def index
-    @producers = Producer.includes(:address).all
+  @producers = Producer.includes(:products, address: :country).all
     render :index
   end
 
@@ -82,7 +82,7 @@ class Api::V1::ProducersController < ApplicationController
   end
 
   def set_producer
-    @producer = Producer.includes(:address).find(params[:id])
+  @producer = Producer.includes(:products, address: :country).find(params[:id])
   end
 
   def producer_params

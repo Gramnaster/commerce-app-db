@@ -9,6 +9,7 @@ json.data do
     json.title company_site.title
     json.site_type company_site.site_type
     json.address_id company_site.address_id
+    json.admin_users_count company_site.admin_users.count
     json.created_at company_site.created_at
     json.updated_at company_site.updated_at
   end

@@ -1,8 +1,18 @@
 class Api::V1::CompanySitesController < ApplicationController
   before_action :authenticate_admin_user!
-  before_action :authorize_admin_user!, only: [ :index ]
+  before_action :authorize_admin_user!, only: [ :index, :show ]
 
   respond_to :json
+
+  def show
+    # Only management can view a company site
+    unless current_admin_user.management?
+      return render json: { error: "Unauthorized. Higher permissions required." }, status: :forbidden
+    end
+
+    @company_site = CompanySite.find(params[:id])
+    render :show
+  end
 
   rescue_from ActionController::ParameterMissing do |e|
     render json: { error: "Missing parameter: #{e.param}" }, status: :bad_request
