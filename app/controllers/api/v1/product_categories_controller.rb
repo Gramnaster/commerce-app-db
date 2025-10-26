@@ -10,7 +10,7 @@ class Api::V1::ProductCategoriesController < ApplicationController
   end
 
   def index
-  @product_categories = ProductCategory.includes(:products).all
+  @product_categories = ProductCategory.all
   render :index
   end
 

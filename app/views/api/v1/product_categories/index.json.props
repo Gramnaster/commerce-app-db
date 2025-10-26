@@ -7,7 +7,7 @@ json.data do
   json.array! @product_categories do |category|
     json.id category.id
     json.title category.title
-    json.products_count category.products.count
+  json.products_count category.products.size
     json.created_at category.created_at
     json.updated_at category.updated_at
   end
