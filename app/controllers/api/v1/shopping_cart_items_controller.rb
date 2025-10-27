@@ -21,7 +21,7 @@ class Api::V1::ShoppingCartItemsController < ApplicationController
     if @shopping_cart_item.save
       render :show, status: :created
     else
-      render json: { errors: @shopping_cart_item.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @shopping_cart_item.errors.full_messages }, status: :unprocessable_content
     end
   end
 
@@ -30,7 +30,7 @@ class Api::V1::ShoppingCartItemsController < ApplicationController
     if @shopping_cart_item.update(shopping_cart_item_params)
       render :show
     else
-      render json: { errors: @shopping_cart_item.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @shopping_cart_item.errors.full_messages }, status: :unprocessable_content
     end
   end
 
@@ -39,7 +39,7 @@ class Api::V1::ShoppingCartItemsController < ApplicationController
     if @shopping_cart_item.destroy
       render json: { message: "Item removed from cart successfully" }, status: :ok
     else
-      render json: { errors: @shopping_cart_item.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @shopping_cart_item.errors.full_messages }, status: :unprocessable_content
     end
   end
 

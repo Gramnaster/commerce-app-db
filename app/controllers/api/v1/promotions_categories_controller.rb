@@ -24,7 +24,7 @@ class Api::V1::PromotionsCategoriesController < ApplicationController
     if @promotions_category.save
       render :show, status: :created
     else
-      render json: { errors: @promotions_category.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @promotions_category.errors.full_messages }, status: :unprocessable_content
     end
   end
 
@@ -32,7 +32,7 @@ class Api::V1::PromotionsCategoriesController < ApplicationController
     if @promotions_category.destroy
       render json: { message: "Promotion-category association deleted successfully" }, status: :ok
     else
-      render json: { errors: @promotions_category.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @promotions_category.errors.full_messages }, status: :unprocessable_content
     end
   end
 

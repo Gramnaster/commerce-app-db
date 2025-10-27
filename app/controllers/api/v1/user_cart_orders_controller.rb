@@ -24,7 +24,7 @@ class Api::V1::UserCartOrdersController < ApplicationController
     shopping_cart = current_user.shopping_cart
 
     unless shopping_cart && shopping_cart.shopping_cart_items.any?
-      return render json: { error: "Cart is empty" }, status: :unprocessable_entity
+      return render json: { error: "Cart is empty" }, status: :unprocessable_content
     end
 
     # Calculate total cost with promotions applied
@@ -44,7 +44,7 @@ class Api::V1::UserCartOrdersController < ApplicationController
         required: total_cost,
         current_balance: payment_method.balance,
         shortfall: (total_cost - payment_method.balance).round(2)
-      }, status: :unprocessable_entity
+      }, status: :unprocessable_content
     end
 
     # Create the order in a transaction
@@ -81,7 +81,7 @@ class Api::V1::UserCartOrdersController < ApplicationController
 
         render :show, status: :created
       else
-        render json: { errors: @user_cart_order.errors.full_messages }, status: :unprocessable_entity
+        render json: { errors: @user_cart_order.errors.full_messages }, status: :unprocessable_content
       end
     end
   end
@@ -92,13 +92,13 @@ class Api::V1::UserCartOrdersController < ApplicationController
     authorize_management!
 
     unless @user_cart_order.is_paid
-      return render json: { error: "Cannot approve unpaid order" }, status: :unprocessable_entity
+      return render json: { error: "Cannot approve unpaid order" }, status: :unprocessable_content
     end
 
     if @user_cart_order.update(cart_status: "approved")
       render :show
     else
-      render json: { errors: @user_cart_order.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @user_cart_order.errors.full_messages }, status: :unprocessable_content
     end
   end
 
@@ -110,7 +110,7 @@ class Api::V1::UserCartOrdersController < ApplicationController
     if @user_cart_order.update(user_cart_order_params)
       render :show
     else
-      render json: { errors: @user_cart_order.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @user_cart_order.errors.full_messages }, status: :unprocessable_content
     end
   end
 

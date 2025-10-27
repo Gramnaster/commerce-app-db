@@ -45,7 +45,7 @@ end
     if @inventory.update(inventory_params)
       render :show
     else
-      render json: { errors: @inventory.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @inventory.errors.full_messages }, status: :unprocessable_content
     end
   end
 
@@ -53,7 +53,7 @@ end
     if @inventory.destroy
       render json: { message: "Inventory deleted successfully" }, status: :ok
     else
-      render json: { errors: @inventory.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @inventory.errors.full_messages }, status: :unprocessable_content
     end
   end
 

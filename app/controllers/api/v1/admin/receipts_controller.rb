@@ -51,7 +51,7 @@ class Api::V1::Admin::ReceiptsController < ApplicationController
     if @receipt.destroy
       render json: { message: "Receipt deleted successfully" }, status: :ok
     else
-      render json: { errors: @receipt.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @receipt.errors.full_messages }, status: :unprocessable_content
     end
   end
 
