@@ -18,7 +18,7 @@ class Api::V1::UserPaymentMethodsController < ApplicationController
     amount = params[:amount].to_f
 
     if amount <= 0
-      return render json: { error: "Amount must be greater than zero" }, status: :unprocessable_entity
+      return render json: { error: "Amount must be greater than zero" }, status: :unprocessable_content
     end
 
     result = @payment_method.deposit(amount)
@@ -30,7 +30,7 @@ class Api::V1::UserPaymentMethodsController < ApplicationController
         new_balance: result[:new_balance]
       }, status: :ok
     else
-      render json: { error: result[:error] }, status: :unprocessable_entity
+      render json: { error: result[:error] }, status: :unprocessable_content
     end
   end
 
@@ -39,7 +39,7 @@ class Api::V1::UserPaymentMethodsController < ApplicationController
     amount = params[:amount].to_f
 
     if amount <= 0
-      return render json: { error: "Amount must be greater than zero" }, status: :unprocessable_entity
+      return render json: { error: "Amount must be greater than zero" }, status: :unprocessable_content
     end
 
     result = @payment_method.withdraw(amount)
@@ -51,7 +51,7 @@ class Api::V1::UserPaymentMethodsController < ApplicationController
         new_balance: result[:new_balance]
       }, status: :ok
     else
-      render json: { error: result[:error] }, status: :unprocessable_entity
+      render json: { error: result[:error] }, status: :unprocessable_content
     end
   end
 

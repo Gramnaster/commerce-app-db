@@ -24,7 +24,7 @@ class Api::V1::PromotionsController < ApplicationController
     if @promotion.save
       render :show, status: :created
     else
-      render json: { errors: @promotion.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @promotion.errors.full_messages }, status: :unprocessable_content
     end
   end
 
@@ -32,7 +32,7 @@ class Api::V1::PromotionsController < ApplicationController
     if @promotion.update(promotion_params)
       render :show
     else
-      render json: { errors: @promotion.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @promotion.errors.full_messages }, status: :unprocessable_content
     end
   end
 
@@ -40,7 +40,7 @@ class Api::V1::PromotionsController < ApplicationController
     if @promotion.destroy
       render json: { message: "Promotion deleted successfully" }, status: :ok
     else
-      render json: { errors: @promotion.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @promotion.errors.full_messages }, status: :unprocessable_content
     end
   end
 
