@@ -141,12 +141,12 @@ class Api::V1::UserCartOrdersController < ApplicationController
       @current_user = User.find(decoded_token.first["sub"])
 
       unless @current_user.jti == decoded_token.first["jti"]
-        render json: { error: "Token has been revoked" }, status: :unauthorized
+        render json: { error: "Token has been revoked" }, status: :unauthorized and return
       end
     rescue JWT::DecodeError => e
-      render json: { error: "Invalid or expired token: #{e.message}" }, status: :unauthorized
+      render json: { error: "Invalid or expired token: #{e.message}" }, status: :unauthorized and return
     rescue ActiveRecord::RecordNotFound
-      render json: { error: "User not found" }, status: :unauthorized
+      render json: { error: "User not found" }, status: :unauthorized and return
     end
   end
 
@@ -161,18 +161,18 @@ class Api::V1::UserCartOrdersController < ApplicationController
       @current_admin_user = AdminUser.find(decoded_token.first["sub"])
 
       unless @current_admin_user.jti == decoded_token.first["jti"]
-        render json: { error: "Token has been revoked" }, status: :unauthorized
+        render json: { error: "Token has been revoked" }, status: :unauthorized and return
       end
     rescue JWT::DecodeError => e
-      render json: { error: "Invalid or expired token: #{e.message}" }, status: :unauthorized
+      render json: { error: "Invalid or expired token: #{e.message}" }, status: :unauthorized and return
     rescue ActiveRecord::RecordNotFound
-      render json: { error: "Admin user not found" }, status: :unauthorized
+      render json: { error: "Admin user not found" }, status: :unauthorized and return
     end
   end
 
   def authorize_management!
     unless @current_admin_user&.admin_role == "management"
-      render json: { error: "Access denied. Management role required." }, status: :forbidden
+      render json: { error: "Access denied. Management role required." }, status: :forbidden and return
     end
   end
 
