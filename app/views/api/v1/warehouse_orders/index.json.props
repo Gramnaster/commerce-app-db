@@ -3,6 +3,8 @@ json.status do
   json.message "Warehouse orders fetched successfully"
 end
 
+json.pagination @pagination if @pagination
+
 json.data do
   json.array! @warehouse_orders do |order|
     json.id order.id
