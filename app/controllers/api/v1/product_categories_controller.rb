@@ -1,4 +1,6 @@
 class Api::V1::ProductCategoriesController < ApplicationController
+  include Paginatable
+  
   before_action :authenticate_admin_user!, except: [ :index, :show ]
   before_action :authorize_management!, except: [ :index, :show ]
   before_action :set_product_category, only: [ :show, :update, :destroy ]
@@ -10,8 +12,13 @@ class Api::V1::ProductCategoriesController < ApplicationController
   end
 
   def index
-  @product_categories = ProductCategory.all
-  render :index
+    product_categories = ProductCategory.all
+    
+    result = paginate_collection(product_categories, default_per_page: 20)
+    @product_categories = result[:collection]
+    @pagination = result[:pagination]
+    
+    render :index
   end
 
   def show
