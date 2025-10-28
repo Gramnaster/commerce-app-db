@@ -1,7 +1,12 @@
 class Api::V1::CountriesController < Api::V1::BaseController
+  include Paginatable
+
   skip_before_action :authenticate_user!, only: [ :index, :show ]
   def index
-    @countries = Country.all
+    collection = Country.all
+    result = paginate_collection(collection, 50)
+    @countries = result[:collection]
+    @pagination = result[:pagination]
   end
 
   def show
