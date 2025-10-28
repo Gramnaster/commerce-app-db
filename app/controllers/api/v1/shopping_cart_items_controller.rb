@@ -1,4 +1,6 @@
 class Api::V1::ShoppingCartItemsController < ApplicationController
+  include Paginatable
+
   before_action :authenticate_user!
   before_action :set_shopping_cart
   before_action :set_shopping_cart_item, only: [ :show, :update, :destroy ]
@@ -7,7 +9,10 @@ class Api::V1::ShoppingCartItemsController < ApplicationController
 
   # GET /api/v1/shopping_cart_items
   def index
-    @shopping_cart_items = @shopping_cart.shopping_cart_items.includes(:product)
+    collection = @shopping_cart.shopping_cart_items.includes(:product)
+    result = paginate_collection(collection, 20)
+    @shopping_cart_items = result[:collection]
+    @pagination = result[:pagination]
   end
 
   # GET /api/v1/shopping_cart_items/:id
