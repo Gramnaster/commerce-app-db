@@ -1,3 +1,5 @@
+json.pagination @pagination if @pagination
+
 json.admin_users do
   @admin_users.each do |admin_user|
     json.set! admin_user.id do

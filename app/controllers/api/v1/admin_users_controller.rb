@@ -57,7 +57,12 @@ class Api::V1::AdminUsersController < ApplicationController
       return render json: { error: "Unauthorized. Higher permissions required." }, status: :forbidden
     end
 
-  @admin_users = AdminUser.includes(:admin_detail, :admin_phones, { admin_addresses: :address }, company_sites: :address).all
+    admin_users = AdminUser.includes(:admin_detail, :admin_phones, { admin_addresses: :address }, company_sites: :address).all
+    
+    result = paginate_collection(admin_users, default_per_page: 20)
+    @admin_users = result[:collection]
+    @pagination = result[:pagination]
+    
     render :index
   end
 
