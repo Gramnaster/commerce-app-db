@@ -4,6 +4,10 @@
 ## Table of Contents
 
 - [API Documentation](#api-documentation)
+  - [Users](#users-public-registration--authentication)
+    - [User Registration](#user-registration)
+    - [User Authentication](#user-authentication)
+    - [User Profile Management](#user-profile-management)
   - [Admin Users](#admin-users-management--warehouse)
     - [Admin Authentication](#admin-authentication)
     - [Admin User Management](#admin-user-management)
@@ -51,6 +55,333 @@ Things you may want to cover:
 # commerce-app-db
 
 ## API Documentation
+
+### Users (Public Registration & Authentication)
+
+Regular users can self-register, manage their profiles, and shop in the system. User accounts require email confirmation before login. All authenticated user endpoints use the `Authorization: Bearer <token>` header with the `user` scope.
+
+---
+
+### User Registration
+
+#### POST /api/v1/users/signup
+Create a new user account with complete profile information.
+- **Auth Required**: None
+- **Body**:
+```json
+{
+  "user": {
+    "email": "user@example.com",
+    "password": "password123",
+    "password_confirmation": "password123",
+    "user_detail_attributes": {
+      "first_name": "John",
+      "middle_name": "M",
+      "last_name": "Doe",
+      "dob": "1990-01-15"
+    },
+    "phones_attributes": [
+      {
+        "phone_no": "917123456",
+        "phone_type": "mobile"
+      }
+    ],
+    "user_addresses_attributes": [
+      {
+        "is_default": true,
+        "address_attributes": {
+          "unit_no": "123",
+          "street_no": "456",
+          "address_line1": "Main Street",
+          "address_line2": "Subdivision",
+          "barangay": "Barangay 1",
+          "city": "Manila",
+          "region": "NCR",
+          "zipcode": "1000",
+          "country_id": 1
+        }
+      }
+    ],
+    "user_payment_methods_attributes": [
+      {
+        "balance": 5000.00,
+        "payment_type": "e_wallet"
+      }
+    ]
+  }
+}
+```
+
+**Required Fields**:
+- `email`, `password`, `password_confirmation`
+- `user_detail_attributes`: `first_name`, `last_name`, `dob`
+- `phones_attributes`: Array with at least one phone entry (`phone_no`, `phone_type`)
+- `user_addresses_attributes`: Array with at least one address entry including complete `address_attributes` with `barangay`
+- `user_payment_methods_attributes`: Optional but recommended (`balance`, `payment_type`)
+
+**Phone Types**: `mobile`, `home`, `work`  
+**Payment Types**: `e_wallet`, `credit_card`, `debit_card`, `cash`
+
+**Example Response:**
+```json
+{
+  "status": {
+    "code": 201,
+    "message": "Signed up successfully."
+  },
+  "data": {
+    "id": 14,
+    "email": "user@example.com",
+    "jti": "ba991969-1624-44ec-8a4b-a501faa49db6"
+  }
+}
+```
+
+**Note**: A confirmation email is sent asynchronously. The user must confirm their email before logging in.
+
+#### GET /api/v1/users/confirmation?confirmation_token=TOKEN
+Confirm user email address.
+- **Auth Required**: None
+- **Query Parameters**: `confirmation_token` (received via email)
+
+**Example Response (Success):**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Email successfully confirmed."
+  },
+  "data": {
+    "id": 14,
+    "email": "user@example.com",
+    "confirmed": true
+  }
+}
+```
+
+**Example Response (Already Confirmed):**
+```json
+{
+  "status": {
+    "message": "Invalid confirmation token."
+  },
+  "errors": [
+    "Email was already confirmed, please try signing in"
+  ]
+}
+```
+
+---
+
+### User Authentication
+
+#### POST /api/v1/users/login
+User login (requires confirmed email).
+- **Auth Required**: None
+- **Body**:
+```json
+{
+  "user": {
+    "email": "user@example.com",
+    "password": "password123"
+  }
+}
+```
+
+**Example Response:**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Logged in successfully."
+  },
+  "data": {
+    "id": 14,
+    "email": "user@example.com",
+    "jti": "ba991969-1624-44ec-8a4b-a501faa49db6"
+  }
+}
+```
+
+**Note**: JWT token is returned in the `Authorization` response header as `Bearer <token>`
+
+#### DELETE /api/v1/users/logout
+User logout (revokes JWT token).
+- **Auth Required**: User JWT token
+- **Returns**: `{"message": "Logged out successfully"}`
+
+---
+
+### User Profile Management
+
+#### GET /api/v1/users/:id
+Retrieve user profile with all nested data.
+- **Auth Required**: User JWT token (users can only view their own profile)
+- **Returns**: Complete user object including `user_detail`, `phones`, `user_addresses`, and `user_payment_methods`
+
+**Example Response:**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "User was retrieved successfully."
+  },
+  "data": {
+    "id": 14,
+    "email": "user@example.com",
+    "is_verified": false,
+    "confirmed_at": "2025-10-28T15:47:17.724Z",
+    "created_at": "2025-10-28T15:46:28.302Z",
+    "updated_at": "2025-10-28T15:47:17.725Z",
+    "user_detail": {
+      "id": 13,
+      "first_name": "John",
+      "middle_name": "M",
+      "last_name": "Doe",
+      "dob": "1990-01-15"
+    },
+    "phones": [
+      {
+        "id": 1,
+        "phone_no": 917123456,
+        "phone_type": "mobile"
+      }
+    ],
+    "user_addresses": [
+      {
+        "id": 2,
+        "is_default": true,
+        "address": {
+          "id": 18,
+          "unit_no": "123",
+          "street_no": "456",
+          "address_line1": "Main Street",
+          "address_line2": "Subdivision",
+          "barangay": "Barangay 1",
+          "city": "Manila",
+          "region": "NCR",
+          "zipcode": "1000",
+          "country_id": 1
+        }
+      }
+    ],
+    "user_payment_methods": [
+      {
+        "id": 10,
+        "balance": "5000.0",
+        "payment_type": "e_wallet"
+      }
+    ]
+  }
+}
+```
+
+#### PATCH /api/v1/users/:id
+Update user profile and nested attributes.
+- **Auth Required**: User JWT token (users can only update their own profile)
+- **Body**: Same structure as registration, but all fields are optional. Include `id` for existing nested records.
+
+**Example - Update User Detail and Add New Phone:**
+```json
+{
+  "user": {
+    "user_detail_attributes": {
+      "id": 13,
+      "first_name": "Jane",
+      "middle_name": "Marie",
+      "last_name": "Smith",
+      "dob": "1992-05-20"
+    },
+    "phones_attributes": [
+      {
+        "id": 1,
+        "phone_no": "917123456",
+        "phone_type": "mobile"
+      },
+      {
+        "phone_no": "286543210",
+        "phone_type": "home"
+      }
+    ]
+  }
+}
+```
+
+**Example - Delete a Nested Record:**
+```json
+{
+  "user": {
+    "phones_attributes": [
+      {
+        "id": 2,
+        "_destroy": true
+      }
+    ]
+  }
+}
+```
+
+**Example - Update Address with New Barangay:**
+```json
+{
+  "user": {
+    "user_addresses_attributes": [
+      {
+        "id": 2,
+        "is_default": false,
+        "address_attributes": {
+          "id": 18,
+          "unit_no": "999",
+          "street_no": "888",
+          "address_line1": "Updated Street",
+          "address_line2": "New Subdivision",
+          "barangay": "Barangay 5",
+          "city": "Quezon City",
+          "region": "NCR",
+          "zipcode": "1100",
+          "country_id": 1
+        }
+      }
+    ]
+  }
+}
+```
+
+**Example Response:**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "User updated successfully"
+  },
+  "data": {
+    "id": 14,
+    "email": "user@example.com",
+    "is_verified": false,
+    "created_at": "2025-10-28T15:46:28.302Z",
+    "updated_at": "2025-10-28T15:47:17.725Z",
+    "user_detail": {
+      "id": 13,
+      "first_name": "Jane",
+      "middle_name": "Marie",
+      "last_name": "Smith",
+      "dob": "1992-05-20"
+    },
+    "phones": [...],
+    "user_addresses": [...],
+    "user_payment_methods": [...]
+  }
+}
+```
+
+#### DELETE /api/v1/users/:id
+Delete user account and all associated data.
+- **Auth Required**: User JWT token (users can only delete their own account)
+- **Returns**: `{"message": "User deleted successfully"}`
+
+**Note**: This permanently deletes the user and all nested records (detail, phones, addresses, payment methods, shopping cart, orders, receipts).
+
+---
 
 ### Admin Users (Management & Warehouse)
 
