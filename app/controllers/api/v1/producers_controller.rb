@@ -91,7 +91,7 @@ class Api::V1::ProducersController < ApplicationController
       :address_id,
       address_attributes: [
         :id, :unit_no, :street_no, :address_line1, :address_line2,
-        :city, :region, :zipcode, :country_id
+        :barangay, :city, :region, :zipcode, :country_id
       ]
     )
   end
