@@ -3,6 +3,8 @@ json.status do
   json.message "Fetched all promotions successfully"
 end
 
+json.pagination @pagination if @pagination
+
 json.data do
   json.array! @promotions do |promotion|
     json.id promotion.id
