@@ -59,11 +59,30 @@ Things you may want to cover:
 
 ### Pagination
 
-Many endpoints that return lists of items support pagination to improve performance and reduce response sizes. Pagination is available for:
-- **Products** (GET /api/v1/products)
-- **Inventories** (GET /api/v1/inventories)
-- **Receipts** (GET /api/v1/admin/receipts)
-- And other large collections
+Most endpoints that return lists of items support pagination to improve performance and reduce response sizes. 
+
+#### Paginated Endpoints
+
+The following endpoints support pagination:
+
+**Public/User Accessible:**
+- Products (GET /api/v1/products) - Default: 20 per page
+- Product Categories (GET /api/v1/product_categories) - Default: 20 per page
+- Producers (GET /api/v1/producers) - Default: 20 per page
+- Countries (GET /api/v1/countries) - Default: 50 per page
+- Shopping Cart Items (GET /api/v1/shopping_cart_items) - Default: 20 per page
+- Receipts (GET /api/v1/receipts) - Default: 20 per page (user's own receipts)
+
+**Admin Only:**
+- Admin Users (GET /api/v1/admin_users) - Default: 20 per page
+- Users (GET /api/v1/users) - Default: 20 per page (management only)
+- Inventories (GET /api/v1/inventories) - Default: 50 per page
+- Promotions (GET /api/v1/promotions) - Default: 20 per page
+- Promotion Categories (GET /api/v1/promotions_categories) - Default: 20 per page
+- Company Sites (GET /api/v1/company_sites) - Default: 20 per page
+- Warehouse Orders (GET /api/v1/warehouse_orders) - Default: 30 per page
+- User Cart Orders (GET /api/v1/user_cart_orders) - Default: 30 per page
+- Admin Receipts (GET /api/v1/admin/receipts) - Default: 20 per page
 
 #### Pagination Parameters
 
@@ -104,11 +123,6 @@ GET /api/v1/products?page=2&per_page=10
 - `total_pages`: Total number of pages available
 - `next_page`: Next page number (null if on last page)
 - `previous_page`: Previous page number (null if on first page)
-
-**Default Items Per Page:**
-- Products: 20 items
-- Inventories: 50 items
-- Receipts: 20 items
 
 **Maximum Limit:** The `per_page` parameter is capped at 100 items to prevent performance issues.
 
