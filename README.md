@@ -4,6 +4,7 @@
 ## Table of Contents
 
 - [API Documentation](#api-documentation)
+  - [Pagination](#pagination)
   - [Users](#users-public-registration--authentication)
     - [User Registration](#user-registration)
     - [User Authentication](#user-authentication)
@@ -55,6 +56,63 @@ Things you may want to cover:
 # commerce-app-db
 
 ## API Documentation
+
+### Pagination
+
+Many endpoints that return lists of items support pagination to improve performance and reduce response sizes. Pagination is available for:
+- **Products** (GET /api/v1/products)
+- **Inventories** (GET /api/v1/inventories)
+- **Receipts** (GET /api/v1/admin/receipts)
+- And other large collections
+
+#### Pagination Parameters
+
+**Query Parameters:**
+- `page` (integer, optional): Page number to retrieve (default: 1)
+- `per_page` (integer, optional): Number of items per page (default: varies by endpoint, max: 100)
+
+**Example Request:**
+```bash
+GET /api/v1/products?page=2&per_page=10
+```
+
+**Response Format:**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Fetched all products successfully"
+  },
+  "pagination": {
+    "current_page": 2,
+    "per_page": 10,
+    "total_entries": 20,
+    "total_pages": 2,
+    "next_page": null,
+    "previous_page": 1
+  },
+  "data": [
+    ...
+  ]
+}
+```
+
+**Pagination Metadata:**
+- `current_page`: The current page number
+- `per_page`: Number of items per page
+- `total_entries`: Total number of items across all pages
+- `total_pages`: Total number of pages available
+- `next_page`: Next page number (null if on last page)
+- `previous_page`: Previous page number (null if on first page)
+
+**Default Items Per Page:**
+- Products: 20 items
+- Inventories: 50 items
+- Receipts: 20 items
+
+**Maximum Limit:** The `per_page` parameter is capped at 100 items to prevent performance issues.
+
+---
 
 ### Users (Public Registration & Authentication)
 
@@ -1094,9 +1152,18 @@ Delete a promotion-category association.
 ### Products (Public Read, Management CRUD)
 
 #### GET /api/v1/products
-List all products.
+List all products with pagination support.
 - **Auth Required**: None (public access)
-- **Returns**: Array of products with category, producer, and promotion details
+- **Pagination**: Yes (default: 20 per page, max: 100)
+- **Query Parameters**: 
+  - `page` (optional): Page number
+  - `per_page` (optional): Items per page
+- **Returns**: Paginated array of products with category, producer, and promotion details
+
+**Example Request with Pagination**:
+```bash
+GET /api/v1/products?page=1&per_page=10
+```
 
 **Example Response**:
 ```json
@@ -1104,6 +1171,14 @@ List all products.
   "status": {
     "code": 200,
     "message": "Products retrieved successfully"
+  },
+  "pagination": {
+    "current_page": 1,
+    "per_page": 10,
+    "total_entries": 20,
+    "total_pages": 2,
+    "next_page": 2,
+    "previous_page": null
   },
   "data": [
     {
@@ -1248,9 +1323,18 @@ Delete a product.
 - Admins can optionally provide a custom SKU, but it's not required.
 
 #### GET /api/v1/inventories
-List all inventories.
+List all inventories with pagination support.
 - **Auth Required**: Management or Warehouse Admin JWT token
-- **Returns**: Array of inventories with company site and product details
+- **Pagination**: Yes (default: 50 per page, max: 100)
+- **Query Parameters**: 
+  - `page` (optional): Page number
+  - `per_page` (optional): Items per page
+- **Returns**: Paginated array of inventories with company site and product details
+
+**Example Request with Pagination**:
+```bash
+GET /api/v1/inventories?page=1&per_page=20
+```
 
 **Example Response**:
 ```json
@@ -1258,6 +1342,14 @@ List all inventories.
   "status": {
     "code": 200,
     "message": "Fetched all inventories successfully"
+  },
+  "pagination": {
+    "current_page": 1,
+    "per_page": 20,
+    "total_entries": 60,
+    "total_pages": 3,
+    "next_page": 2,
+    "previous_page": null
   },
   "data": [
     {
