@@ -67,7 +67,9 @@ unless Rails.env.test?
   ]
 
   producers.each do |attrs|
-    Producer.find_or_create_by!(title: attrs[:title], address: attrs[:address])
+    Producer.find_or_create_by!(title: attrs[:title]) do |producer|
+      producer.address = attrs[:address]
+    end
   end
 
   # Seeds the Categories table
