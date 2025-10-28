@@ -3,6 +3,8 @@ json.status do
   json.message "Fetched all producers successfully"
 end
 
+json.pagination @pagination if @pagination
+
 json.data do
   json.array! @producers do |producer|
     json.id producer.id
