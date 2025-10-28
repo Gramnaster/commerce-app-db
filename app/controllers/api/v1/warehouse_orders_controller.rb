@@ -27,7 +27,7 @@ class Api::V1::WarehouseOrdersController < ApplicationController
 
       render :show, status: :created
     else
-      render json: { errors: @warehouse_order.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @warehouse_order.errors.full_messages }, status: :unprocessable_content
     end
   end
 
@@ -36,7 +36,7 @@ class Api::V1::WarehouseOrdersController < ApplicationController
     if @warehouse_order.update(warehouse_order_params)
       render :show
     else
-      render json: { errors: @warehouse_order.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @warehouse_order.errors.full_messages }, status: :unprocessable_content
     end
   end
 
@@ -54,7 +54,7 @@ class Api::V1::WarehouseOrdersController < ApplicationController
     if @warehouse_order.destroy
       render json: { message: "Warehouse order deleted successfully" }, status: :ok
     else
-      render json: { errors: @warehouse_order.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @warehouse_order.errors.full_messages }, status: :unprocessable_content
     end
   end
 
