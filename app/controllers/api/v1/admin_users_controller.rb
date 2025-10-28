@@ -1,4 +1,5 @@
 class Api::V1::AdminUsersController < ApplicationController
+  include Paginatable
   before_action :authenticate_admin_user!
   before_action :set_admin_user, only: [ :show, :update, :destroy ]
   before_action :authorize_admin_user!, only: [ :show, :update ]
