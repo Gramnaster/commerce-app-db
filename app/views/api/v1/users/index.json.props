@@ -3,6 +3,8 @@ json.status do
   json.message "Users were retrieved successfully."
 end
 
+json.pagination @pagination if @pagination
+
 json.data do
   json.users do
     @users.each do |user|
