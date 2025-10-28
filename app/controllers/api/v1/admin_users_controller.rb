@@ -1,4 +1,5 @@
 class Api::V1::AdminUsersController < ApplicationController
+  include Paginatable
   before_action :authenticate_admin_user!
   before_action :set_admin_user, only: [ :show, :update, :destroy ]
   before_action :authorize_admin_user!, only: [ :show, :update ]
@@ -56,7 +57,12 @@ class Api::V1::AdminUsersController < ApplicationController
       return render json: { error: "Unauthorized. Higher permissions required." }, status: :forbidden
     end
 
-  @admin_users = AdminUser.includes(:admin_detail, :admin_phones, { admin_addresses: :address }, company_sites: :address).all
+    admin_users = AdminUser.includes(:admin_detail, :admin_phones, { admin_addresses: :address }, company_sites: :address).all
+
+    result = paginate_collection(admin_users, default_per_page: 20)
+    @admin_users = result[:collection]
+    @pagination = result[:pagination]
+
     render :index
   end
 
@@ -132,7 +138,7 @@ class Api::V1::AdminUsersController < ApplicationController
       admin_addresses_attributes: [
         :id, :is_default, :_destroy,
         address_attributes: [ :id, :unit_no, :street_no, :address_line1, :address_line2,
-                            :city, :region, :zipcode, :country_id ]
+                            :barangay, :city, :region, :zipcode, :country_id ]
       ],
       admin_users_company_sites_attributes: [ :id, :company_site_id, :_destroy ]
     )

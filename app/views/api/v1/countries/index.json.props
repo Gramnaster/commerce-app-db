@@ -1,3 +1,5 @@
+json.pagination @pagination if @pagination
+
 json.array! @countries do |country|
   json.id country.id
   json.code country.code

@@ -1,4 +1,6 @@
 class Api::V1::UsersController < Api::V1::BaseController
+  include Paginatable
+
   # Skip base controller authentication for admin users
   skip_before_action :authenticate_user!, if: :admin_authenticated?
 
@@ -12,7 +14,12 @@ class Api::V1::UsersController < Api::V1::BaseController
       return render json: { error: "Unauthorized. Management role required." }, status: :forbidden
     end
 
-  @users = User.includes(:user_detail, :phones, { user_addresses: :address }, :user_payment_methods).all
+    users = User.includes(:user_detail, :phones, { user_addresses: :address }, :user_payment_methods).all
+
+    result = paginate_collection(users, default_per_page: 20)
+    @users = result[:collection]
+    @pagination = result[:pagination]
+
     render :index
   end
 
@@ -163,7 +170,7 @@ class Api::V1::UsersController < Api::V1::BaseController
       user_addresses_attributes: [
         :id, :is_default, :_destroy,
         address_attributes: [ :id, :unit_no, :street_no, :address_line1, :address_line2,
-                            :city, :region, :zipcode, :country_id ]
+                            :barangay, :city, :region, :zipcode, :country_id ]
       ],
       user_payment_methods_attributes: [ :id, :balance, :payment_type, :_destroy ]
     )

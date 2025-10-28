@@ -49,10 +49,10 @@ unless Rails.env.test?
   # Seeds the Producers table
   puts "Seeding Producers table..."
   addresses = [
-    { unit_no: "2020", street_no: "26th Ave", city: "Taguig", zipcode: "1244", country_id: "102" },
-    { unit_no: "0110", street_no: "9th Roxas", city: "Quezon", zipcode: "1499", country_id: "102" },
-    { unit_no: "1430", street_no: "8th Cucumber", city: "Metro Manila", zipcode: "1011", country_id: "102" },
-    { unit_no: "310", street_no: "15th Centre", city: "Cavite", zipcode: "1802", country_id: "102" }
+    { unit_no: "2020", street_no: "26th Ave", barangay: "Bagumbayan", city: "Taguig", zipcode: "1244", country_id: "102" },
+    { unit_no: "0110", street_no: "9th Roxas", barangay: "San Isidro", city: "Quezon", zipcode: "1499", country_id: "102" },
+    { unit_no: "1430", street_no: "8th Cucumber", barangay: "Poblacion", city: "Metro Manila", zipcode: "1011", country_id: "102" },
+    { unit_no: "310", street_no: "15th Centre", barangay: "San Nicolas", city: "Cavite", zipcode: "1802", country_id: "102" }
   ]
 
   address_records = addresses.map do |attrs|
@@ -67,7 +67,9 @@ unless Rails.env.test?
   ]
 
   producers.each do |attrs|
-    Producer.find_or_create_by!(title: attrs[:title], address: attrs[:address])
+    Producer.find_or_create_by!(title: attrs[:title]) do |producer|
+      producer.address = attrs[:address]
+    end
   end
 
   # Seeds the Categories table
@@ -137,10 +139,10 @@ unless Rails.env.test?
   ph_country = Country.find_by(code: "PH")
   sg_country = Country.find_by(code: "SG")
   company_addresses = [
-    { unit_no: "110", street_no: "87 Cucumber St", city: "Singapore", zipcode: "1557330", country_id: sg_country.id  },
-    { unit_no: "332", street_no: "9th Roxas", city: "Tarlac", zipcode: "5650", country_id: ph_country.id  },
-    { unit_no: "090", street_no: "8th Linkway", city: "Malolos", zipcode: "8110", country_id: ph_country.id  },
-    { unit_no: "3101-A", street_no: "99th Ave", city: "Antipolo", zipcode: "6602", country_id: ph_country.id  }
+    { unit_no: "110", street_no: "87 Cucumber St", barangay: "Geylang", city: "Singapore", zipcode: "1557330", country_id: sg_country.id  },
+    { unit_no: "332", street_no: "9th Roxas", barangay: "San Vicente", city: "Tarlac", zipcode: "5650", country_id: ph_country.id  },
+    { unit_no: "090", street_no: "8th Linkway", barangay: "Dakila", city: "Malolos", zipcode: "8110", country_id: ph_country.id  },
+    { unit_no: "3101-A", street_no: "99th Ave", barangay: "San Roque", city: "Antipolo", zipcode: "6602", country_id: ph_country.id  }
   ]
 
   company_site_records = company_addresses.map do |attrs|
@@ -237,6 +239,48 @@ unless Rails.env.test?
       puts "Admin users seeded successfully."
     rescue StandardError => e
       puts "Failed to seed admin users. Error: #{e.message}"
+      raise ActiveRecord::Rollback
+    end
+  end
+
+  # Seeds Inventories for all warehouse company sites
+  puts "Seeding Inventories for warehouse sites..."
+  ActiveRecord::Base.transaction do
+    begin
+      # Get all warehouse sites
+      warehouse_sites = CompanySite.where(site_type: 'warehouse')
+
+      # Get all products
+      all_products = Product.all
+
+      if warehouse_sites.empty?
+        puts "No warehouse sites found. Please seed company sites first."
+        raise ActiveRecord::Rollback
+      end
+
+      if all_products.empty?
+        puts "No products found. Please seed products first."
+        raise ActiveRecord::Rollback
+      end
+
+      # Create inventory for each product in each warehouse with 100 items
+      inventory_count = 0
+      warehouse_sites.each do |warehouse|
+        all_products.each do |product|
+          Inventory.find_or_create_by!(
+            product: product,
+            company_site: warehouse
+          ) do |inventory|
+            inventory.qty_in_stock = 100
+          end
+          inventory_count += 1
+        end
+        puts "Created inventories for #{warehouse.title}"
+      end
+
+      puts "Successfully seeded #{inventory_count} inventory records across #{warehouse_sites.count} warehouses."
+    rescue StandardError => e
+      puts "Failed to seed inventories. Error: #{e.message}"
       raise ActiveRecord::Rollback
     end
   end

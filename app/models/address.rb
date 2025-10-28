@@ -7,5 +7,5 @@ class Address < ApplicationRecord
   has_many :producers, dependent: :destroy
   has_many :company_sites, dependent: :destroy
 
-  # validates :unit_no, :street_no, :city, :zipcode, :country_id, presence: true
+  validates :unit_no, :street_no, :barangay, :city, :zipcode, :country_id, presence: true
 end

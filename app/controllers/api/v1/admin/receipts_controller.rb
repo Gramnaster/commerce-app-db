@@ -1,4 +1,6 @@
 class Api::V1::Admin::ReceiptsController < ApplicationController
+  include Paginatable
+
   before_action :set_receipt, only: [ :show, :destroy ]
 
   respond_to :json
@@ -8,33 +10,30 @@ class Api::V1::Admin::ReceiptsController < ApplicationController
     authenticate_admin_user!
     authorize_management!
 
-    @receipts = Receipt.includes(:user, :user_cart_order).recent
+    collection = Receipt.includes(:user, :user_cart_order).recent
 
     # Optional filtering by user
     if params[:user_id].present?
-      @receipts = @receipts.where(user_id: params[:user_id])
+      collection = collection.where(user_id: params[:user_id])
     end
 
     # Optional filtering by transaction type
     if params[:transaction_type].present?
-      @receipts = @receipts.where(transaction_type: params[:transaction_type])
+      collection = collection.where(transaction_type: params[:transaction_type])
     end
 
     # Optional filtering by date range
     if params[:start_date].present?
-      @receipts = @receipts.where("created_at >= ?", params[:start_date])
+      collection = collection.where("created_at >= ?", params[:start_date])
     end
 
     if params[:end_date].present?
-      @receipts = @receipts.where("created_at <= ?", params[:end_date])
+      collection = collection.where("created_at <= ?", params[:end_date])
     end
 
-    # Pagination
-    page = params[:page].to_i > 0 ? params[:page].to_i : 1
-    per_page = params[:per_page].to_i > 0 ? params[:per_page].to_i : 20
-
-    @receipts = @receipts.offset((page - 1) * per_page).limit(per_page)
-    @total_count = Receipt.count
+    result = paginate_collection(collection, 20)
+    @receipts = result[:collection]
+    @pagination = result[:pagination]
   end
 
   # GET /api/v1/admin/receipts/:id (Management only - view any receipt detail)

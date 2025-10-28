@@ -4,6 +4,11 @@
 ## Table of Contents
 
 - [API Documentation](#api-documentation)
+  - [Pagination](#pagination)
+  - [Users](#users-public-registration--authentication)
+    - [User Registration](#user-registration)
+    - [User Authentication](#user-authentication)
+    - [User Profile Management](#user-profile-management)
   - [Admin Users](#admin-users-management--warehouse)
     - [Admin Authentication](#admin-authentication)
     - [Admin User Management](#admin-user-management)
@@ -13,6 +18,7 @@
     - [How Product Promotions Are Displayed](#how-product-promotions-are-displayed)
   - [Promotions Categories](#promotions-categories-join-table---management-admin-only)
   - [Products](#products-public-read-management-crud)
+  - [Inventories](#inventories-admin-only---management--warehouse)
   - [User Payment Methods & Shopping Cart System](#user-payment-methods--shopping-cart-system)
     - [User Payment Methods](#user-payment-methods-user-only)
     - [Shopping Cart Items](#shopping-cart-items-user-only)
@@ -50,6 +56,473 @@ Things you may want to cover:
 # commerce-app-db
 
 ## API Documentation
+
+### Pagination
+
+Most endpoints that return lists of items support pagination to improve performance and reduce response sizes. 
+
+#### Paginated Endpoints
+
+The following endpoints support pagination:
+
+**Public/User Accessible:**
+- Products (GET /api/v1/products) - Default: 20 per page
+- Product Categories (GET /api/v1/product_categories) - Default: 20 per page
+- Producers (GET /api/v1/producers) - Default: 20 per page
+- Countries (GET /api/v1/countries) - Default: 50 per page
+- Shopping Cart Items (GET /api/v1/shopping_cart_items) - Default: 20 per page
+- Receipts (GET /api/v1/receipts) - Default: 20 per page (user's own receipts)
+
+**Admin Only:**
+- Admin Users (GET /api/v1/admin_users) - Default: 20 per page
+- Users (GET /api/v1/users) - Default: 20 per page (management only)
+- Inventories (GET /api/v1/inventories) - Default: 50 per page
+- Promotions (GET /api/v1/promotions) - Default: 20 per page
+- Promotion Categories (GET /api/v1/promotions_categories) - Default: 20 per page
+- Company Sites (GET /api/v1/company_sites) - Default: 20 per page
+- Warehouse Orders (GET /api/v1/warehouse_orders) - Default: 30 per page
+- User Cart Orders (GET /api/v1/user_cart_orders) - Default: 30 per page
+- Admin Receipts (GET /api/v1/admin/receipts) - Default: 20 per page
+
+#### Pagination Parameters
+
+**Query Parameters:**
+- `page` (integer, optional): Page number to retrieve (default: 1)
+- `per_page` (integer, optional): Number of items per page (default: varies by endpoint, max: 100)
+
+**Example Request:**
+```bash
+GET /api/v1/products?page=2&per_page=10
+```
+
+**Response Format:**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Fetched all products successfully"
+  },
+  "pagination": {
+    "current_page": 2,
+    "per_page": 10,
+    "total_entries": 20,
+    "total_pages": 2,
+    "next_page": null,
+    "previous_page": 1
+  },
+  "data": [
+    ...
+  ]
+}
+```
+
+**Pagination Metadata:**
+- `current_page`: The current page number
+- `per_page`: Number of items per page
+- `total_entries`: Total number of items across all pages
+- `total_pages`: Total number of pages available
+- `next_page`: Next page number (null if on last page)
+- `previous_page`: Previous page number (null if on first page)
+
+**Maximum Limit:** The `per_page` parameter is capped at 100 items to prevent performance issues.
+
+---
+
+### Users (Public Registration & Authentication)
+
+Regular users can self-register, manage their profiles, and shop in the system. User accounts require email confirmation before login. All authenticated user endpoints use the `Authorization: Bearer <token>` header with the `user` scope.
+
+---
+
+### User Registration
+
+#### POST /api/v1/users/signup
+Create a new user account. Only basic information is required for registration.
+- **Auth Required**: None
+
+**Minimal Registration (Recommended for Frontend):**
+```json
+{
+  "user": {
+    "email": "user@example.com",
+    "password": "password123",
+    "password_confirmation": "password123",
+    "user_detail_attributes": {
+      "first_name": "Alice",
+      "last_name": "Johnson",
+      "dob": "1995-03-10"
+    }
+  }
+}
+```
+
+**Required Fields**:
+- `email`, `password`, `password_confirmation`
+- `user_detail_attributes`: `first_name`, `last_name`, `dob`
+
+**Optional Fields** (can be added later via PATCH):
+- `user_detail_attributes.middle_name`
+- `phones_attributes`: Array of phone objects
+- `user_addresses_attributes`: Array of address objects
+- `user_payment_methods_attributes`: Array of payment method objects
+
+**Example Response:**
+```json
+{
+  "status": {
+    "code": 201,
+    "message": "Signed up successfully."
+  },
+  "data": {
+    "id": 15,
+    "email": "user@example.com",
+    "jti": "5117f677-1bec-4e8b-b842-93c18e2efd02"
+  }
+}
+```
+
+**What Gets Auto-Created:**
+- `user_detail`: Created with provided first_name, last_name, dob
+- `user_payment_method`: Auto-created with balance=0.0 and payment_type=null
+- `shopping_cart`: Auto-created empty shopping cart
+- `phones`: Empty array (can be added later)
+- `user_addresses`: Empty array (can be added later)
+
+**Note**: A confirmation email is sent asynchronously. The user must confirm their email before logging in.
+
+<details>
+<summary><b>Advanced: Full Registration with Nested Attributes</b></summary>
+
+You can optionally include phones, addresses, and payment methods during registration:
+
+```json
+{
+  "user": {
+    "email": "user@example.com",
+    "password": "password123",
+    "password_confirmation": "password123",
+    "user_detail_attributes": {
+      "first_name": "John",
+      "middle_name": "M",
+      "last_name": "Doe",
+      "dob": "1990-01-15"
+    },
+    "phones_attributes": [
+      {
+        "phone_no": "+639171234567",
+        "phone_type": "mobile"
+      }
+    ],
+    "user_addresses_attributes": [
+      {
+        "is_default": true,
+        "address_attributes": {
+          "unit_no": "123",
+          "street_no": "456",
+          "address_line1": "Main Street",
+          "address_line2": "Subdivision",
+          "barangay": "Barangay 1",
+          "city": "Manila",
+          "region": "NCR",
+          "zipcode": "1000",
+          "country_id": 1
+        }
+      }
+    ],
+    "user_payment_methods_attributes": [
+      {
+        "balance": 5000.00,
+        "payment_type": "e_wallet"
+      }
+    ]
+  }
+}
+```
+
+**Phone Types**: `mobile`, `home`, `work`  
+**Payment Types**: `e_wallet`, `credit_card`, `debit_card`, `cash`
+</details>
+
+#### GET /api/v1/users/confirmation?confirmation_token=TOKEN
+Confirm user email address.
+- **Auth Required**: None
+- **Query Parameters**: `confirmation_token` (received via email)
+
+**Example Response (Success):**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Email successfully confirmed."
+  },
+  "data": {
+    "id": 14,
+    "email": "user@example.com",
+    "confirmed": true
+  }
+}
+```
+
+**Example Response (Already Confirmed):**
+```json
+{
+  "status": {
+    "message": "Invalid confirmation token."
+  },
+  "errors": [
+    "Email was already confirmed, please try signing in"
+  ]
+}
+```
+
+---
+
+### User Authentication
+
+#### POST /api/v1/users/login
+User login (requires confirmed email).
+- **Auth Required**: None
+- **Body**:
+```json
+{
+  "user": {
+    "email": "user@example.com",
+    "password": "password123"
+  }
+}
+```
+
+**Example Response:**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Logged in successfully."
+  },
+  "data": {
+    "id": 14,
+    "email": "user@example.com",
+    "jti": "ba991969-1624-44ec-8a4b-a501faa49db6"
+  }
+}
+```
+
+**Note**: JWT token is returned in the `Authorization` response header as `Bearer <token>`
+
+#### DELETE /api/v1/users/logout
+User logout (revokes JWT token).
+- **Auth Required**: User JWT token
+- **Returns**: `{"message": "Logged out successfully"}`
+
+---
+
+### User Profile Management
+
+#### GET /api/v1/users/:id
+Retrieve user profile with all nested data.
+- **Auth Required**: User JWT token (users can only view their own profile)
+- **Returns**: Complete user object including `user_detail`, `phones`, `user_addresses`, and `user_payment_methods`
+
+**Example Response (Minimal Registration):**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "User was retrieved successfully."
+  },
+  "data": {
+    "id": 15,
+    "email": "user@example.com",
+    "is_verified": false,
+    "confirmed_at": "2025-10-28T15:52:36.657Z",
+    "created_at": "2025-10-28T15:51:57.822Z",
+    "updated_at": "2025-10-28T15:52:36.658Z",
+    "user_detail": {
+      "id": 14,
+      "first_name": "Alice",
+      "middle_name": null,
+      "last_name": "Johnson",
+      "dob": "1995-03-10"
+    },
+    "phones": [],
+    "user_addresses": [],
+    "user_payment_methods": [
+      {
+        "id": 12,
+        "balance": "0.0",
+        "payment_type": null
+      }
+    ]
+  }
+}
+```
+
+<details>
+<summary><b>Example Response (Full Registration with All Nested Data)</b></summary>
+
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "User was retrieved successfully."
+  },
+  "data": {
+    "id": 14,
+    "email": "user@example.com",
+    "is_verified": false,
+    "confirmed_at": "2025-10-28T15:47:17.724Z",
+    "created_at": "2025-10-28T15:46:28.302Z",
+    "updated_at": "2025-10-28T15:47:17.725Z",
+    "user_detail": {
+      "id": 13,
+      "first_name": "John",
+      "middle_name": "M",
+      "last_name": "Doe",
+      "dob": "1990-01-15"
+    },
+    "phones": [
+      {
+        "id": 1,
+        "phone_no": "+639171234567",
+        "phone_type": "mobile"
+      }
+    ],
+    "user_addresses": [
+      {
+        "id": 2,
+        "is_default": true,
+        "address": {
+          "id": 18,
+          "unit_no": "123",
+          "street_no": "456",
+          "address_line1": "Main Street",
+          "address_line2": "Subdivision",
+          "barangay": "Barangay 1",
+          "city": "Manila",
+          "region": "NCR",
+          "zipcode": "1000",
+          "country_id": 1
+        }
+      }
+    ],
+    "user_payment_methods": [
+      {
+        "id": 10,
+        "balance": "5000.0",
+        "payment_type": "e_wallet"
+      }
+    ]
+  }
+}
+```
+</details>
+
+#### PATCH /api/v1/users/:id
+Update user profile and nested attributes.
+- **Auth Required**: User JWT token (users can only update their own profile)
+- **Body**: Same structure as registration, but all fields are optional. Include `id` for existing nested records.
+
+**Example - Update User Detail and Add New Phone:**
+```json
+{
+  "user": {
+    "user_detail_attributes": {
+      "id": 13,
+      "first_name": "Jane",
+      "middle_name": "Marie",
+      "last_name": "Smith",
+      "dob": "1992-05-20"
+    },
+    "phones_attributes": [
+      {
+        "id": 1,
+        "phone_no": "+639171234567",
+        "phone_type": "mobile"
+      },
+      {
+        "phone_no": "+639281234567",
+        "phone_type": "home"
+      }
+    ]
+  }
+}
+```
+
+**Example - Delete a Nested Record:**
+```json
+{
+  "user": {
+    "phones_attributes": [
+      {
+        "id": 2,
+        "_destroy": true
+      }
+    ]
+  }
+}
+```
+
+**Example - Update Address with New Barangay:**
+```json
+{
+  "user": {
+    "user_addresses_attributes": [
+      {
+        "id": 2,
+        "is_default": false,
+        "address_attributes": {
+          "id": 18,
+          "unit_no": "999",
+          "street_no": "888",
+          "address_line1": "Updated Street",
+          "address_line2": "New Subdivision",
+          "barangay": "Barangay 5",
+          "city": "Quezon City",
+          "region": "NCR",
+          "zipcode": "1100",
+          "country_id": 1
+        }
+      }
+    ]
+  }
+}
+```
+
+**Example Response:**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "User updated successfully"
+  },
+  "data": {
+    "id": 14,
+    "email": "user@example.com",
+    "is_verified": false,
+    "created_at": "2025-10-28T15:46:28.302Z",
+    "updated_at": "2025-10-28T15:47:17.725Z",
+    "user_detail": {
+      "id": 13,
+      "first_name": "Jane",
+      "middle_name": "Marie",
+      "last_name": "Smith",
+      "dob": "1992-05-20"
+    },
+    "phones": [...],
+    "user_addresses": [...],
+    "user_payment_methods": [...]
+  }
+}
+```
+
+#### DELETE /api/v1/users/:id
+Delete user account and all associated data.
+- **Auth Required**: User JWT token (users can only delete their own account)
+- **Returns**: `{"message": "User deleted successfully"}`
+
+**Note**: This permanently deletes the user and all nested records (detail, phones, addresses, payment methods, shopping cart, orders, receipts).
+
+---
 
 ### Admin Users (Management & Warehouse)
 
@@ -693,9 +1166,18 @@ Delete a promotion-category association.
 ### Products (Public Read, Management CRUD)
 
 #### GET /api/v1/products
-List all products.
+List all products with pagination support.
 - **Auth Required**: None (public access)
-- **Returns**: Array of products with category, producer, and promotion details
+- **Pagination**: Yes (default: 20 per page, max: 100)
+- **Query Parameters**: 
+  - `page` (optional): Page number
+  - `per_page` (optional): Items per page
+- **Returns**: Paginated array of products with category, producer, and promotion details
+
+**Example Request with Pagination**:
+```bash
+GET /api/v1/products?page=1&per_page=10
+```
 
 **Example Response**:
 ```json
@@ -703,6 +1185,14 @@ List all products.
   "status": {
     "code": 200,
     "message": "Products retrieved successfully"
+  },
+  "pagination": {
+    "current_page": 1,
+    "per_page": 10,
+    "total_entries": 20,
+    "total_pages": 2,
+    "next_page": 2,
+    "previous_page": null
   },
   "data": [
     {
@@ -847,9 +1337,18 @@ Delete a product.
 - Admins can optionally provide a custom SKU, but it's not required.
 
 #### GET /api/v1/inventories
-List all inventories.
+List all inventories with pagination support.
 - **Auth Required**: Management or Warehouse Admin JWT token
-- **Returns**: Array of inventories with company site and product details
+- **Pagination**: Yes (default: 50 per page, max: 100)
+- **Query Parameters**: 
+  - `page` (optional): Page number
+  - `per_page` (optional): Items per page
+- **Returns**: Paginated array of inventories with company site and product details
+
+**Example Request with Pagination**:
+```bash
+GET /api/v1/inventories?page=1&per_page=20
+```
 
 **Example Response**:
 ```json
@@ -857,6 +1356,14 @@ List all inventories.
   "status": {
     "code": 200,
     "message": "Fetched all inventories successfully"
+  },
+  "pagination": {
+    "current_page": 1,
+    "per_page": 20,
+    "total_entries": 60,
+    "total_pages": 3,
+    "next_page": 2,
+    "previous_page": null
   },
   "data": [
     {
@@ -932,8 +1439,11 @@ Get a specific inventory.
 ```
 
 #### POST /api/v1/inventories
-Create a new inventory.
+Create a new inventory or add to existing inventory.
 - **Auth Required**: Management or Warehouse Admin JWT token
+- **Behavior**: 
+  - If an inventory for the same `product_id` and `company_site_id` already exists, the `qty_in_stock` will be **added** to the existing inventory
+  - If no matching inventory exists, a new inventory record is created
 - **Body** (SKU is optional - will auto-generate if not provided):
 ```json
 {
@@ -956,13 +1466,13 @@ Create a new inventory.
 }
 ```
 - **Required Fields**: `company_site_id`, `product_id`, `qty_in_stock`
-- **Optional Fields**: `sku` (auto-generated if not provided)
+- **Optional Fields**: `sku` (auto-generated if not provided, ignored if inventory exists)
 - **Validation**: 
   - `sku` must be unique across all inventories (automatically ensured if auto-generated)
   - `qty_in_stock` must be an integer >= 0
   - `company_site_id` must reference a warehouse-type site (not management-type)
 
-**Example Response with Auto-Generated SKU**:
+**Example Response with Auto-Generated SKU (New Inventory)**:
 ```json
 {
   "status": {
@@ -985,6 +1495,35 @@ Create a new inventory.
     },
     "created_at": "2025-01-14T10:00:00.000Z",
     "updated_at": "2025-01-14T10:00:00.000Z"
+  }
+}
+```
+
+**Example Response (Adding to Existing Inventory)**:
+If an inventory with `product_id: 1` and `company_site_id: 2` already exists with `qty_in_stock: 150`, 
+and you POST with `qty_in_stock: 100`, the result will be:
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Inventory fetched successfully"
+  },
+  "data": {
+    "id": 1,
+    "sku": "002000001439",
+    "qty_in_stock": 250,
+    "company_site": {
+      "id": 2,
+      "title": "JPB Warehouse A",
+      "site_type": "warehouse"
+    },
+    "product": {
+      "id": 1,
+      "title": "Running Shoes",
+      "price": "99.99"
+    },
+    "created_at": "2025-01-14T10:00:00.000Z",
+    "updated_at": "2025-01-14T15:32:46.274Z"
   }
 }
 ```
@@ -1028,7 +1567,7 @@ For updating an admin_user's details, role, and company site assignments:
     "admin_phones_attributes": [
       {
         "id": 1,
-        "phone_no": "12345678",
+        "phone_no": "+639171234567",
         "phone_type": "mobile"
       }
     ],

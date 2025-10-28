@@ -1,4 +1,6 @@
 class Api::V1::WarehouseOrdersController < ApplicationController
+  include Paginatable
+
   before_action :authenticate_admin_user!
   before_action :set_warehouse_order, only: [ :show, :update, :destroy ]
 
@@ -6,7 +8,10 @@ class Api::V1::WarehouseOrdersController < ApplicationController
 
   # GET /api/v1/warehouse_orders (Management and Warehouse)
   def index
-    @warehouse_orders = WarehouseOrder.includes(:company_site, :inventory, :user, :user_cart_order).all
+    collection = WarehouseOrder.includes(:company_site, :inventory, :user, :user_cart_order).all
+    result = paginate_collection(collection, 30)
+    @warehouse_orders = result[:collection]
+    @pagination = result[:pagination]
   end
 
   # GET /api/v1/warehouse_orders/:id (Management and Warehouse)
@@ -27,7 +32,7 @@ class Api::V1::WarehouseOrdersController < ApplicationController
 
       render :show, status: :created
     else
-      render json: { errors: @warehouse_order.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @warehouse_order.errors.full_messages }, status: :unprocessable_content
     end
   end
 
@@ -36,7 +41,7 @@ class Api::V1::WarehouseOrdersController < ApplicationController
     if @warehouse_order.update(warehouse_order_params)
       render :show
     else
-      render json: { errors: @warehouse_order.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @warehouse_order.errors.full_messages }, status: :unprocessable_content
     end
   end
 
@@ -54,7 +59,7 @@ class Api::V1::WarehouseOrdersController < ApplicationController
     if @warehouse_order.destroy
       render json: { message: "Warehouse order deleted successfully" }, status: :ok
     else
-      render json: { errors: @warehouse_order.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @warehouse_order.errors.full_messages }, status: :unprocessable_content
     end
   end
 

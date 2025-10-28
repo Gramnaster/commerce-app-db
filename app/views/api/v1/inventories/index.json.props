@@ -3,6 +3,8 @@ json.status do
   json.message "Fetched all inventories successfully"
 end
 
+json.pagination @pagination if @pagination
+
 json.data do
   json.array! @inventories do |inventory|
     json.id inventory.id

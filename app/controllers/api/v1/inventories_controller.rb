@@ -1,4 +1,6 @@
 class Api::V1::InventoriesController < ApplicationController
+  include Paginatable
+
   before_action :authenticate_admin_user!
   before_action :set_inventory, only: [ :show, :update, :destroy ]
 
@@ -9,7 +11,11 @@ class Api::V1::InventoriesController < ApplicationController
   end
 
   def index
-    @inventories = Inventory.includes(:company_site, :product).all
+    inventories = Inventory.includes(:company_site, :product).all
+
+    result = paginate_collection(inventories, default_per_page: 50)
+    @inventories = result[:collection]
+    @pagination = result[:pagination]
   end
 
   def show

@@ -3,6 +3,8 @@ json.status do
   json.message "Fetched all product categories successfully"
 end
 
+json.pagination @pagination if @pagination
+
 json.data do
   json.array! @product_categories do |category|
     json.id category.id

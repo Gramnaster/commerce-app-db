@@ -1,4 +1,6 @@
 class Api::V1::UserCartOrdersController < ApplicationController
+  include Paginatable
+
   before_action :set_user_cart_order, only: [ :show, :update, :approve ]
 
   respond_to :json
@@ -8,7 +10,10 @@ class Api::V1::UserCartOrdersController < ApplicationController
     authenticate_admin_user!
     authorize_management!
 
-    @user_cart_orders = UserCartOrder.includes(:shopping_cart, :user_address, :warehouse_orders).all
+    collection = UserCartOrder.includes(:shopping_cart, :user_address, :warehouse_orders).all
+    result = paginate_collection(collection, 30)
+    @user_cart_orders = result[:collection]
+    @pagination = result[:pagination]
   end
 
   # GET /api/v1/user_cart_orders/:id (Management only)

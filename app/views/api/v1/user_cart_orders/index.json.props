@@ -3,6 +3,8 @@ json.status do
   json.message "User cart orders fetched successfully"
 end
 
+json.pagination @pagination if @pagination
+
 json.data do
   json.array! @user_cart_orders do |order|
     json.id order.id
@@ -14,6 +16,7 @@ json.data do
       json.address do
         json.unit_no order.user_address.address.unit_no
         json.street_no order.user_address.address.street_no
+        json.barangay order.user_address.address.barangay
         json.city order.user_address.address.city
         json.region order.user_address.address.region
         json.zipcode order.user_address.address.zipcode

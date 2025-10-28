@@ -1,3 +1,5 @@
+json.pagination @pagination if @pagination
+
 json.array! @receipts do |receipt|
   json.id receipt.id
   json.transaction_type receipt.transaction_type

@@ -41,7 +41,7 @@ class Api::V1::AdminUsers::RegistrationsController < Devise::RegistrationsContro
       admin_addresses_attributes: [
         :id, :is_default, :_destroy,
         address_attributes: [ :id, :unit_no, :street_no, :address_line1, :address_line2,
-                            :city, :region, :zipcode, :country_id ]
+                            :barangay, :city, :region, :zipcode, :country_id ]
       ]
     )
   end
