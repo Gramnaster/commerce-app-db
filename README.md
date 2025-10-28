@@ -65,9 +65,64 @@ Regular users can self-register, manage their profiles, and shop in the system. 
 ### User Registration
 
 #### POST /api/v1/users/signup
-Create a new user account with complete profile information.
+Create a new user account. Only basic information is required for registration.
 - **Auth Required**: None
-- **Body**:
+
+**Minimal Registration (Recommended for Frontend):**
+```json
+{
+  "user": {
+    "email": "user@example.com",
+    "password": "password123",
+    "password_confirmation": "password123",
+    "user_detail_attributes": {
+      "first_name": "Alice",
+      "last_name": "Johnson",
+      "dob": "1995-03-10"
+    }
+  }
+}
+```
+
+**Required Fields**:
+- `email`, `password`, `password_confirmation`
+- `user_detail_attributes`: `first_name`, `last_name`, `dob`
+
+**Optional Fields** (can be added later via PATCH):
+- `user_detail_attributes.middle_name`
+- `phones_attributes`: Array of phone objects
+- `user_addresses_attributes`: Array of address objects
+- `user_payment_methods_attributes`: Array of payment method objects
+
+**Example Response:**
+```json
+{
+  "status": {
+    "code": 201,
+    "message": "Signed up successfully."
+  },
+  "data": {
+    "id": 15,
+    "email": "user@example.com",
+    "jti": "5117f677-1bec-4e8b-b842-93c18e2efd02"
+  }
+}
+```
+
+**What Gets Auto-Created:**
+- `user_detail`: Created with provided first_name, last_name, dob
+- `user_payment_method`: Auto-created with balance=0.0 and payment_type=null
+- `shopping_cart`: Auto-created empty shopping cart
+- `phones`: Empty array (can be added later)
+- `user_addresses`: Empty array (can be added later)
+
+**Note**: A confirmation email is sent asynchronously. The user must confirm their email before logging in.
+
+<details>
+<summary><b>Advanced: Full Registration with Nested Attributes</b></summary>
+
+You can optionally include phones, addresses, and payment methods during registration:
+
 ```json
 {
   "user": {
@@ -112,32 +167,9 @@ Create a new user account with complete profile information.
 }
 ```
 
-**Required Fields**:
-- `email`, `password`, `password_confirmation`
-- `user_detail_attributes`: `first_name`, `last_name`, `dob`
-- `phones_attributes`: Array with at least one phone entry (`phone_no`, `phone_type`)
-- `user_addresses_attributes`: Array with at least one address entry including complete `address_attributes` with `barangay`
-- `user_payment_methods_attributes`: Optional but recommended (`balance`, `payment_type`)
-
 **Phone Types**: `mobile`, `home`, `work`  
 **Payment Types**: `e_wallet`, `credit_card`, `debit_card`, `cash`
-
-**Example Response:**
-```json
-{
-  "status": {
-    "code": 201,
-    "message": "Signed up successfully."
-  },
-  "data": {
-    "id": 14,
-    "email": "user@example.com",
-    "jti": "ba991969-1624-44ec-8a4b-a501faa49db6"
-  }
-}
-```
-
-**Note**: A confirmation email is sent asynchronously. The user must confirm their email before logging in.
+</details>
 
 #### GET /api/v1/users/confirmation?confirmation_token=TOKEN
 Confirm user email address.
@@ -219,7 +251,43 @@ Retrieve user profile with all nested data.
 - **Auth Required**: User JWT token (users can only view their own profile)
 - **Returns**: Complete user object including `user_detail`, `phones`, `user_addresses`, and `user_payment_methods`
 
-**Example Response:**
+**Example Response (Minimal Registration):**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "User was retrieved successfully."
+  },
+  "data": {
+    "id": 15,
+    "email": "user@example.com",
+    "is_verified": false,
+    "confirmed_at": "2025-10-28T15:52:36.657Z",
+    "created_at": "2025-10-28T15:51:57.822Z",
+    "updated_at": "2025-10-28T15:52:36.658Z",
+    "user_detail": {
+      "id": 14,
+      "first_name": "Alice",
+      "middle_name": null,
+      "last_name": "Johnson",
+      "dob": "1995-03-10"
+    },
+    "phones": [],
+    "user_addresses": [],
+    "user_payment_methods": [
+      {
+        "id": 12,
+        "balance": "0.0",
+        "payment_type": null
+      }
+    ]
+  }
+}
+```
+
+<details>
+<summary><b>Example Response (Full Registration with All Nested Data)</b></summary>
+
 ```json
 {
   "status": {
@@ -275,6 +343,7 @@ Retrieve user profile with all nested data.
   }
 }
 ```
+</details>
 
 #### PATCH /api/v1/users/:id
 Update user profile and nested attributes.
