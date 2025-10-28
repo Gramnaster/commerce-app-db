@@ -1,4 +1,6 @@
 class Api::V1::PromotionsCategoriesController < ApplicationController
+  include Paginatable
+
   before_action :authenticate_admin_user!
   before_action :authorize_management!
   before_action :set_promotions_category, only: [ :show, :destroy ]
@@ -10,7 +12,10 @@ class Api::V1::PromotionsCategoriesController < ApplicationController
   end
 
   def index
-    @promotions_categories = PromotionsCategory.includes(:product_category, :promotion).all
+    collection = PromotionsCategory.includes(:product_category, :promotion).all
+    result = paginate_collection(collection, 20)
+    @promotions_categories = result[:collection]
+    @pagination = result[:pagination]
     render :index
   end
 
