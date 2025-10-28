@@ -1,4 +1,6 @@
 class Api::V1::CompanySitesController < ApplicationController
+  include Paginatable
+
   before_action :authenticate_admin_user!
   before_action :authorize_admin_user!, only: [ :index, :show ]
 
@@ -64,7 +66,10 @@ class Api::V1::CompanySitesController < ApplicationController
       return render json: { error: "Unauthorized. Higher permissions required." }, status: :forbidden
     end
 
-    @company_sites = CompanySite.all
+    collection = CompanySite.all
+    result = paginate_collection(collection, 20)
+    @company_sites = result[:collection]
+    @pagination = result[:pagination]
     render :index
   end
 
