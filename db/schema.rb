@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_10_28_150942) do
+ActiveRecord::Schema[8.1].define(version: 2025_10_28_155747) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -132,7 +132,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_28_150942) do
 
   create_table "phones", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.integer "phone_no", null: false
+    t.string "phone_no", default: "", null: false
     t.enum "phone_type", default: "mobile", null: false, enum_type: "phone_type"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
