@@ -14,6 +14,7 @@ json.data do
       json.address do
         json.unit_no order.user_address.address.unit_no
         json.street_no order.user_address.address.street_no
+        json.barangay order.user_address.address.barangay
         json.city order.user_address.address.city
         json.region order.user_address.address.region
         json.zipcode order.user_address.address.zipcode

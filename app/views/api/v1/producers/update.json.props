@@ -14,6 +14,7 @@ json.data do
     json.street_no @producer.address.street_no
     json.address_line1 @producer.address.address_line1
     json.address_line2 @producer.address.address_line2
+    json.barangay @producer.address.barangay
     json.city @producer.address.city
     json.region @producer.address.region
     json.zipcode @producer.address.zipcode

@@ -25,6 +25,7 @@ json.data do
       json.id @product.producer.address.id
       json.unit_no @product.producer.address.unit_no
       json.street_no @product.producer.address.street_no
+      json.barangay @product.producer.address.barangay
       json.city @product.producer.address.city
       json.zipcode @product.producer.address.zipcode
       json.country @product.producer.address.country.name if @product.producer.address.country
