@@ -1,4 +1,6 @@
 class Api::V1::ReceiptsController < ApplicationController
+  include Paginatable
+
   before_action :set_receipt, only: [ :show ]
 
   respond_to :json
@@ -7,12 +9,16 @@ class Api::V1::ReceiptsController < ApplicationController
   def index
     authenticate_user!
 
-    @receipts = current_user.receipts.includes(:user_cart_order).recent
+    collection = current_user.receipts.includes(:user_cart_order).recent
 
     # Optional filtering by transaction type
     if params[:transaction_type].present?
-      @receipts = @receipts.where(transaction_type: params[:transaction_type])
+      collection = collection.where(transaction_type: params[:transaction_type])
     end
+
+    result = paginate_collection(collection, 20)
+    @receipts = result[:collection]
+    @pagination = result[:pagination]
   end
 
   # GET /api/v1/receipts/:id (Users only - view their own receipt detail)
