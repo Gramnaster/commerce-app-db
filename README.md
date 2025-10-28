@@ -137,7 +137,7 @@ You can optionally include phones, addresses, and payment methods during registr
     },
     "phones_attributes": [
       {
-        "phone_no": "917123456",
+        "phone_no": "+639171234567",
         "phone_type": "mobile"
       }
     ],
@@ -311,7 +311,7 @@ Retrieve user profile with all nested data.
     "phones": [
       {
         "id": 1,
-        "phone_no": 917123456,
+        "phone_no": "+639171234567",
         "phone_type": "mobile"
       }
     ],
@@ -364,11 +364,11 @@ Update user profile and nested attributes.
     "phones_attributes": [
       {
         "id": 1,
-        "phone_no": "917123456",
+        "phone_no": "+639171234567",
         "phone_type": "mobile"
       },
       {
-        "phone_no": "286543210",
+        "phone_no": "+639281234567",
         "phone_type": "home"
       }
     ]
@@ -1461,7 +1461,7 @@ For updating an admin_user's details, role, and company site assignments:
     "admin_phones_attributes": [
       {
         "id": 1,
-        "phone_no": "12345678",
+        "phone_no": "+639171234567",
         "phone_type": "mobile"
       }
     ],
