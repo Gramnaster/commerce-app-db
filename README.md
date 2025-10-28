@@ -13,6 +13,7 @@
     - [How Product Promotions Are Displayed](#how-product-promotions-are-displayed)
   - [Promotions Categories](#promotions-categories-join-table---management-admin-only)
   - [Products](#products-public-read-management-crud)
+  - [Inventories](#inventories-admin-only---management--warehouse)
   - [User Payment Methods & Shopping Cart System](#user-payment-methods--shopping-cart-system)
     - [User Payment Methods](#user-payment-methods-user-only)
     - [Shopping Cart Items](#shopping-cart-items-user-only)
@@ -932,8 +933,11 @@ Get a specific inventory.
 ```
 
 #### POST /api/v1/inventories
-Create a new inventory.
+Create a new inventory or add to existing inventory.
 - **Auth Required**: Management or Warehouse Admin JWT token
+- **Behavior**: 
+  - If an inventory for the same `product_id` and `company_site_id` already exists, the `qty_in_stock` will be **added** to the existing inventory
+  - If no matching inventory exists, a new inventory record is created
 - **Body** (SKU is optional - will auto-generate if not provided):
 ```json
 {
@@ -956,13 +960,13 @@ Create a new inventory.
 }
 ```
 - **Required Fields**: `company_site_id`, `product_id`, `qty_in_stock`
-- **Optional Fields**: `sku` (auto-generated if not provided)
+- **Optional Fields**: `sku` (auto-generated if not provided, ignored if inventory exists)
 - **Validation**: 
   - `sku` must be unique across all inventories (automatically ensured if auto-generated)
   - `qty_in_stock` must be an integer >= 0
   - `company_site_id` must reference a warehouse-type site (not management-type)
 
-**Example Response with Auto-Generated SKU**:
+**Example Response with Auto-Generated SKU (New Inventory)**:
 ```json
 {
   "status": {
@@ -985,6 +989,35 @@ Create a new inventory.
     },
     "created_at": "2025-01-14T10:00:00.000Z",
     "updated_at": "2025-01-14T10:00:00.000Z"
+  }
+}
+```
+
+**Example Response (Adding to Existing Inventory)**:
+If an inventory with `product_id: 1` and `company_site_id: 2` already exists with `qty_in_stock: 150`, 
+and you POST with `qty_in_stock: 100`, the result will be:
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Inventory fetched successfully"
+  },
+  "data": {
+    "id": 1,
+    "sku": "002000001439",
+    "qty_in_stock": 250,
+    "company_site": {
+      "id": 2,
+      "title": "JPB Warehouse A",
+      "site_type": "warehouse"
+    },
+    "product": {
+      "id": 1,
+      "title": "Running Shoes",
+      "price": "99.99"
+    },
+    "created_at": "2025-01-14T10:00:00.000Z",
+    "updated_at": "2025-01-14T15:32:46.274Z"
   }
 }
 ```

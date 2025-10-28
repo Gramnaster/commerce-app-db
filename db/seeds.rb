@@ -243,4 +243,46 @@ unless Rails.env.test?
     end
   end
 
+  # Seeds Inventories for all warehouse company sites
+  puts "Seeding Inventories for warehouse sites..."
+  ActiveRecord::Base.transaction do
+    begin
+      # Get all warehouse sites
+      warehouse_sites = CompanySite.where(site_type: 'warehouse')
+
+      # Get all products
+      all_products = Product.all
+
+      if warehouse_sites.empty?
+        puts "No warehouse sites found. Please seed company sites first."
+        raise ActiveRecord::Rollback
+      end
+
+      if all_products.empty?
+        puts "No products found. Please seed products first."
+        raise ActiveRecord::Rollback
+      end
+
+      # Create inventory for each product in each warehouse with 100 items
+      inventory_count = 0
+      warehouse_sites.each do |warehouse|
+        all_products.each do |product|
+          Inventory.find_or_create_by!(
+            product: product,
+            company_site: warehouse
+          ) do |inventory|
+            inventory.qty_in_stock = 100
+          end
+          inventory_count += 1
+        end
+        puts "Created inventories for #{warehouse.title}"
+      end
+
+      puts "Successfully seeded #{inventory_count} inventory records across #{warehouse_sites.count} warehouses."
+    rescue StandardError => e
+      puts "Failed to seed inventories. Error: #{e.message}"
+      raise ActiveRecord::Rollback
+    end
+  end
+
 end
