@@ -8,7 +8,12 @@ class Product < ApplicationRecord
   has_many :company_sites, through: :inventories
 
   # Active Storage attachment for product images
-  has_one_attached :product_image
+  # Eager transformations generate common sizes on upload for faster delivery
+  has_one_attached :product_image do |attachable|
+    attachable.variant :thumb, resize_to_limit: [ 300, 300 ]
+    attachable.variant :medium, resize_to_limit: [ 600, 600 ]
+    attachable.variant :large, resize_to_limit: [ 1200, 1200 ]
+  end
 
   validates :title, presence: true
   validates :price, presence: true, numericality: { greater_than_or_equal_to: 0 }
@@ -45,5 +50,21 @@ class Product < ApplicationRecord
   # Check if product has any promotion
   def has_promotion?
     promotion.present? || product_category.promotions.any?
+  end
+
+  # Get optimized image URL with WebP format and size limit
+  def optimized_image_url
+    return product_image_url unless product_image.attached?
+
+    # Get base Cloudinary URL
+    base_url = product_image.url
+
+    # Add Cloudinary transformations for optimal delivery
+    # f_auto: automatic format (WebP/AVIF), q_auto: automatic quality, w_600: max width
+    if base_url.include?("cloudinary.com")
+      base_url.sub("/upload/", "/upload/w_600,f_auto,q_auto/")
+    else
+      base_url
+    end
   end
 end
