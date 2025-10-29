@@ -1,0 +1,14 @@
+# Nixpacks configuration for Dokploy deployment
+# This tells Dokploy to run database setup commands during build
+
+[phases.install]
+# Run bundle install, then prepare database and seed it
+cmds = [
+  "bundle install",
+  "bundle exec rake db:prepare",
+  "bundle exec rake db:seed"
+]
+
+[start]
+# Start the application using Puma (matches Procfile web command)
+cmd = "bundle exec puma -C config/puma.rb"
