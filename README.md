@@ -1303,29 +1303,130 @@ curl -X POST http://localhost:3001/api/v1/products \
 ```
 
 **React-Vite Frontend Example (File Upload)**
-```javascript
-const handleCreateProduct = async (formData) => {
-  const data = new FormData();
-  data.append('product[title]', formData.title);
-  data.append('product[description]', formData.description);
-  data.append('product[price]', formData.price);
-  data.append('product[product_category_id]', formData.categoryId);
-  data.append('product[producer_id]', formData.producerId);
-  if (formData.imageFile) {
-    data.append('product[product_image]', formData.imageFile);
-  }
 
-  const response = await fetch('http://localhost:3001/api/v1/products', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`
-    },
-    body: data
-  });
-  
-  return await response.json();
+The backend automatically handles Cloudinary upload - you just send the file to the endpoint!
+
+```javascript
+// Component: CreateProductForm.jsx
+import { useState } from 'react';
+
+const CreateProductForm = () => {
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // Handle file selection
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      // Create preview URL
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  // Submit form with image
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      // Create FormData object
+      const formData = new FormData();
+      formData.append('product[title]', e.target.title.value);
+      formData.append('product[description]', e.target.description.value);
+      formData.append('product[price]', e.target.price.value);
+      formData.append('product[product_category_id]', e.target.category.value);
+      formData.append('product[producer_id]', e.target.producer.value);
+      
+      // Add image file if selected
+      if (imageFile) {
+        formData.append('product[product_image]', imageFile);
+      }
+
+      // Send to your Rails API
+      const response = await fetch('http://localhost:3001/api/v1/products', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          // NOTE: Do NOT set 'Content-Type' header - browser sets it automatically with boundary
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        console.log('Product created:', data);
+        console.log('Image URL from Cloudinary:', data.data.product_image_url);
+        // The product_image_url will be a Cloudinary URL in production:
+        // https://res.cloudinary.com/dftqk1gfb/image/upload/v1234567890/xyz123.jpg
+      } else {
+        console.error('Error:', data.errors);
+      }
+    } catch (error) {
+      console.error('Upload failed:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input type="text" name="title" placeholder="Product Title" required />
+      <textarea name="description" placeholder="Description" />
+      <input type="number" name="price" step="0.01" placeholder="Price" required />
+      <select name="category" required>
+        <option value="1">Men's Clothing</option>
+        {/* Add other categories */}
+      </select>
+      <select name="producer" required>
+        <option value="1">Producer 1</option>
+        {/* Add other producers */}
+      </select>
+      
+      {/* File input for image */}
+      <div>
+        <label>Product Image:</label>
+        <input 
+          type="file" 
+          accept="image/*" 
+          onChange={handleFileChange}
+        />
+        {imagePreview && (
+          <img src={imagePreview} alt="Preview" style={{width: '200px'}} />
+        )}
+      </div>
+
+      <button type="submit" disabled={loading}>
+        {loading ? 'Uploading...' : 'Create Product'}
+      </button>
+    </form>
+  );
 };
+
+export default CreateProductForm;
 ```
+
+**Key Points:**
+- ✅ **Endpoint**: `POST http://localhost:3001/api/v1/products` (same as before!)
+- ✅ **Content-Type**: Browser automatically sets `multipart/form-data` with boundary
+- ✅ **Cloudinary Upload**: Happens automatically in the backend - you don't need to do anything special!
+- ✅ **Response**: You get back a Cloudinary URL in `product_image_url`
+
+**What Happens Behind the Scenes:**
+1. Your React app sends the file to Rails API
+2. Rails Active Storage receives the file
+3. Active Storage checks `config.active_storage.service` → sees `:cloudinary`
+4. Active Storage automatically uploads to your Cloudinary account
+5. Cloudinary returns a permanent URL
+6. Rails saves the product with Cloudinary reference
+7. Your React app receives the Cloudinary URL in the response
+
+**Production vs Development URLs:**
+- **Development (local storage)**: `/rails/active_storage/blobs/redirect/...`
+- **Production (Cloudinary)**: `https://res.cloudinary.com/dftqk1gfb/image/upload/...`
+
 
 - **Required Fields**: `title`, `price`, `product_category_id`, `producer_id`
 - **Optional Fields**: `description`, `promotion_id`, `product_image` (file), `product_image_url` (string)
@@ -1401,24 +1502,149 @@ curl -X PATCH http://localhost:3001/api/v1/products/:id \
 ```
 
 **React-Vite Frontend Example (Update with File)**
-```javascript
-const handleUpdateProduct = async (productId, formData) => {
-  const data = new FormData();
-  if (formData.title) data.append('product[title]', formData.title);
-  if (formData.price) data.append('product[price]', formData.price);
-  if (formData.imageFile) {
-    data.append('product[product_image]', formData.imageFile);
-  }
 
-  const response = await fetch(`http://localhost:3001/api/v1/products/${productId}`, {
-    method: 'PATCH',
-    headers: {
-      'Authorization': `Bearer ${token}`
-    },
-    body: data
-  });
-  
-  return await response.json();
+```javascript
+// Component: UpdateProductForm.jsx
+const UpdateProductForm = ({ productId, currentProduct }) => {
+  const [newImage, setNewImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(currentProduct.product_image_url);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setNewImage(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData();
+    formData.append('product[title]', e.target.title.value);
+    formData.append('product[price]', e.target.price.value);
+    
+    // Only add image if a new one was selected
+    if (newImage) {
+      formData.append('product[product_image]', newImage);
+    }
+
+    const response = await fetch(`http://localhost:3001/api/v1/products/${productId}`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+      },
+      body: formData
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      console.log('Product updated!');
+      console.log('New image URL:', data.data.product_image_url);
+    }
+  };
+
+  return (
+    <form onSubmit={handleUpdate}>
+      <input 
+        type="text" 
+        name="title" 
+        defaultValue={currentProduct.title} 
+      />
+      <input 
+        type="number" 
+        name="price" 
+        step="0.01" 
+        defaultValue={currentProduct.price} 
+      />
+      
+      <div>
+        <label>Change Image:</label>
+        <input type="file" accept="image/*" onChange={handleFileChange} />
+        {imagePreview && (
+          <img src={imagePreview} alt="Preview" style={{width: '200px'}} />
+        )}
+      </div>
+
+      <button type="submit">Update Product</button>
+    </form>
+  );
+};
+```
+
+**Updating Image Behavior:**
+- If you upload a new file → Old Cloudinary image is replaced
+- If you don't upload a file → Existing image stays unchanged
+- Backend handles Cloudinary upload automatically
+
+**React-Vite: Displaying Product Images**
+
+```javascript
+// Component: ProductCard.jsx
+const ProductCard = ({ product }) => {
+  return (
+    <div className="product-card">
+      <img 
+        src={product.product_image_url} 
+        alt={product.title}
+        onError={(e) => {
+          // Fallback image if Cloudinary URL fails
+          e.target.src = '/placeholder-image.png';
+        }}
+      />
+      <h3>{product.title}</h3>
+      <p>${product.price}</p>
+    </div>
+  );
+};
+
+// The product_image_url automatically works with:
+// - Local development: /rails/active_storage/blobs/redirect/...
+// - Production: https://res.cloudinary.com/dftqk1gfb/image/upload/...
+```
+
+**React-Vite: Fetching Products**
+
+```javascript
+// Hook: useProducts.js
+import { useState, useEffect } from 'react';
+
+export const useProducts = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/api/v1/products');
+        const data = await response.json();
+        setProducts(data.data); // Array of products
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  return { products, loading };
+};
+
+// Usage in component:
+const ProductList = () => {
+  const { products, loading } = useProducts();
+
+  if (loading) return <div>Loading...</div>;
+
+  return (
+    <div className="product-grid">
+      {products.map(product => (
+        <ProductCard key={product.id} product={product} />
+      ))}
+    </div>
+  );
 };
 ```
 
@@ -1499,6 +1725,77 @@ Delete a product entirely.
 - Free tier: 25GB storage, 25GB bandwidth/month
 - To deploy: Set `CLOUDINARY_URL` in Render environment variables
 - Format: `cloudinary://API_KEY:API_SECRET@CLOUD_NAME`
+
+---
+
+### Frontend Integration Summary
+
+**The Magic: You Don't Need Cloudinary SDK in React!**
+
+Your React-Vite frontend doesn't need any Cloudinary libraries. Just use standard `fetch` with `FormData`:
+
+```javascript
+// ✅ This is all you need!
+const formData = new FormData();
+formData.append('product[product_image]', imageFile);
+
+fetch('http://localhost:3001/api/v1/products', {
+  method: 'POST',
+  headers: { 'Authorization': `Bearer ${token}` },
+  body: formData
+});
+
+// Rails Active Storage + Cloudinary handle the rest automatically!
+```
+
+**The Complete Flow:**
+
+1. **Create Product (React)**
+   ```javascript
+   // User selects file → Upload to Rails → Rails uploads to Cloudinary → Done!
+   <input type="file" onChange={(e) => setImageFile(e.target.files[0])} />
+   ```
+
+2. **Display Products (React)**
+   ```javascript
+   // Just use the product_image_url from the API response
+   <img src={product.product_image_url} alt={product.title} />
+   ```
+
+3. **Update Product (React)**
+   ```javascript
+   // Upload new file → Rails replaces old Cloudinary image → Done!
+   formData.append('product[product_image]', newImageFile);
+   ```
+
+4. **Delete Image (React)**
+   ```javascript
+   // Delete only the image, keep the product
+   fetch(`/api/v1/products/${id}/delete_image`, { method: 'DELETE' });
+   ```
+
+**Important: Content-Type Header**
+```javascript
+// ❌ DON'T do this when uploading files:
+headers: {
+  'Content-Type': 'multipart/form-data',  // Wrong! Browser needs to set boundary
+  'Authorization': `Bearer ${token}`
+}
+
+// ✅ DO this instead:
+headers: {
+  'Authorization': `Bearer ${token}`  // Only auth header, browser handles Content-Type
+}
+```
+
+**Environment Differences:**
+
+| Environment | Image URL Format | Storage Location |
+|-------------|-----------------|------------------|
+| **Development** | `/rails/active_storage/blobs/redirect/...` | Local disk (`storage/`) |
+| **Production** | `https://res.cloudinary.com/dftqk1gfb/image/upload/...` | Cloudinary cloud |
+
+Both work seamlessly with `<img src={product.product_image_url} />` in React!
 
 ---
 
