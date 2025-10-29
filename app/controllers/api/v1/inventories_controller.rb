@@ -13,7 +13,7 @@ class Api::V1::InventoriesController < ApplicationController
   def index
     inventories = Inventory.includes(:company_site, :product).all
 
-    result = paginate_collection(inventories, default_per_page: 50)
+    result = paginate_collection(inventories, default_per_page: 10)
     @inventories = result[:collection]
     @pagination = result[:pagination]
   end

@@ -18,7 +18,7 @@ class Api::V1::ProductsController < ApplicationController
       product_category: :promotions
     ).all
 
-    result = paginate_collection(products, default_per_page: 20)
+    result = paginate_collection(products, default_per_page: 10)
     @products = result[:collection]
     @pagination = result[:pagination]
   end
