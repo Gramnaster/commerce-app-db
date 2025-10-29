@@ -1799,6 +1799,247 @@ Both work seamlessly with `<img src={product.product_image_url} />` in React!
 
 ---
 
+### Cloudinary Image Transformations
+
+**No Backend Code Required!** Cloudinary handles image transformations on-the-fly via URL parameters. Simply modify the image URL in your React frontend to get different versions of the same image.
+
+#### Basic Transformation Syntax
+
+Cloudinary URLs follow this pattern:
+```
+https://res.cloudinary.com/{cloud_name}/image/upload/{transformations}/{version}/{public_id}.{format}
+```
+
+Transformations are inserted between `/upload/` and the version/filename.
+
+#### Common Transformations
+
+**Resize (Width)**
+```javascript
+// Original from API
+const originalUrl = product.product_image_url;
+// "https://res.cloudinary.com/dftqk1gfb/image/upload/v123/product.jpg"
+
+// Resize to 300px width, maintain aspect ratio
+const resizedUrl = originalUrl.replace('/upload/', '/upload/w_300/');
+// "https://res.cloudinary.com/dftqk1gfb/image/upload/w_300/v123/product.jpg"
+```
+
+**Crop to Square Thumbnail**
+```javascript
+// 200x200 square, crop to fill, focus on center
+const thumbnailUrl = originalUrl.replace('/upload/', '/upload/w_200,h_200,c_fill/');
+// "https://res.cloudinary.com/dftqk1gfb/image/upload/w_200,h_200,c_fill/v123/product.jpg"
+```
+
+**Crop with Gravity (Smart Crop)**
+```javascript
+// 400x300, crop to fill, focus on faces or center
+const smartCropUrl = originalUrl.replace('/upload/', '/upload/w_400,h_300,c_fill,g_auto/');
+// "https://res.cloudinary.com/dftqk1gfb/image/upload/w_400,h_300,c_fill,g_auto/v123/product.jpg"
+```
+
+**Quality Optimization**
+```javascript
+// Auto quality (balances quality vs file size)
+const optimizedUrl = originalUrl.replace('/upload/', '/upload/q_auto/');
+// "https://res.cloudinary.com/dftqk1gfb/image/upload/q_auto/v123/product.jpg"
+```
+
+**Format Conversion**
+```javascript
+// Convert to WebP format
+const webpUrl = originalUrl.replace('/upload/', '/upload/f_auto/');
+// Cloudinary automatically serves WebP to browsers that support it
+```
+
+**Combine Multiple Transformations**
+```javascript
+// 500px wide, auto quality, auto format
+const transformedUrl = originalUrl.replace('/upload/', '/upload/w_500,q_auto,f_auto/');
+// "https://res.cloudinary.com/dftqk1gfb/image/upload/w_500,q_auto,f_auto/v123/product.jpg"
+```
+
+#### React Component Examples
+
+**Responsive Product Card**
+```javascript
+const ProductCard = ({ product }) => {
+  const getImageUrl = (transformations = '') => {
+    if (!product.product_image_url) return '/placeholder.png';
+    return product.product_image_url.replace('/upload/', `/upload/${transformations}/`);
+  };
+
+  return (
+    <div className="product-card">
+      {/* Thumbnail - 300x300 square */}
+      <img 
+        src={getImageUrl('w_300,h_300,c_fill,q_auto,f_auto')}
+        alt={product.title}
+        loading="lazy"
+      />
+      <h3>{product.title}</h3>
+      <p>${product.price}</p>
+    </div>
+  );
+};
+```
+
+**Product Detail with Zoom**
+```javascript
+const ProductDetail = ({ product }) => {
+  const [imageSize, setImageSize] = useState('medium');
+  
+  const getImageUrl = (size) => {
+    if (!product.product_image_url) return '/placeholder.png';
+    
+    const sizes = {
+      thumbnail: 'w_150,h_150,c_fill',
+      medium: 'w_500,h_500,c_fit',
+      large: 'w_1000,h_1000,c_fit',
+      zoom: 'w_2000,h_2000,c_fit'
+    };
+    
+    return product.product_image_url.replace(
+      '/upload/', 
+      `/upload/${sizes[size]},q_auto,f_auto/`
+    );
+  };
+
+  return (
+    <div className="product-detail">
+      <img 
+        src={getImageUrl(imageSize)}
+        alt={product.title}
+        onClick={() => setImageSize(imageSize === 'medium' ? 'large' : 'medium')}
+      />
+      
+      <div className="thumbnails">
+        {['thumbnail', 'medium', 'large'].map(size => (
+          <img 
+            key={size}
+            src={getImageUrl('thumbnail')}
+            onClick={() => setImageSize(size)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+```
+
+**Utility Function for Transformations**
+```javascript
+// utils/cloudinaryTransform.js
+export const transformCloudinaryUrl = (url, transformations) => {
+  if (!url || !url.includes('cloudinary.com')) {
+    return url; // Return as-is if not a Cloudinary URL
+  }
+  
+  return url.replace('/upload/', `/upload/${transformations}/`);
+};
+
+// Usage in components:
+import { transformCloudinaryUrl } from '@/utils/cloudinaryTransform';
+
+const thumbnailUrl = transformCloudinaryUrl(
+  product.product_image_url, 
+  'w_300,h_300,c_fill,q_auto,f_auto'
+);
+```
+
+#### Transformation Parameters Reference
+
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| `w_X` | Width in pixels | `w_300` |
+| `h_X` | Height in pixels | `h_200` |
+| `c_X` | Crop mode | `c_fill`, `c_fit`, `c_scale`, `c_thumb` |
+| `g_X` | Gravity/focus | `g_auto`, `g_face`, `g_center` |
+| `q_X` | Quality | `q_auto`, `q_80` (1-100) |
+| `f_X` | Format | `f_auto`, `f_webp`, `f_jpg` |
+| `r_X` | Radius/rounded corners | `r_10`, `r_max` (circle) |
+| `e_X` | Effects | `e_grayscale`, `e_sepia`, `e_blur:300` |
+| `b_X` | Background color | `b_white`, `b_rgb:ff0000` |
+
+#### Crop Modes Explained
+
+- **`c_fill`**: Resize and crop to fill dimensions exactly (may crop image)
+- **`c_fit`**: Resize to fit within dimensions (maintains aspect ratio, no cropping)
+- **`c_scale`**: Scale to exact dimensions (may distort)
+- **`c_thumb`**: Generate thumbnail with smart cropping
+- **`c_pad`**: Resize and add padding to fit exact dimensions
+
+#### Best Practices
+
+**1. Always Use Auto Quality and Format**
+```javascript
+// ✅ Good - Let Cloudinary optimize
+'w_500,q_auto,f_auto'
+
+// ❌ Bad - Fixed quality/format
+'w_500,q_100,f_jpg'
+```
+
+**2. Use Lazy Loading**
+```javascript
+<img 
+  src={transformedUrl} 
+  loading="lazy"  // Browser native lazy loading
+  alt={product.title}
+/>
+```
+
+**3. Provide Multiple Sizes for Responsive Images**
+```javascript
+<img 
+  src={transformCloudinaryUrl(url, 'w_800,q_auto,f_auto')}
+  srcSet={`
+    ${transformCloudinaryUrl(url, 'w_400,q_auto,f_auto')} 400w,
+    ${transformCloudinaryUrl(url, 'w_800,q_auto,f_auto')} 800w,
+    ${transformCloudinaryUrl(url, 'w_1200,q_auto,f_auto')} 1200w
+  `}
+  sizes="(max-width: 640px) 400px, (max-width: 1024px) 800px, 1200px"
+  alt={product.title}
+/>
+```
+
+**4. Cache Transformations**
+```javascript
+// Cache transformed URLs to avoid recalculating
+const cachedThumbnail = useMemo(
+  () => transformCloudinaryUrl(product.product_image_url, 'w_300,h_300,c_fill,q_auto,f_auto'),
+  [product.product_image_url]
+);
+```
+
+#### Free Tier Limits
+
+Your Cloudinary free tier includes:
+- ✅ **25,000 transformations/month** (plenty for most apps!)
+- ✅ **Unlimited cached transformations** (first transformation is cached)
+- ✅ **25GB bandwidth/month**
+
+**Note**: The first time a transformation is requested, Cloudinary creates it. Subsequent requests use the cached version (doesn't count against transformation limit).
+
+#### Advanced: Named Transformations (Optional)
+
+For frequently used transformations, you can create named presets in the Cloudinary dashboard:
+
+1. Go to Cloudinary Console → Settings → Upload
+2. Create a preset: `product_thumbnail` = `w_300,h_300,c_fill,q_auto,f_auto`
+3. Use in URL: `t_product_thumbnail`
+
+```javascript
+// Instead of:
+const url = originalUrl.replace('/upload/', '/upload/w_300,h_300,c_fill,q_auto,f_auto/');
+
+// Use named transformation:
+const url = originalUrl.replace('/upload/', '/upload/t_product_thumbnail/');
+```
+
+---
+
 ### Inventories (Admin Only - Management & Warehouse)
 
 **Important Notes**: 
