@@ -1487,9 +1487,18 @@ Delete a product entirely.
 - **Delete product**: Removes product and all associated data including images
 
 **Backend Storage**:
-- Uploaded images are stored using Rails Active Storage
-- Development/Production: Local disk storage (`Rails.root/storage`)
+- **Development**: Local disk storage (`Rails.root/storage`)
+- **Production**: Cloudinary cloud storage (persistent across deployments)
+- Uploaded images are stored using Rails Active Storage with Cloudinary service
 - Image URLs are returned in all product responses with absolute paths
+- Images are delivered via Cloudinary's CDN for fast global delivery
+
+**Cloudinary Configuration** (Production):
+- Cloud storage ensures images persist across Render deployments
+- Automatically configured via `CLOUDINARY_URL` environment variable
+- Free tier: 25GB storage, 25GB bandwidth/month
+- To deploy: Set `CLOUDINARY_URL` in Render environment variables
+- Format: `cloudinary://API_KEY:API_SECRET@CLOUD_NAME`
 
 ---
 
@@ -2512,3 +2521,113 @@ curl -X PATCH http://localhost:3001/api/v1/warehouse_orders/1 \
   }
 }
 ```
+
+---
+
+## Deployment Guide
+
+### Deploying to Render with Cloudinary
+
+This application uses **Cloudinary** for persistent image storage in production. This is critical because Render's basic plans use ephemeral storage (files are deleted on every deployment/restart).
+
+#### Prerequisites
+1. **Render Account**: Sign up at [render.com](https://render.com)
+2. **Cloudinary Account**: Sign up at [cloudinary.com](https://cloudinary.com) (Free tier: 25GB storage, 25GB bandwidth/month)
+3. **PostgreSQL Database**: Create a PostgreSQL database on Render
+
+#### Step 1: Set Up Cloudinary
+1. Create a free Cloudinary account
+2. Go to Dashboard → Account Details
+3. Copy your `CLOUDINARY_URL` (format: `cloudinary://API_KEY:API_SECRET@CLOUD_NAME`)
+
+#### Step 2: Configure Render Environment Variables
+In your Render service settings, add the following environment variables:
+
+```bash
+# Database (automatically set by Render when you attach PostgreSQL)
+DATABASE_URL=<your-postgres-url>
+
+# Rails
+RAILS_ENV=production
+RAILS_MASTER_KEY=<your-master-key>
+DEVISE_JWT_SECRET_KEY=<your-jwt-secret>
+
+# Cloudinary (CRITICAL for image storage)
+CLOUDINARY_URL=cloudinary://API_KEY:API_SECRET@CLOUD_NAME
+
+# Email (Gmail SMTP)
+GMAIL_USERNAME=<your-gmail>
+GMAIL_APP_PASSWORD=<your-app-password>
+
+# Optional: Stock API
+FINNHUB_API_KEY=<your-key>
+```
+
+#### Step 3: Deploy Configuration
+
+**Build Command:**
+```bash
+bundle install && rails db:migrate && rails db:seed
+```
+
+**Start Command:**
+```bash
+bundle exec puma -C config/puma.rb
+```
+
+#### How Image Storage Works
+
+**Development (Local):**
+- Images stored in `Rails.root/storage` directory
+- Uses Active Storage with `:local` service
+- Perfect for testing, but data is on your machine
+
+**Production (Render + Cloudinary):**
+- Images uploaded to Cloudinary cloud storage
+- Uses Active Storage with `:cloudinary` service
+- **Images persist across deployments** (no data loss!)
+- Delivered via Cloudinary's global CDN
+- Automatic image optimization and transformations
+
+#### Verification After Deployment
+
+1. **Test image upload:**
+```bash
+curl -X POST https://your-app.onrender.com/api/v1/products \
+  -H "Authorization: Bearer <admin-token>" \
+  -F "product[title]=Test Product" \
+  -F "product[price]=19.99" \
+  -F "product[product_category_id]=1" \
+  -F "product[producer_id]=1" \
+  -F "product[product_image]=@/path/to/image.jpg"
+```
+
+2. **Check image URL in response** - Should start with `https://res.cloudinary.com/...`
+
+3. **Verify persistence** - Redeploy your app, images should still be accessible
+
+#### Why Cloudinary?
+- ✅ **Persistent Storage**: Images survive deployments and restarts
+- ✅ **CDN Delivery**: Fast image loading worldwide
+- ✅ **Free Tier**: 25GB storage is plenty for most projects
+- ✅ **Image Transformations**: Automatic resizing, format conversion, optimization
+- ✅ **Zero Infrastructure**: No need to manage S3 buckets or servers
+- ✅ **Active Storage Compatible**: Drop-in replacement for local storage
+
+#### Troubleshooting
+
+**Images not uploading?**
+- Check `CLOUDINARY_URL` is set correctly in Render environment variables
+- Verify the URL format: `cloudinary://API_KEY:API_SECRET@CLOUD_NAME`
+- Check Render logs for Cloudinary authentication errors
+
+**Images loading slowly?**
+- Cloudinary delivers via CDN, should be fast globally
+- Check your Cloudinary bandwidth usage in dashboard
+
+**Need more storage?**
+- Cloudinary free tier: 25GB storage, 25GB bandwidth/month
+- Paid plans start at $89/month for 85GB storage (rarely needed for small apps)
+- Alternative: AWS S3 (~$0.023/GB/month, cheaper for large storage)
+
+---
