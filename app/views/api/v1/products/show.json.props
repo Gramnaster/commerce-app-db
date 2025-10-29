@@ -12,9 +12,9 @@ json.data do
   json.discount_percentage @product.applicable_discount_percentage
   json.discount_amount_dollars @product.discount_amount_dollars
 
-  # Priority: attached product_image > product_image_url > null
+  # Priority: attached product_image > product_image_url > nil
   if @product.product_image.attached?
-    json.product_image_url url_for(@product.product_image)
+    json.product_image_url @product.product_image.url
   else
     json.product_image_url @product.product_image_url
   end
