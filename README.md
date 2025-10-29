@@ -1271,9 +1271,23 @@ Get a specific product.
 ```
 
 #### POST /api/v1/products
-Create a new product.
+Create a new product with either image upload or URL.
 - **Auth Required**: Management Admin JWT token
-- **Body**:
+
+**Method 1: Image File Upload (multipart/form-data)**
+```bash
+curl -X POST http://localhost:3001/api/v1/products \
+  -H "Authorization: Bearer <token>" \
+  -F "product[title]=Running Shoes" \
+  -F "product[description]=High-quality running shoes" \
+  -F "product[price]=99.99" \
+  -F "product[product_category_id]=1" \
+  -F "product[producer_id]=1" \
+  -F "product[promotion_id]=2" \
+  -F "product[product_image]=@/path/to/image.jpg"
+```
+
+**Method 2: Image URL (application/json)**
 ```json
 {
   "product": {
@@ -1287,26 +1301,125 @@ Create a new product.
   }
 }
 ```
+
+**React-Vite Frontend Example (File Upload)**
+```javascript
+const handleCreateProduct = async (formData) => {
+  const data = new FormData();
+  data.append('product[title]', formData.title);
+  data.append('product[description]', formData.description);
+  data.append('product[price]', formData.price);
+  data.append('product[product_category_id]', formData.categoryId);
+  data.append('product[producer_id]', formData.producerId);
+  if (formData.imageFile) {
+    data.append('product[product_image]', formData.imageFile);
+  }
+
+  const response = await fetch('http://localhost:3001/api/v1/products', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    },
+    body: data
+  });
+  
+  return await response.json();
+};
+```
+
 - **Required Fields**: `title`, `price`, `product_category_id`, `producer_id`
-- **Optional Fields**: `description`, `promotion_id`, `product_image_url`
+- **Optional Fields**: `description`, `promotion_id`, `product_image` (file), `product_image_url` (string)
+- **Image Priority**: Uploaded `product_image` takes precedence over `product_image_url`
 - **Validation**: 
   - `title` must be present
   - `price` must be >= 0
   - `product_category_id` and `producer_id` must reference existing records
   - `promotion_id` is optional (nullable)
 
+**Example Response**:
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Product created successfully"
+  },
+  "data": {
+    "id": 21,
+    "title": "Running Shoes",
+    "description": "High-quality running shoes",
+    "price": "99.99",
+    "final_price": "99.99",
+    "discount_percentage": 0,
+    "discount_amount_dollars": "0.0",
+    "product_image_url": "/rails/active_storage/blobs/redirect/...",
+    "product_category": {
+      "id": 1,
+      "title": "men's clothing"
+    },
+    "producer": {
+      "id": 1,
+      "title": "Nestle Inc.",
+      "address": {
+        "id": 1,
+        "unit_no": "2020",
+        "street_no": "26th Ave",
+        "barangay": "Unknown",
+        "city": "Taguig",
+        "zipcode": "1244",
+        "country": "Philippines"
+      }
+    },
+    "promotion": null,
+    "created_at": "2025-10-29T05:42:23.720Z",
+    "updated_at": "2025-10-29T05:42:23.761Z"
+  }
+}
+```
+
 #### PATCH /api/v1/products/:id
-Update a product.
+Update a product with optional image upload or URL.
 - **Auth Required**: Management Admin JWT token
-- **Body** (all fields optional for update):
+
+**Method 1: Update with Image File (multipart/form-data)**
+```bash
+curl -X PATCH http://localhost:3001/api/v1/products/:id \
+  -H "Authorization: Bearer <token>" \
+  -F "product[title]=Updated Product Name" \
+  -F "product[price]=149.99" \
+  -F "product[product_image]=@/path/to/new-image.jpg"
+```
+
+**Method 2: Update with Image URL (application/json)**
 ```json
 {
   "product": {
     "title": "Updated Product Name",
     "price": 149.99,
-    "promotion_id": 3
+    "product_image_url": "https://example.com/new-image.jpg"
   }
 }
+```
+
+**React-Vite Frontend Example (Update with File)**
+```javascript
+const handleUpdateProduct = async (productId, formData) => {
+  const data = new FormData();
+  if (formData.title) data.append('product[title]', formData.title);
+  if (formData.price) data.append('product[price]', formData.price);
+  if (formData.imageFile) {
+    data.append('product[product_image]', formData.imageFile);
+  }
+
+  const response = await fetch(`http://localhost:3001/api/v1/products/${productId}`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    },
+    body: data
+  });
+  
+  return await response.json();
+};
 ```
 
 **Example - Remove promotion from product**:
