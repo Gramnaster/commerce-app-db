@@ -9,7 +9,11 @@ class Api::V1::ReceiptsController < ApplicationController
   def index
     authenticate_user!
 
-    collection = current_user.receipts.includes(:user_cart_order).recent
+    # Eager load associations used in view: user_cart_order.shopping_cart.shopping_cart_items, user.user_detail
+    collection = current_user.receipts.includes(
+      { user: :user_detail },
+      { user_cart_order: { shopping_cart: :shopping_cart_items } }
+    ).recent
 
     # Optional filtering by transaction type
     if params[:transaction_type].present?

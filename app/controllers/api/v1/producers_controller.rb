@@ -12,6 +12,7 @@ class Api::V1::ProducersController < ApplicationController
   end
 
   def index
+    # Eager load associations used in view: products (for count), address.country
     producers = Producer.includes(:products, address: :country).all
 
     result = paginate_collection(producers, default_per_page: 20)

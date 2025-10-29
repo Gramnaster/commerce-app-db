@@ -10,7 +10,12 @@ class Api::V1::UserCartOrdersController < ApplicationController
     authenticate_admin_user!
     authorize_management!
 
-    collection = UserCartOrder.includes(:shopping_cart, :user_address, :warehouse_orders).all
+    # Eager load associations used in view: user_address.address, shopping_cart.shopping_cart_items
+    collection = UserCartOrder.includes(
+      { user_address: :address },
+      { shopping_cart: :shopping_cart_items },
+      :warehouse_orders
+    ).all
     result = paginate_collection(collection, default_per_page: 30)
     @user_cart_orders = result[:collection]
     @pagination = result[:pagination]
