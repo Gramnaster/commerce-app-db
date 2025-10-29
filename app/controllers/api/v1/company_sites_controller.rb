@@ -66,8 +66,8 @@ class Api::V1::CompanySitesController < ApplicationController
       return render json: { error: "Unauthorized. Higher permissions required." }, status: :forbidden
     end
 
-    collection = CompanySite.all
-    result = paginate_collection(collection, 20)
+    collection = CompanySite.includes(:address).all
+    result = paginate_collection(collection, default_per_page: 20)
     @company_sites = result[:collection]
     @pagination = result[:pagination]
     render :index

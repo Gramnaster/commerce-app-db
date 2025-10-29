@@ -16,7 +16,7 @@ class Api::V1::ReceiptsController < ApplicationController
       collection = collection.where(transaction_type: params[:transaction_type])
     end
 
-    result = paginate_collection(collection, 20)
+    result = paginate_collection(collection, default_per_page: 20)
     @receipts = result[:collection]
     @pagination = result[:pagination]
   end

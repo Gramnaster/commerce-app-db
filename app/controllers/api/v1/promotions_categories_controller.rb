@@ -12,8 +12,8 @@ class Api::V1::PromotionsCategoriesController < ApplicationController
   end
 
   def index
-    collection = PromotionsCategory.includes(:product_category, :promotion).all
-    result = paginate_collection(collection, 20)
+    collection = PromotionsCategory.includes(:promotion, :product_category).all
+    result = paginate_collection(collection, default_per_page: 20)
     @promotions_categories = result[:collection]
     @pagination = result[:pagination]
     render :index

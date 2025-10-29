@@ -31,7 +31,7 @@ class Api::V1::Admin::ReceiptsController < ApplicationController
       collection = collection.where("created_at <= ?", params[:end_date])
     end
 
-    result = paginate_collection(collection, 20)
+    result = paginate_collection(collection, default_per_page: 20)
     @receipts = result[:collection]
     @pagination = result[:pagination]
   end

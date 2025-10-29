@@ -11,7 +11,7 @@ class Api::V1::UserCartOrdersController < ApplicationController
     authorize_management!
 
     collection = UserCartOrder.includes(:shopping_cart, :user_address, :warehouse_orders).all
-    result = paginate_collection(collection, 30)
+    result = paginate_collection(collection, default_per_page: 30)
     @user_cart_orders = result[:collection]
     @pagination = result[:pagination]
   end
