@@ -7,6 +7,9 @@ class Product < ApplicationRecord
   has_many :inventories, dependent: :destroy
   has_many :company_sites, through: :inventories
 
+  # Active Storage attachment for product images
+  has_one_attached :product_image
+
   validates :title, presence: true
   validates :price, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validates :product_category, presence: true

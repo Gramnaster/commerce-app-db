@@ -32,7 +32,11 @@ Rails.application.routes.draw do
       resources :users, only: [ :index, :show, :update, :destroy ]
       resources :admin_users, only: [ :index, :show, :update, :destroy ]
       resources :countries, only: [ :index, :show ]
-      resources :products, only: [ :index, :show, :create, :update, :destroy ]
+      resources :products, only: [ :index, :show, :create, :update, :destroy ] do
+        member do
+          delete :delete_image
+        end
+      end
       resources :product_categories, only: [ :index, :show, :create, :update, :destroy ]
       resources :producers, only: [ :index, :show, :create, :update, :destroy ]
       resources :promotions, only: [ :index, :show, :create, :update, :destroy ]

@@ -12,7 +12,13 @@ json.data do
     json.final_price product.final_price
     json.discount_percentage product.applicable_discount_percentage
     json.discount_amount_dollars product.discount_amount_dollars
-    json.product_image_url product.product_image_url
+
+    # Attached product_image > product_image_url > null
+    if product.product_image.attached?
+      json.product_image_url url_for(product.product_image)
+    else
+      json.product_image_url product.product_image_url
+    end
 
     json.product_category do
       json.id product.product_category.id

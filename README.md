@@ -1271,9 +1271,23 @@ Get a specific product.
 ```
 
 #### POST /api/v1/products
-Create a new product.
+Create a new product with either image upload or URL.
 - **Auth Required**: Management Admin JWT token
-- **Body**:
+
+**Method 1: Image File Upload (multipart/form-data)**
+```bash
+curl -X POST http://localhost:3001/api/v1/products \
+  -H "Authorization: Bearer <token>" \
+  -F "product[title]=Running Shoes" \
+  -F "product[description]=High-quality running shoes" \
+  -F "product[price]=99.99" \
+  -F "product[product_category_id]=1" \
+  -F "product[producer_id]=1" \
+  -F "product[promotion_id]=2" \
+  -F "product[product_image]=@/path/to/image.jpg"
+```
+
+**Method 2: Image URL (application/json)**
 ```json
 {
   "product": {
@@ -1287,26 +1301,351 @@ Create a new product.
   }
 }
 ```
+
+**React-Vite Frontend Example (File Upload)**
+
+The backend automatically handles Cloudinary upload - you just send the file to the endpoint!
+
+```javascript
+// Component: CreateProductForm.jsx
+import { useState } from 'react';
+
+const CreateProductForm = () => {
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // Handle file selection
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      // Create preview URL
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  // Submit form with image
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      // Create FormData object
+      const formData = new FormData();
+      formData.append('product[title]', e.target.title.value);
+      formData.append('product[description]', e.target.description.value);
+      formData.append('product[price]', e.target.price.value);
+      formData.append('product[product_category_id]', e.target.category.value);
+      formData.append('product[producer_id]', e.target.producer.value);
+      
+      // Add image file if selected
+      if (imageFile) {
+        formData.append('product[product_image]', imageFile);
+      }
+
+      // Send to your Rails API
+      const response = await fetch('http://localhost:3001/api/v1/products', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          // NOTE: Do NOT set 'Content-Type' header - browser sets it automatically with boundary
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        console.log('Product created:', data);
+        console.log('Image URL from Cloudinary:', data.data.product_image_url);
+        // The product_image_url will be a Cloudinary URL in production:
+        // https://res.cloudinary.com/dftqk1gfb/image/upload/v1234567890/xyz123.jpg
+      } else {
+        console.error('Error:', data.errors);
+      }
+    } catch (error) {
+      console.error('Upload failed:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input type="text" name="title" placeholder="Product Title" required />
+      <textarea name="description" placeholder="Description" />
+      <input type="number" name="price" step="0.01" placeholder="Price" required />
+      <select name="category" required>
+        <option value="1">Men's Clothing</option>
+        {/* Add other categories */}
+      </select>
+      <select name="producer" required>
+        <option value="1">Producer 1</option>
+        {/* Add other producers */}
+      </select>
+      
+      {/* File input for image */}
+      <div>
+        <label>Product Image:</label>
+        <input 
+          type="file" 
+          accept="image/*" 
+          onChange={handleFileChange}
+        />
+        {imagePreview && (
+          <img src={imagePreview} alt="Preview" style={{width: '200px'}} />
+        )}
+      </div>
+
+      <button type="submit" disabled={loading}>
+        {loading ? 'Uploading...' : 'Create Product'}
+      </button>
+    </form>
+  );
+};
+
+export default CreateProductForm;
+```
+
+**Key Points:**
+- ✅ **Endpoint**: `POST http://localhost:3001/api/v1/products` (same as before!)
+- ✅ **Content-Type**: Browser automatically sets `multipart/form-data` with boundary
+- ✅ **Cloudinary Upload**: Happens automatically in the backend - you don't need to do anything special!
+- ✅ **Response**: You get back a Cloudinary URL in `product_image_url`
+
+**What Happens Behind the Scenes:**
+1. Your React app sends the file to Rails API
+2. Rails Active Storage receives the file
+3. Active Storage checks `config.active_storage.service` → sees `:cloudinary`
+4. Active Storage automatically uploads to your Cloudinary account
+5. Cloudinary returns a permanent URL
+6. Rails saves the product with Cloudinary reference
+7. Your React app receives the Cloudinary URL in the response
+
+**Production vs Development URLs:**
+- **Development (local storage)**: `/rails/active_storage/blobs/redirect/...`
+- **Production (Cloudinary)**: `https://res.cloudinary.com/dftqk1gfb/image/upload/...`
+
+
 - **Required Fields**: `title`, `price`, `product_category_id`, `producer_id`
-- **Optional Fields**: `description`, `promotion_id`, `product_image_url`
+- **Optional Fields**: `description`, `promotion_id`, `product_image` (file), `product_image_url` (string)
+- **Image Priority**: Uploaded `product_image` takes precedence over `product_image_url`
 - **Validation**: 
   - `title` must be present
   - `price` must be >= 0
   - `product_category_id` and `producer_id` must reference existing records
   - `promotion_id` is optional (nullable)
 
+**Example Response**:
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Product created successfully"
+  },
+  "data": {
+    "id": 21,
+    "title": "Running Shoes",
+    "description": "High-quality running shoes",
+    "price": "99.99",
+    "final_price": "99.99",
+    "discount_percentage": 0,
+    "discount_amount_dollars": "0.0",
+    "product_image_url": "/rails/active_storage/blobs/redirect/...",
+    "product_category": {
+      "id": 1,
+      "title": "men's clothing"
+    },
+    "producer": {
+      "id": 1,
+      "title": "Nestle Inc.",
+      "address": {
+        "id": 1,
+        "unit_no": "2020",
+        "street_no": "26th Ave",
+        "barangay": "Unknown",
+        "city": "Taguig",
+        "zipcode": "1244",
+        "country": "Philippines"
+      }
+    },
+    "promotion": null,
+    "created_at": "2025-10-29T05:42:23.720Z",
+    "updated_at": "2025-10-29T05:42:23.761Z"
+  }
+}
+```
+
 #### PATCH /api/v1/products/:id
-Update a product.
+Update a product with optional image upload or URL.
 - **Auth Required**: Management Admin JWT token
-- **Body** (all fields optional for update):
+
+**Method 1: Update with Image File (multipart/form-data)**
+```bash
+curl -X PATCH http://localhost:3001/api/v1/products/:id \
+  -H "Authorization: Bearer <token>" \
+  -F "product[title]=Updated Product Name" \
+  -F "product[price]=149.99" \
+  -F "product[product_image]=@/path/to/new-image.jpg"
+```
+
+**Method 2: Update with Image URL (application/json)**
 ```json
 {
   "product": {
     "title": "Updated Product Name",
     "price": 149.99,
-    "promotion_id": 3
+    "product_image_url": "https://example.com/new-image.jpg"
   }
 }
+```
+
+**React-Vite Frontend Example (Update with File)**
+
+```javascript
+// Component: UpdateProductForm.jsx
+const UpdateProductForm = ({ productId, currentProduct }) => {
+  const [newImage, setNewImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(currentProduct.product_image_url);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setNewImage(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData();
+    formData.append('product[title]', e.target.title.value);
+    formData.append('product[price]', e.target.price.value);
+    
+    // Only add image if a new one was selected
+    if (newImage) {
+      formData.append('product[product_image]', newImage);
+    }
+
+    const response = await fetch(`http://localhost:3001/api/v1/products/${productId}`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+      },
+      body: formData
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      console.log('Product updated!');
+      console.log('New image URL:', data.data.product_image_url);
+    }
+  };
+
+  return (
+    <form onSubmit={handleUpdate}>
+      <input 
+        type="text" 
+        name="title" 
+        defaultValue={currentProduct.title} 
+      />
+      <input 
+        type="number" 
+        name="price" 
+        step="0.01" 
+        defaultValue={currentProduct.price} 
+      />
+      
+      <div>
+        <label>Change Image:</label>
+        <input type="file" accept="image/*" onChange={handleFileChange} />
+        {imagePreview && (
+          <img src={imagePreview} alt="Preview" style={{width: '200px'}} />
+        )}
+      </div>
+
+      <button type="submit">Update Product</button>
+    </form>
+  );
+};
+```
+
+**Updating Image Behavior:**
+- If you upload a new file → Old Cloudinary image is replaced
+- If you don't upload a file → Existing image stays unchanged
+- Backend handles Cloudinary upload automatically
+
+**React-Vite: Displaying Product Images**
+
+```javascript
+// Component: ProductCard.jsx
+const ProductCard = ({ product }) => {
+  return (
+    <div className="product-card">
+      <img 
+        src={product.product_image_url} 
+        alt={product.title}
+        onError={(e) => {
+          // Fallback image if Cloudinary URL fails
+          e.target.src = '/placeholder-image.png';
+        }}
+      />
+      <h3>{product.title}</h3>
+      <p>${product.price}</p>
+    </div>
+  );
+};
+
+// The product_image_url automatically works with:
+// - Local development: /rails/active_storage/blobs/redirect/...
+// - Production: https://res.cloudinary.com/dftqk1gfb/image/upload/...
+```
+
+**React-Vite: Fetching Products**
+
+```javascript
+// Hook: useProducts.js
+import { useState, useEffect } from 'react';
+
+export const useProducts = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/api/v1/products');
+        const data = await response.json();
+        setProducts(data.data); // Array of products
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  return { products, loading };
+};
+
+// Usage in component:
+const ProductList = () => {
+  const { products, loading } = useProducts();
+
+  if (loading) return <div>Loading...</div>;
+
+  return (
+    <div className="product-grid">
+      {products.map(product => (
+        <ProductCard key={product.id} product={product} />
+      ))}
+    </div>
+  );
+};
 ```
 
 **Example - Remove promotion from product**:
@@ -1318,11 +1657,145 @@ Update a product.
 }
 ```
 
+**Note**: When updating a product with an uploaded `product_image`, it will replace any existing uploaded image. The `product_image_url` field is ignored if an uploaded image is attached.
+
+#### DELETE /api/v1/products/:id/delete_image
+Delete only the uploaded image attachment from a product (keeps the product).
+- **Auth Required**: Management Admin JWT token
+- **Note**: This only removes uploaded images (Active Storage attachments). If the product has a `product_image_url`, it will remain and be used after deletion.
+
+**Example Request**:
+```bash
+curl -X DELETE http://localhost:3001/api/v1/products/:id/delete_image \
+  -H "Authorization: Bearer <token>"
+```
+
+**Example Response (Success)**:
+```json
+{
+  "message": "Product image deleted successfully",
+  "product": {
+    "id": 21,
+    "title": "Running Shoes",
+    "product_image_url": "https://example.com/fallback.jpg"
+  }
+}
+```
+
+**Example Response (No Image Attached)**:
+```json
+{
+  "error": "No image attached to this product"
+}
+```
+
 #### DELETE /api/v1/products/:id
-Delete a product.
+Delete a product entirely.
 - **Auth Required**: Management Admin JWT token
 - **Returns**: `{"message": "Product deleted successfully"}`
-- **Note**: This will also delete all associated shopping_cart_items and inventories (cascade delete)
+- **Note**: This will delete the product, its uploaded image (if any), and all associated shopping_cart_items and inventories (cascade delete)
+
+---
+
+### Product Images - Important Notes
+
+**Image Priority System**:
+1. If a product has an uploaded image attachment (`product_image`), it will be used
+2. If no uploaded image exists, the `product_image_url` field will be used
+3. If neither exists, `product_image_url` will be `null`
+
+**Supported Operations**:
+- **Create with file upload**: Use `multipart/form-data` with `product[product_image]`
+- **Create with URL**: Use `application/json` with `product[product_image_url]`
+- **Update image file**: Upload new file with `multipart/form-data` (replaces existing)
+- **Update image URL**: Use `application/json` with `product[product_image_url]` (only used if no uploaded image exists)
+- **Delete uploaded image**: Use `DELETE /api/v1/products/:id/delete_image` (fallback to URL if present)
+- **Delete product**: Removes product and all associated data including images
+
+**Backend Storage**:
+- **Development**: Local disk storage (`Rails.root/storage`)
+- **Production**: Cloudinary cloud storage (persistent across deployments)
+- Uploaded images are stored using Rails Active Storage with Cloudinary service
+- Image URLs are returned in all product responses with absolute paths
+- Images are delivered via Cloudinary's CDN for fast global delivery
+
+**Cloudinary Configuration** (Production):
+- Cloud storage ensures images persist across Render deployments
+- Automatically configured via `CLOUDINARY_URL` environment variable
+- Free tier: 25GB storage, 25GB bandwidth/month
+- To deploy: Set `CLOUDINARY_URL` in Render environment variables
+- Format: `cloudinary://API_KEY:API_SECRET@CLOUD_NAME`
+
+---
+
+### Frontend Integration Summary
+
+**The Magic: You Don't Need Cloudinary SDK in React!**
+
+Your React-Vite frontend doesn't need any Cloudinary libraries. Just use standard `fetch` with `FormData`:
+
+```javascript
+// ✅ This is all you need!
+const formData = new FormData();
+formData.append('product[product_image]', imageFile);
+
+fetch('http://localhost:3001/api/v1/products', {
+  method: 'POST',
+  headers: { 'Authorization': `Bearer ${token}` },
+  body: formData
+});
+
+// Rails Active Storage + Cloudinary handle the rest automatically!
+```
+
+**The Complete Flow:**
+
+1. **Create Product (React)**
+   ```javascript
+   // User selects file → Upload to Rails → Rails uploads to Cloudinary → Done!
+   <input type="file" onChange={(e) => setImageFile(e.target.files[0])} />
+   ```
+
+2. **Display Products (React)**
+   ```javascript
+   // Just use the product_image_url from the API response
+   <img src={product.product_image_url} alt={product.title} />
+   ```
+
+3. **Update Product (React)**
+   ```javascript
+   // Upload new file → Rails replaces old Cloudinary image → Done!
+   formData.append('product[product_image]', newImageFile);
+   ```
+
+4. **Delete Image (React)**
+   ```javascript
+   // Delete only the image, keep the product
+   fetch(`/api/v1/products/${id}/delete_image`, { method: 'DELETE' });
+   ```
+
+**Important: Content-Type Header**
+```javascript
+// ❌ DON'T do this when uploading files:
+headers: {
+  'Content-Type': 'multipart/form-data',  // Wrong! Browser needs to set boundary
+  'Authorization': `Bearer ${token}`
+}
+
+// ✅ DO this instead:
+headers: {
+  'Authorization': `Bearer ${token}`  // Only auth header, browser handles Content-Type
+}
+```
+
+**Environment Differences:**
+
+| Environment | Image URL Format | Storage Location |
+|-------------|-----------------|------------------|
+| **Development** | `/rails/active_storage/blobs/redirect/...` | Local disk (`storage/`) |
+| **Production** | `https://res.cloudinary.com/dftqk1gfb/image/upload/...` | Cloudinary cloud |
+
+Both work seamlessly with `<img src={product.product_image_url} />` in React!
 
 ---
 
@@ -2345,3 +2818,113 @@ curl -X PATCH http://localhost:3001/api/v1/warehouse_orders/1 \
   }
 }
 ```
+
+---
+
+## Deployment Guide
+
+### Deploying to Render with Cloudinary
+
+This application uses **Cloudinary** for persistent image storage in production. This is critical because Render's basic plans use ephemeral storage (files are deleted on every deployment/restart).
+
+#### Prerequisites
+1. **Render Account**: Sign up at [render.com](https://render.com)
+2. **Cloudinary Account**: Sign up at [cloudinary.com](https://cloudinary.com) (Free tier: 25GB storage, 25GB bandwidth/month)
+3. **PostgreSQL Database**: Create a PostgreSQL database on Render
+
+#### Step 1: Set Up Cloudinary
+1. Create a free Cloudinary account
+2. Go to Dashboard → Account Details
+3. Copy your `CLOUDINARY_URL` (format: `cloudinary://API_KEY:API_SECRET@CLOUD_NAME`)
+
+#### Step 2: Configure Render Environment Variables
+In your Render service settings, add the following environment variables:
+
+```bash
+# Database (automatically set by Render when you attach PostgreSQL)
+DATABASE_URL=<your-postgres-url>
+
+# Rails
+RAILS_ENV=production
+RAILS_MASTER_KEY=<your-master-key>
+DEVISE_JWT_SECRET_KEY=<your-jwt-secret>
+
+# Cloudinary (CRITICAL for image storage)
+CLOUDINARY_URL=cloudinary://API_KEY:API_SECRET@CLOUD_NAME
+
+# Email (Gmail SMTP)
+GMAIL_USERNAME=<your-gmail>
+GMAIL_APP_PASSWORD=<your-app-password>
+
+# Optional: Stock API
+FINNHUB_API_KEY=<your-key>
+```
+
+#### Step 3: Deploy Configuration
+
+**Build Command:**
+```bash
+bundle install && rails db:migrate && rails db:seed
+```
+
+**Start Command:**
+```bash
+bundle exec puma -C config/puma.rb
+```
+
+#### How Image Storage Works
+
+**Development (Local):**
+- Images stored in `Rails.root/storage` directory
+- Uses Active Storage with `:local` service
+- Perfect for testing, but data is on your machine
+
+**Production (Render + Cloudinary):**
+- Images uploaded to Cloudinary cloud storage
+- Uses Active Storage with `:cloudinary` service
+- **Images persist across deployments** (no data loss!)
+- Delivered via Cloudinary's global CDN
+- Automatic image optimization and transformations
+
+#### Verification After Deployment
+
+1. **Test image upload:**
+```bash
+curl -X POST https://your-app.onrender.com/api/v1/products \
+  -H "Authorization: Bearer <admin-token>" \
+  -F "product[title]=Test Product" \
+  -F "product[price]=19.99" \
+  -F "product[product_category_id]=1" \
+  -F "product[producer_id]=1" \
+  -F "product[product_image]=@/path/to/image.jpg"
+```
+
+2. **Check image URL in response** - Should start with `https://res.cloudinary.com/...`
+
+3. **Verify persistence** - Redeploy your app, images should still be accessible
+
+#### Why Cloudinary?
+- ✅ **Persistent Storage**: Images survive deployments and restarts
+- ✅ **CDN Delivery**: Fast image loading worldwide
+- ✅ **Free Tier**: 25GB storage is plenty for most projects
+- ✅ **Image Transformations**: Automatic resizing, format conversion, optimization
+- ✅ **Zero Infrastructure**: No need to manage S3 buckets or servers
+- ✅ **Active Storage Compatible**: Drop-in replacement for local storage
+
+#### Troubleshooting
+
+**Images not uploading?**
+- Check `CLOUDINARY_URL` is set correctly in Render environment variables
+- Verify the URL format: `cloudinary://API_KEY:API_SECRET@CLOUD_NAME`
+- Check Render logs for Cloudinary authentication errors
+
+**Images loading slowly?**
+- Cloudinary delivers via CDN, should be fast globally
+- Check your Cloudinary bandwidth usage in dashboard
+
+**Need more storage?**
+- Cloudinary free tier: 25GB storage, 25GB bandwidth/month
+- Paid plans start at $89/month for 85GB storage (rarely needed for small apps)
+- Alternative: AWS S3 (~$0.023/GB/month, cheaper for large storage)
+
+---

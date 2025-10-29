@@ -10,7 +10,7 @@ class Api::V1::ShoppingCartItemsController < ApplicationController
   # GET /api/v1/shopping_cart_items
   def index
     collection = @shopping_cart.shopping_cart_items.includes(:product)
-    result = paginate_collection(collection, 20)
+    result = paginate_collection(collection, default_per_page: 20)
     @shopping_cart_items = result[:collection]
     @pagination = result[:pagination]
   end
