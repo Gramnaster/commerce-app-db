@@ -1431,11 +1431,65 @@ const handleUpdateProduct = async (productId, formData) => {
 }
 ```
 
+**Note**: When updating a product with an uploaded `product_image`, it will replace any existing uploaded image. The `product_image_url` field is ignored if an uploaded image is attached.
+
+#### DELETE /api/v1/products/:id/delete_image
+Delete only the uploaded image attachment from a product (keeps the product).
+- **Auth Required**: Management Admin JWT token
+- **Note**: This only removes uploaded images (Active Storage attachments). If the product has a `product_image_url`, it will remain and be used after deletion.
+
+**Example Request**:
+```bash
+curl -X DELETE http://localhost:3001/api/v1/products/:id/delete_image \
+  -H "Authorization: Bearer <token>"
+```
+
+**Example Response (Success)**:
+```json
+{
+  "message": "Product image deleted successfully",
+  "product": {
+    "id": 21,
+    "title": "Running Shoes",
+    "product_image_url": "https://example.com/fallback.jpg"
+  }
+}
+```
+
+**Example Response (No Image Attached)**:
+```json
+{
+  "error": "No image attached to this product"
+}
+```
+
 #### DELETE /api/v1/products/:id
-Delete a product.
+Delete a product entirely.
 - **Auth Required**: Management Admin JWT token
 - **Returns**: `{"message": "Product deleted successfully"}`
-- **Note**: This will also delete all associated shopping_cart_items and inventories (cascade delete)
+- **Note**: This will delete the product, its uploaded image (if any), and all associated shopping_cart_items and inventories (cascade delete)
+
+---
+
+### Product Images - Important Notes
+
+**Image Priority System**:
+1. If a product has an uploaded image attachment (`product_image`), it will be used
+2. If no uploaded image exists, the `product_image_url` field will be used
+3. If neither exists, `product_image_url` will be `null`
+
+**Supported Operations**:
+- **Create with file upload**: Use `multipart/form-data` with `product[product_image]`
+- **Create with URL**: Use `application/json` with `product[product_image_url]`
+- **Update image file**: Upload new file with `multipart/form-data` (replaces existing)
+- **Update image URL**: Use `application/json` with `product[product_image_url]` (only used if no uploaded image exists)
+- **Delete uploaded image**: Use `DELETE /api/v1/products/:id/delete_image` (fallback to URL if present)
+- **Delete product**: Removes product and all associated data including images
+
+**Backend Storage**:
+- Uploaded images are stored using Rails Active Storage
+- Development/Production: Local disk storage (`Rails.root/storage`)
+- Image URLs are returned in all product responses with absolute paths
 
 ---
 
