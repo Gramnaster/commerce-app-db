@@ -1,9 +1,9 @@
 class Api::V1::ProductsController < ApplicationController
   include Paginatable
 
-  before_action :authenticate_admin_user!, only: [ :create, :update, :destroy ]
-  before_action :authorize_management!, only: [ :create, :update, :destroy ]
-  before_action :set_product, only: [ :show, :update, :destroy ]
+  before_action :authenticate_admin_user!, only: [ :create, :update, :destroy, :delete_image ]
+  before_action :authorize_management!, only: [ :create, :update, :destroy, :delete_image ]
+  before_action :set_product, only: [ :show, :update, :destroy, :delete_image ]
 
   respond_to :json
 
@@ -58,6 +58,22 @@ class Api::V1::ProductsController < ApplicationController
       render json: { message: "Product deleted successfully" }, status: :ok
     else
       render json: { errors: @product.errors.full_messages }, status: :unprocessable_content
+    end
+  end
+
+  def delete_image
+    if @product.product_image.attached?
+      @product.product_image.purge
+      render json: {
+        message: "Product image deleted successfully",
+        product: {
+          id: @product.id,
+          title: @product.title,
+          product_image_url: @product.product_image_url
+        }
+      }, status: :ok
+    else
+      render json: { error: "No image attached to this product" }, status: :not_found
     end
   end
 
