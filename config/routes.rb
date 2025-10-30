@@ -70,6 +70,9 @@ Rails.application.routes.draw do
         # Admin receipts (Management only - view all, delete)
         resources :receipts, only: [ :index, :show, :destroy ]
       end
+
+      resources :social_programs, only: [ :index, :show ]
+      resources :social_program_receipts, only: [ :index, :show ]
       # resources :stocks, only: [ :index, :show ]
       # resources :countries, only: [ :index, :show ]
       # resources :wallets, only: [ :index, :show ] do

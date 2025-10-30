@@ -1,0 +1,29 @@
+json.status do
+  json.code 200
+  json.message "Social program fetched successfully"
+end
+
+json.data do
+  json.id @social_program.id
+  json.title @social_program.title
+  json.description @social_program.description
+
+  if @social_program.address
+    json.address do
+      json.id @social_program.address.id
+      json.unit_no @social_program.address.unit_no
+      json.street_no @social_program.address.street_no
+      json.address_line1 @social_program.address.address_line1
+      json.address_line2 @social_program.address.address_line2
+      json.barangay @social_program.address.barangay
+      json.city @social_program.address.city
+      json.region @social_program.address.region
+      json.zipcode @social_program.address.zipcode
+      json.country_id @social_program.address.country_id
+      json.country @social_program.address.country.name if @social_program.address.country
+    end
+  end
+
+  json.created_at @social_program.created_at
+  json.updated_at @social_program.updated_at
+end
