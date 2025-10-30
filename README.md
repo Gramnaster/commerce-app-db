@@ -28,6 +28,9 @@
   - [Transaction History (Receipts)](#transaction-history-receipts)
     - [User Receipts Endpoints](#user-receipts-endpoints)
     - [Admin Receipts Management](#admin-receipts-management-management-admin-only)
+  - [Social Programs & Donation Tracking](#social-programs--donation-tracking)
+    - [Social Programs](#social-programs)
+    - [Donation Tracking (Social Program Receipts)](#donation-tracking-social-program-receipts)
   - [Complete User Purchase Flow](#complete-user-purchase-flow)
   - [Test Credentials](#test-credentials)
 
@@ -3130,6 +3133,277 @@ curl -X DELETE http://localhost:3001/api/v1/admin/receipts/1 \
 ```json
 {
   "message": "Receipt deleted successfully"
+}
+```
+
+---
+
+## Social Programs & Donation Tracking
+
+### Overview
+
+Social Programs track community support initiatives where 8% of each order's total cost is automatically donated. The system maintains a join table (`social_program_receipts`) that links receipts to social programs, providing a complete audit trail of all donations.
+
+**Key Features:**
+- Manage multiple social programs with descriptions and addresses
+- Track which receipts contributed to which programs
+- Full CRUD operations for programs and donation tracking
+- Complete donation history with user and order details
+
+---
+
+### Social Programs
+
+#### GET /api/v1/social_programs
+List all available social programs.
+- **Auth Required**: None (public endpoint)
+- **Pagination**: Default 10 per page
+- **Returns**: Array of social programs with addresses
+
+**Example Request:**
+```bash
+curl -X GET http://localhost:3003/api/v1/social_programs
+```
+
+**Example Response:**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Social programs fetched successfully"
+  },
+  "pagination": {
+    "total_count": 2,
+    "current_page": 1,
+    "per_page": 10,
+    "total_pages": 1
+  },
+  "data": [
+    {
+      "id": 1,
+      "title": "Community Food Program",
+      "description": "Monthly food distribution for 100+ families",
+      "address": {
+        "id": 1,
+        "unit_no": "2020",
+        "street_no": "26th Ave",
+        "barangay": "Unknown",
+        "city": "Taguig",
+        "zipcode": "1244",
+        "country": "Philippines"
+      },
+      "created_at": "2025-10-30T16:21:05.321Z",
+      "updated_at": "2025-10-30T16:23:15.123Z"
+    }
+  ]
+}
+```
+
+---
+
+#### GET /api/v1/social_programs/:id
+View detailed information about a specific social program.
+- **Auth Required**: None (public endpoint)
+
+**Example Request:**
+```bash
+curl -X GET http://localhost:3003/api/v1/social_programs/1
+```
+
+---
+
+#### POST /api/v1/social_programs
+Create a new social program.
+- **Auth Required**: Admin JWT token (recommended)
+- **Required Fields**:
+  - `title`: Program name
+  - `description`: Program details
+  - `address_id`: Location reference
+
+**Example Request:**
+```bash
+curl -X POST http://localhost:3003/api/v1/social_programs \
+  -H "Content-Type: application/json" \
+  -d '{
+    "social_program": {
+      "title": "Education Support Program",
+      "description": "School supplies for underprivileged students",
+      "address_id": 1
+    }
+  }'
+```
+
+---
+
+#### PATCH /api/v1/social_programs/:id
+Update an existing social program.
+- **Auth Required**: Admin JWT token (recommended)
+
+**Example Request:**
+```bash
+curl -X PATCH http://localhost:3003/api/v1/social_programs/1 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "social_program": {
+      "description": "Updated: Weekly food distribution for families in need"
+    }
+  }'
+```
+
+---
+
+#### DELETE /api/v1/social_programs/:id
+Delete a social program.
+- **Auth Required**: Admin JWT token (recommended)
+- **Note**: Will also delete associated donation tracking records
+
+**Example Request:**
+```bash
+curl -X DELETE http://localhost:3003/api/v1/social_programs/1
+```
+
+**Example Response:**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Social program deleted successfully"
+  }
+}
+```
+
+---
+
+### Donation Tracking (Social Program Receipts)
+
+The join table tracks which receipts (representing 8% donations from orders) are allocated to which social programs.
+
+#### GET /api/v1/social_program_receipts
+View all donation tracking records.
+- **Auth Required**: None (public endpoint)
+- **Pagination**: Default 20 per page
+- **Returns**: Complete details including social program info, receipt details, user info, and order details
+
+**Example Request:**
+```bash
+curl -X GET http://localhost:3003/api/v1/social_program_receipts
+```
+
+**Example Response:**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Fetched all social programs-receipts associations successfully"
+  },
+  "pagination": {
+    "total_count": 1,
+    "current_page": 1,
+    "per_page": 20,
+    "total_pages": 1
+  },
+  "data": [
+    {
+      "id": 1,
+      "social_program": {
+        "id": 1,
+        "title": "Community Food Program",
+        "description": "Monthly food distribution for 100+ families",
+        "address": {
+          "id": 1,
+          "city": "Taguig",
+          "country": "Philippines"
+        }
+      },
+      "receipt": {
+        "id": 1,
+        "transaction_type": "deposit",
+        "amount": 500.0,
+        "balance_before": 0.0,
+        "balance_after": 500.0,
+        "description": "Deposit to account",
+        "created_at": "2025-10-22T07:18:01.841Z",
+        "user": {
+          "id": 3,
+          "email": "finaltest@example.com",
+          "first_name": "Final",
+          "last_name": "Test"
+        },
+        "order": null
+      },
+      "created_at": "2025-10-30T16:23:41.089Z"
+    }
+  ]
+}
+```
+
+---
+
+#### GET /api/v1/social_program_receipts/:id
+View a specific donation tracking record with full details.
+- **Auth Required**: None (public endpoint)
+
+**Example Request:**
+```bash
+curl -X GET http://localhost:3003/api/v1/social_program_receipts/1
+```
+
+---
+
+#### POST /api/v1/social_program_receipts
+Create a donation tracking record (link a receipt to a social program).
+- **Auth Required**: Admin JWT token (recommended)
+- **Required Fields**:
+  - `social_program_id`: The program receiving the donation
+  - `receipt_id`: The receipt representing the donation (typically 8% of order total)
+
+**Example Request:**
+```bash
+curl -X POST http://localhost:3003/api/v1/social_program_receipts \
+  -H "Content-Type: application/json" \
+  -d '{
+    "social_program_receipt": {
+      "social_program_id": 1,
+      "receipt_id": 5
+    }
+  }'
+```
+
+**Example Response:**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Social programs-receipts association fetched successfully"
+  },
+  "data": {
+    "id": 2,
+    "social_program": { ... },
+    "receipt": { ... },
+    "created_at": "2025-10-30T16:25:00.000Z"
+  }
+}
+```
+
+---
+
+#### DELETE /api/v1/social_program_receipts/:id
+Remove a donation tracking record (unlink a receipt from a social program).
+- **Auth Required**: Admin JWT token (recommended)
+- **Use Case**: Correcting allocation errors
+
+**Example Request:**
+```bash
+curl -X DELETE http://localhost:3003/api/v1/social_program_receipts/1
+```
+
+**Example Response:**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Social program receipt association deleted successfully"
+  }
 }
 ```
 

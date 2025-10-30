@@ -1,4 +1,4 @@
-class Api::V1::SocialProgramsReceiptsController < ApplicationController
+class Api::V1::SocialProgramReceiptsController < ApplicationController
   include Paginatable
 
   before_action :set_social_program_receipt, only: [ :show, :destroy ]

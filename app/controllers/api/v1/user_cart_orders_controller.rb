@@ -65,9 +65,9 @@ class Api::V1::UserCartOrdersController < ApplicationController
       @user_cart_order = UserCartOrder.new(
         shopping_cart: shopping_cart,
         user_address_id: user_cart_order_params[:user_address_id],
+        social_program_id: user_cart_order_params[:social_program_id],
         total_cost: total_cost,
         is_paid: true,
-        social_program_id: social_program_params[:social_program_id],
         cart_status: "approved"  # Auto-approve paid orders
       )
 
@@ -155,11 +155,7 @@ class Api::V1::UserCartOrdersController < ApplicationController
   end
 
   def user_cart_order_params
-    params.require(:user_cart_order).permit(:user_address_id, :is_paid, :cart_status)
-  end
-
-  def social_program_params
-    params.require(:social_program).permit(:title, :description, :address_id)
+    params.require(:user_cart_order).permit(:user_address_id, :is_paid, :cart_status, :social_program_id)
   end
 
   # JWT authentication for regular users
