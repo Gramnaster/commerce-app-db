@@ -12,17 +12,17 @@ json.data do
       json.description @social_program_receipt.social_program.description
 
       json.address do
-        json.id @social_program_receipt.address.id
-        json.unit_no @social_program_receipt.address.unit_no
-        json.street_no @social_program_receipt.address.street_no
-        json.address_line1 @social_program_receipt.address.address_line1
-        json.address_line2 @social_program_receipt.address.address_line2
-        json.barangay @social_program_receipt.address.barangay
-        json.city @social_program_receipt.address.city
-        json.region @social_program_receipt.address.region
-        json.zipcode @social_program_receipt.address.zipcode
-        json.country_id @social_program_receipt.address.country_id
-        json.country @social_program_receipt.address.country.name if @social_program_receipt.address.country
+        json.id @social_program_receipt.social_program.address.id
+        json.unit_no @social_program_receipt.social_program.address.unit_no
+        json.street_no @social_program_receipt.social_program.address.street_no
+        json.address_line1 @social_program_receipt.social_program.address.address_line1
+        json.address_line2 @social_program_receipt.social_program.address.address_line2
+        json.barangay @social_program_receipt.social_program.address.barangay
+        json.city @social_program_receipt.social_program.address.city
+        json.region @social_program_receipt.social_program.address.region
+        json.zipcode @social_program_receipt.social_program.address.zipcode
+        json.country_id @social_program_receipt.social_program.address.country_id
+        json.country @social_program_receipt.social_program.address.country.name if @social_program_receipt.social_program.address.country
       end
     end
 

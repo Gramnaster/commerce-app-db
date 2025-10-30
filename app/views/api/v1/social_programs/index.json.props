@@ -8,6 +8,7 @@ json.pagination @pagination if @pagination
 json.data do
   json.array! @social_programs do |program|
     json.id program.id
+    json.title program.title
     json.description program.description
 
     json.address do

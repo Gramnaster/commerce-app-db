@@ -1,7 +1,7 @@
 class Api::V1::SocialProgramsController < ApplicationController
   include Paginatable
 
-  before_action :set_social_program, only: [ :show, :index ]
+  before_action :set_social_program, only: [ :show ]
 
   respond_to :json
 
