@@ -112,7 +112,6 @@ gem 'faraday-net_http'  # Default adapter
 #### 2.2 Environment Variables
 **Already Added to `.env`:**
 ```bash
-GOOGLE_MAPS_API_KEY=AIzaSyA05IeZjtgP1v4dL6ZaJnKFZSGrHny7dDo
 ```
 
 #### 2.3 Create GoogleMapsService
