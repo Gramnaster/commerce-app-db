@@ -64,7 +64,7 @@ class Api::V1::UserCartOrdersController < ApplicationController
         user_address_id: user_cart_order_params[:user_address_id],
         total_cost: total_cost,
         is_paid: true,
-        cart_status: "pending"
+        cart_status: "approved"  # Auto-approve paid orders
       )
 
       if @user_cart_order.save
@@ -88,6 +88,20 @@ class Api::V1::UserCartOrdersController < ApplicationController
           balance_after: payment_method.balance,
           description: "Purchase - Order ##{@user_cart_order.id}"
         )
+
+        # Automatically assign warehouses and create warehouse orders
+        assignment_service = AssignWarehouseToOrderService.new(@user_cart_order)
+        assignment_result = assignment_service.call
+
+        if assignment_result[:success]
+          Rails.logger.info("[UserCartOrder] Warehouse assignment successful for order ##{@user_cart_order.id}")
+          if assignment_result[:errors].any?
+            Rails.logger.warn("[UserCartOrder] Partial assignment with errors: #{assignment_result[:errors].join(', ')}")
+          end
+        else
+          # Log error but don't fail the order - admin can manually assign later
+          Rails.logger.error("[UserCartOrder] Warehouse assignment failed for order ##{@user_cart_order.id}: #{assignment_result[:errors].join(', ')}")
+        end
 
         render :show, status: :created
       else
