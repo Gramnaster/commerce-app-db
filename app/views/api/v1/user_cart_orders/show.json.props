@@ -8,6 +8,7 @@ json.data do
   json.total_cost @user_cart_order.total_cost
   json.is_paid @user_cart_order.is_paid
   json.cart_status @user_cart_order.cart_status
+  json.social_program_id @user_cart_order.social_program_id
 
   json.user_address do
     json.id @user_cart_order.user_address.id
