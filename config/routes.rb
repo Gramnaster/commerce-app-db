@@ -60,7 +60,12 @@ Rails.application.routes.draw do
       end
 
       # Warehouse orders (Management creates, Management & Warehouse update)
-      resources :warehouse_orders, only: [ :index, :show, :create, :update, :destroy ]
+      resources :warehouse_orders, only: [ :index, :show, :create, :update, :destroy ] do
+        collection do
+          get ":user_id/most_recent", to: "warehouse_orders#user_most_recent"
+          get ":user_id/pending", to: "warehouse_orders#user_pending"
+        end
+      end
 
       # Receipts / Transaction History (Users only - view their own receipts)
       resources :receipts, only: [ :index, :show ]
@@ -71,8 +76,8 @@ Rails.application.routes.draw do
         resources :receipts, only: [ :index, :show, :destroy ]
       end
 
-      resources :social_programs, only: [ :index, :show ]
-      resources :social_program_receipts, only: [ :index, :show ]
+      resources :social_programs
+      resources :social_program_receipts
       # resources :stocks, only: [ :index, :show ]
       # resources :countries, only: [ :index, :show ]
       # resources :wallets, only: [ :index, :show ] do

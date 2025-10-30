@@ -15,17 +15,17 @@ json.data do
       json.description spc.social_program.description
 
       json.address do
-        json.id spc.address.id
-        json.unit_no spc.address.unit_no
-        json.street_no spc.address.street_no
-        json.address_line1 spc.address.address_line1
-        json.address_line2 spc.address.address_line2
-        json.barangay spc.address.barangay
-        json.city spc.address.city
-        json.region spc.address.region
-        json.zipcode spc.address.zipcode
-        json.country_id spc.address.country_id
-        json.country spc.address.country.name if spc.address.country
+        json.id spc.social_program.address.id
+        json.unit_no spc.social_program.address.unit_no
+        json.street_no spc.social_program.address.street_no
+        json.address_line1 spc.social_program.address.address_line1
+        json.address_line2 spc.social_program.address.address_line2
+        json.barangay spc.social_program.address.barangay
+        json.city spc.social_program.address.city
+        json.region spc.social_program.address.region
+        json.zipcode spc.social_program.address.zipcode
+        json.country_id spc.social_program.address.country_id
+        json.country spc.social_program.address.country.name if spc.social_program.address.country
       end
     end
 

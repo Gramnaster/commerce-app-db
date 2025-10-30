@@ -23,10 +23,14 @@
     - [User Payment Methods](#user-payment-methods-user-only)
     - [Shopping Cart Items](#shopping-cart-items-user-only)
     - [User Cart Orders](#user-cart-orders-user-only)
-    - [Order Approval & Fulfillment (Admin/Warehouse)](#order-approval--fulfillment-management-admin--warehouse)
+    - [Warehouse Auto-Assignment](#warehouse-auto-assignment)
+    - [Warehouse Orders](#warehouse-orders-management--warehouse-admin)
   - [Transaction History (Receipts)](#transaction-history-receipts)
     - [User Receipts Endpoints](#user-receipts-endpoints)
     - [Admin Receipts Management](#admin-receipts-management-management-admin-only)
+  - [Social Programs & Donation Tracking](#social-programs--donation-tracking)
+    - [Social Programs](#social-programs)
+    - [Donation Tracking (Social Program Receipts)](#donation-tracking-social-program-receipts)
   - [Complete User Purchase Flow](#complete-user-purchase-flow)
   - [Test Credentials](#test-credentials)
 
@@ -81,6 +85,8 @@ The following endpoints support pagination:
 - Promotion Categories (GET /api/v1/promotions_categories) - Default: 20 per page
 - Company Sites (GET /api/v1/company_sites) - Default: 20 per page
 - Warehouse Orders (GET /api/v1/warehouse_orders) - Default: 30 per page
+- Warehouse Orders by User - Most Recent (GET /api/v1/warehouse_orders/:user_id/most_recent) - Default: 30 per page
+- Warehouse Orders by User - Pending (GET /api/v1/warehouse_orders/:user_id/pending) - Default: 30 per page
 - User Cart Orders (GET /api/v1/user_cart_orders) - Default: 30 per page
 - Admin Receipts (GET /api/v1/admin/receipts) - Default: 20 per page
 
@@ -2495,9 +2501,11 @@ Users submit their shopping cart as an order. The system automatically:
 1. Calculates total cost from all cart items
 2. Checks if user has sufficient balance
 3. Deducts the cost from user's payment method
-4. Creates the order with `is_paid: true` and `cart_status: pending`
+4. Creates the order with `is_paid: true` and `cart_status: approved`
+5. **Auto-assigns products to nearest warehouses** (see [Warehouse Auto-Assignment](#warehouse-auto-assignment))
+6. Creates warehouse orders automatically
 
-Management admins can view and approve paid orders.
+Management admins can view and monitor orders.
 
 #### POST /api/v1/user_cart_orders (User Only)
 Submit your shopping cart as an order.
@@ -2506,19 +2514,29 @@ Submit your shopping cart as an order.
 ```json
 {
   "user_cart_order": {
-    "user_address_id": 2
+    "user_address_id": 2,
+    "social_program_id": 1  // Optional: specify social program for 8% donation
   }
 }
 ```
 - **Requirements**:
   - Cart must not be empty
   - User must have sufficient balance
+  - User address must exist (used for warehouse distance calculation)
 - **Automatic Actions**:
   - Calculates total cost
   - Validates sufficient funds
   - Deducts payment from balance
   - Sets `is_paid: true`
-  - Sets `cart_status: pending`
+  - Sets `cart_status: approved` (auto-approved)
+  - Creates receipt for purchase
+  - **Geocodes customer address** (if not already geocoded)
+  - **Calculates distances to all warehouses**
+  - **Assigns each product to nearest warehouse with stock**
+  - **Creates warehouse orders automatically**
+  - **Deducts inventory quantities**
+  - **Creates 8% donation receipt** (if `social_program_id` provided)
+  - **Links donation to social program** via SocialProgramReceipt
 
 **Example Response (Success)**:
 ```json
@@ -2531,7 +2549,7 @@ Submit your shopping cart as an order.
     "id": 2,
     "total_cost": "286.8",
     "is_paid": true,
-    "cart_status": "pending",
+    "cart_status": "approved",
     "user_address": {
       "id": 2,
       "address": {
@@ -2551,7 +2569,7 @@ Submit your shopping cart as an order.
         "subtotal": "219.9"
       }
     ],
-    "warehouse_orders_count": 0,
+    "warehouse_orders_count": 2,
     "created_at": "2025-10-17T16:27:19.531Z",
     "updated_at": "2025-10-17T16:27:19.531Z"
   }
@@ -2608,14 +2626,191 @@ Update order payment status or reject order.
 
 ---
 
+## Warehouse Auto-Assignment
+
+### Overview
+
+The system automatically assigns products to the nearest available warehouse when a user creates an order. This ensures optimal delivery times and efficient inventory management.
+
+**Key Features:**
+- **Automatic Geocoding**: Customer addresses are geocoded using Google Maps Geocoding API
+- **Distance Calculation**: Uses Google Maps Distance Matrix API to calculate distances from customer to all warehouses
+- **Smart Assignment**: Each product is assigned to the nearest warehouse with sufficient stock
+- **Inventory Management**: Automatically deducts quantities from assigned warehouse inventories
+- **Fallback Logic**: If distance calculation fails, assigns to warehouse with most stock
+
+### How It Works
+
+1. **User Places Order**: Customer submits cart with delivery address
+2. **Address Geocoding**: System geocodes the delivery address to get latitude/longitude
+3. **Distance Calculation**: Calls Google Maps Distance Matrix API with:
+   - Origins: All warehouse addresses (pre-geocoded and stored in database)
+   - Destination: Customer address
+4. **Warehouse Selection**: For each product in the cart:
+   - Finds all warehouses with sufficient stock
+   - Selects the warehouse with shortest distance
+   - Creates warehouse order
+   - Deducts inventory quantity
+5. **Order Completion**: Returns approved order with warehouse_orders_count
+
+### API Integration
+
+**Google Maps APIs Used:**
+- **Geocoding API**: One-time geocoding of warehouse addresses (stored in database)
+- **Distance Matrix API**: Real-time distance calculation for each order
+- **API Key**: Configured in environment variable `GOOGLE_MAPS_API_KEY`
+
+### Database Schema
+
+**Addresses Table** (geolocation fields):
+```ruby
+t.decimal :latitude, precision: 10, scale: 8
+t.decimal :longitude, precision: 11, scale: 8
+t.datetime :geocoded_at
+t.string :geocode_source  # 'google_maps' or 'manual'
+```
+
+### Example Workflow
+
+**Scenario**: Customer in Dagupan, Pangasinan orders 1 Backpack + 1 Jacket
+
+1. **Order Created**: POST /api/v1/user_cart_orders with address in Dagupan
+2. **Geocoding**: Address geocoded → `15.9757° N, 120.5707° E`
+3. **Distance Calculation**:
+   - JPB Warehouse A (Tarlac): 85 km
+   - JPB Warehouse B (Malolos): 145 km
+   - JPB Warehouse C (Antipolo): 320 km
+4. **Assignment**:
+   - Both products assigned to **JPB Warehouse A** (nearest with stock)
+   - 2 warehouse orders created automatically
+   - Inventory deducted from Warehouse A
+5. **Result**: Order approved with `warehouse_orders_count: 2`
+
+### Performance & Reliability
+
+- **Caching**: Warehouse coordinates stored in database (no repeated geocoding)
+- **Fallback**: If API fails, assigns to warehouse with most stock
+- **Error Handling**: Partial failures logged, order still completes
+- **N+1 Prevention**: Eager loading for products and inventories
+
+---
+
 ### Warehouse Orders (Management & Warehouse Admin)
 
-Management creates warehouse orders for approved user orders. Warehouse admins can view and update order status.
+Warehouse orders are **automatically created** when users place orders. The system assigns each product to the nearest warehouse with sufficient stock using Google Maps distance calculation.
+
+Management creates manual warehouse orders only for special cases. Warehouse admins can view and update order status.
 
 #### GET /api/v1/warehouse_orders
 View all warehouse orders.
 - **Auth Required**: Management or Warehouse Admin JWT token
 - **Returns**: Array of warehouse orders with inventory and site details
+- **Pagination**: Default 30 per page
+
+**Example Request:**
+```bash
+curl -X GET "http://localhost:3003/api/v1/warehouse_orders?per_page=50" \
+  -H "Authorization: Bearer ADMIN_TOKEN"
+```
+
+#### GET /api/v1/warehouse_orders/:user_id/most_recent
+View most recent warehouse orders for a specific user.
+- **Auth Required**: Management or Warehouse Admin JWT token
+- **Returns**: Array of user's warehouse orders ordered by most recent first
+- **Pagination**: Default 30 per page
+
+**Example Request:**
+```bash
+curl -X GET "http://localhost:3003/api/v1/warehouse_orders/20/most_recent" \
+  -H "Authorization: Bearer ADMIN_TOKEN"
+```
+
+**Example Response:**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Warehouse orders fetched successfully"
+  },
+  "pagination": {
+    "current_page": 1,
+    "per_page": 30,
+    "total_entries": 6,
+    "total_pages": 1,
+    "next_page": null,
+    "previous_page": null
+  },
+  "data": [
+    {
+      "id": 8,
+      "qty": 1,
+      "product_status": "storage",
+      "company_site": {
+        "id": 4,
+        "title": "JPB Warehouse C",
+        "site_type": "warehouse"
+      },
+      "inventory": {
+        "id": 46,
+        "sku": "001001004972",
+        "product_id": 4
+      },
+      "user_cart_order_id": 6,
+      "created_at": "2025-10-30T15:41:33.269Z",
+      "updated_at": "2025-10-30T15:41:33.269Z"
+    }
+  ]
+}
+```
+
+#### GET /api/v1/warehouse_orders/:user_id/pending
+View pending warehouse orders for a specific user.
+- **Auth Required**: Management or Warehouse Admin JWT token
+- **Returns**: Array of user's warehouse orders with status `storage` or `progress` (excludes `delivered`)
+- **Pagination**: Default 30 per page
+- **Use Case**: Track orders that haven't been delivered yet
+
+**Example Request:**
+```bash
+curl -X GET "http://localhost:3003/api/v1/warehouse_orders/20/pending" \
+  -H "Authorization: Bearer ADMIN_TOKEN"
+```
+
+**Example Response:**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Warehouse orders fetched successfully"
+  },
+  "pagination": {
+    "current_page": 1,
+    "per_page": 30,
+    "total_entries": 5,
+    "total_pages": 1
+  },
+  "data": [
+    {
+      "id": 8,
+      "qty": 1,
+      "product_status": "storage",
+      "company_site": {
+        "id": 4,
+        "title": "JPB Warehouse C",
+        "site_type": "warehouse"
+      },
+      "inventory": {
+        "id": 46,
+        "sku": "001001004972",
+        "product_id": 4
+      },
+      "user_cart_order_id": 6,
+      "created_at": "2025-10-30T15:41:33.269Z",
+      "updated_at": "2025-10-30T15:41:33.269Z"
+    }
+  ]
+}
+```
 
 #### GET /api/v1/warehouse_orders/:id
 View a specific warehouse order.
@@ -2672,10 +2867,12 @@ The receipts system provides a complete audit trail of all financial transaction
 - **Deposit**: User adds funds to their account
 - **Withdraw**: User removes funds from their account (manual or automatic payment)
 - **Purchase**: Order completion record (automatically creates TWO receipts: one withdraw for payment, one purchase for order record)
+- **Donation**: Automatic 8% donation to social program (created when order includes `social_program_id`, does not affect user balance)
 
 **Key Features:**
 - Balance tracking (before/after each transaction)
 - Complete order details for purchases (items, delivery address, products)
+- Automatic donation tracking for social programs (8% of order total)
 - User filtering (users see only their own, admins see all)
 - Admin management capabilities (view all, filter, delete)
 
@@ -2687,7 +2884,7 @@ The receipts system provides a complete audit trail of all financial transaction
 View your transaction history.
 - **Auth Required**: User JWT token
 - **Optional Query Parameters**:
-  - `transaction_type`: Filter by type (`deposit`, `withdraw`, or `purchase`)
+  - `transaction_type`: Filter by type (`deposit`, `withdraw`, `purchase`, or `donation`)
 - **Returns**: Array of receipts ordered by most recent first
 
 **Example Request:**
@@ -2841,7 +3038,7 @@ View all platform receipts with filtering and pagination.
 - **Auth Required**: Management Admin JWT token
 - **Optional Query Parameters**:
   - `user_id`: Filter by specific user
-  - `transaction_type`: Filter by type (`deposit`, `withdraw`, or `purchase`)
+  - `transaction_type`: Filter by type (`deposit`, `withdraw`, `purchase`, or `donation`)
   - `start_date`: Filter receipts from this date
   - `end_date`: Filter receipts to this date
   - `page`: Page number (default: 1)
@@ -2946,6 +3143,291 @@ curl -X DELETE http://localhost:3001/api/v1/admin/receipts/1 \
 
 ---
 
+## Social Programs & Donation Tracking
+
+### Overview
+
+Social Programs track community support initiatives where 8% of each order's total cost is automatically donated. The system maintains a join table (`social_program_receipts`) that links receipts to social programs, providing a complete audit trail of all donations.
+
+**Key Features:**
+- Manage multiple social programs with descriptions and addresses
+- Track which receipts contributed to which programs
+- Full CRUD operations for programs and donation tracking
+- Complete donation history with user and order details
+- **Automatic donation creation**: When a UserCartOrder is created with a `social_program_id`, the system automatically:
+  - Calculates 8% of the order's total cost
+  - Creates a Receipt with `transaction_type: "donation"`
+  - Links the receipt to the social program via SocialProgramReceipt
+  - Does not affect user's balance (tracking only)
+
+**Automatic Donation Flow:**
+1. User creates order with `social_program_id` parameter
+2. Order processes normally (payment deducted, warehouse assignment, etc.)
+3. After order creation, `after_create` callback triggers
+4. System creates donation receipt: `amount = total_cost * 0.08`
+5. Receipt description: `"8% donation to [Program Name] from Order #[ID]"`
+6. SocialProgramReceipt join record created automatically
+7. Donation is tracked but doesn't fail order if tracking fails
+
+---
+
+### Social Programs
+
+#### GET /api/v1/social_programs
+List all available social programs.
+- **Auth Required**: None (public endpoint)
+- **Pagination**: Default 10 per page
+- **Returns**: Array of social programs with addresses
+
+**Example Request:**
+```bash
+curl -X GET http://localhost:3003/api/v1/social_programs
+```
+
+**Example Response:**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Social programs fetched successfully"
+  },
+  "pagination": {
+    "total_count": 2,
+    "current_page": 1,
+    "per_page": 10,
+    "total_pages": 1
+  },
+  "data": [
+    {
+      "id": 1,
+      "title": "Community Food Program",
+      "description": "Monthly food distribution for 100+ families",
+      "address": {
+        "id": 1,
+        "unit_no": "2020",
+        "street_no": "26th Ave",
+        "barangay": "Unknown",
+        "city": "Taguig",
+        "zipcode": "1244",
+        "country": "Philippines"
+      },
+      "created_at": "2025-10-30T16:21:05.321Z",
+      "updated_at": "2025-10-30T16:23:15.123Z"
+    }
+  ]
+}
+```
+
+---
+
+#### GET /api/v1/social_programs/:id
+View detailed information about a specific social program.
+- **Auth Required**: None (public endpoint)
+
+**Example Request:**
+```bash
+curl -X GET http://localhost:3003/api/v1/social_programs/1
+```
+
+---
+
+#### POST /api/v1/social_programs
+Create a new social program.
+- **Auth Required**: Admin JWT token (recommended)
+- **Required Fields**:
+  - `title`: Program name
+  - `description`: Program details
+  - `address_id`: Location reference
+
+**Example Request:**
+```bash
+curl -X POST http://localhost:3003/api/v1/social_programs \
+  -H "Content-Type: application/json" \
+  -d '{
+    "social_program": {
+      "title": "Education Support Program",
+      "description": "School supplies for underprivileged students",
+      "address_id": 1
+    }
+  }'
+```
+
+---
+
+#### PATCH /api/v1/social_programs/:id
+Update an existing social program.
+- **Auth Required**: Admin JWT token (recommended)
+
+**Example Request:**
+```bash
+curl -X PATCH http://localhost:3003/api/v1/social_programs/1 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "social_program": {
+      "description": "Updated: Weekly food distribution for families in need"
+    }
+  }'
+```
+
+---
+
+#### DELETE /api/v1/social_programs/:id
+Delete a social program.
+- **Auth Required**: Admin JWT token (recommended)
+- **Note**: Will also delete associated donation tracking records
+
+**Example Request:**
+```bash
+curl -X DELETE http://localhost:3003/api/v1/social_programs/1
+```
+
+**Example Response:**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Social program deleted successfully"
+  }
+}
+```
+
+---
+
+### Donation Tracking (Social Program Receipts)
+
+The join table tracks which receipts (representing 8% donations from orders) are allocated to which social programs.
+
+#### GET /api/v1/social_program_receipts
+View all donation tracking records.
+- **Auth Required**: None (public endpoint)
+- **Pagination**: Default 20 per page
+- **Returns**: Complete details including social program info, receipt details, user info, and order details
+
+**Example Request:**
+```bash
+curl -X GET http://localhost:3003/api/v1/social_program_receipts
+```
+
+**Example Response:**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Fetched all social programs-receipts associations successfully"
+  },
+  "pagination": {
+    "total_count": 1,
+    "current_page": 1,
+    "per_page": 20,
+    "total_pages": 1
+  },
+  "data": [
+    {
+      "id": 1,
+      "social_program": {
+        "id": 1,
+        "title": "Community Food Program",
+        "description": "Monthly food distribution for 100+ families",
+        "address": {
+          "id": 1,
+          "city": "Taguig",
+          "country": "Philippines"
+        }
+      },
+      "receipt": {
+        "id": 1,
+        "transaction_type": "deposit",
+        "amount": 500.0,
+        "balance_before": 0.0,
+        "balance_after": 500.0,
+        "description": "Deposit to account",
+        "created_at": "2025-10-22T07:18:01.841Z",
+        "user": {
+          "id": 3,
+          "email": "finaltest@example.com",
+          "first_name": "Final",
+          "last_name": "Test"
+        },
+        "order": null
+      },
+      "created_at": "2025-10-30T16:23:41.089Z"
+    }
+  ]
+}
+```
+
+---
+
+#### GET /api/v1/social_program_receipts/:id
+View a specific donation tracking record with full details.
+- **Auth Required**: None (public endpoint)
+
+**Example Request:**
+```bash
+curl -X GET http://localhost:3003/api/v1/social_program_receipts/1
+```
+
+---
+
+#### POST /api/v1/social_program_receipts
+Create a donation tracking record (link a receipt to a social program).
+- **Auth Required**: Admin JWT token (recommended)
+- **Required Fields**:
+  - `social_program_id`: The program receiving the donation
+  - `receipt_id`: The receipt representing the donation (typically 8% of order total)
+
+**Example Request:**
+```bash
+curl -X POST http://localhost:3003/api/v1/social_program_receipts \
+  -H "Content-Type: application/json" \
+  -d '{
+    "social_program_receipt": {
+      "social_program_id": 1,
+      "receipt_id": 5
+    }
+  }'
+```
+
+**Example Response:**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Social programs-receipts association fetched successfully"
+  },
+  "data": {
+    "id": 2,
+    "social_program": { ... },
+    "receipt": { ... },
+    "created_at": "2025-10-30T16:25:00.000Z"
+  }
+}
+```
+
+---
+
+#### DELETE /api/v1/social_program_receipts/:id
+Remove a donation tracking record (unlink a receipt from a social program).
+- **Auth Required**: Admin JWT token (recommended)
+- **Use Case**: Correcting allocation errors
+
+**Example Request:**
+```bash
+curl -X DELETE http://localhost:3003/api/v1/social_program_receipts/1
+```
+
+**Example Response:**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Social program receipt association deleted successfully"
+  }
+}
+```
+
+---
+
 ## Complete User Purchase Flow
 
 ### Step-by-Step Example
@@ -2991,6 +3473,22 @@ curl -X POST http://localhost:3001/api/v1/user_cart_orders \
   -H "Authorization: Bearer YOUR_USER_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"user_cart_order": {"user_address_id": 2}}'
+```
+
+**Optional: Submit Order with Social Program Donation**
+```bash
+# Include social_program_id to automatically donate 8% to a social program
+curl -X POST http://localhost:3001/api/v1/user_cart_orders \
+  -H "Authorization: Bearer YOUR_USER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_cart_order": {
+      "user_address_id": 2,
+      "social_program_id": 1
+    }
+  }'
+# This automatically creates a donation receipt (8% of order total)
+# and links it to the social program via SocialProgramReceipt
 ```
 
 **7. View Transaction History**
