@@ -10,7 +10,15 @@ class Api::V1::SocialProgramReceiptsController < ApplicationController
   end
 
   def index
-    collection = SocialProgramReceipt.includes(receipt: :user_cart_orders, social_program: { address: :country }).all
+    collection = SocialProgramReceipt.includes(
+      {
+        receipt: [
+          { user: :user_detail },
+          { user_cart_order: { shopping_cart: :shopping_cart_items } }
+        ]
+      },
+      { social_program: { address: :country } }
+    ).all
     result = paginate_collection(collection, default_per_page: 20)
     @social_program_receipts = result[:collection]
     @pagination = result[:pagination]
@@ -25,7 +33,15 @@ class Api::V1::SocialProgramReceiptsController < ApplicationController
     @social_program_receipt = SocialProgramReceipt.new(social_program_receipt_params)
 
     if @social_program_receipt.save
-      @social_program_receipt = SocialProgramReceipt.includes(:receipt, social_program: { address: :country }).find(@social_program_receipt.id)
+      @social_program_receipt = SocialProgramReceipt.includes(
+        {
+          receipt: [
+            { user: :user_detail },
+            { user_cart_order: { shopping_cart: :shopping_cart_items } }
+          ]
+        },
+        { social_program: { address: :country } }
+      ).find(@social_program_receipt.id)
       render :show, status: :created
     else
       render json: {
@@ -45,7 +61,20 @@ class Api::V1::SocialProgramReceiptsController < ApplicationController
   private
 
   def set_social_program_receipt
-    @social_program_receipt = SocialProgramReceipt.includes(:receipt, social_program: { address: :country }).find(params[:id])
+    # For destroy action, we don't need eager loading since we're just deleting
+    if action_name == "destroy"
+      @social_program_receipt = SocialProgramReceipt.find(params[:id])
+    else
+      @social_program_receipt = SocialProgramReceipt.includes(
+        {
+          receipt: [
+            { user: :user_detail },
+            { user_cart_order: { shopping_cart: :shopping_cart_items } }
+          ]
+        },
+        { social_program: { address: :country } }
+      ).find(params[:id])
+    end
   end
 
   def social_program_receipt_params

@@ -1,6 +1,8 @@
 class Receipt < ApplicationRecord
   belongs_to :user
   belongs_to :user_cart_order, optional: true
+  has_many :social_program_receipts, dependent: :destroy
+  has_many :social_programs, through: :social_program_receipts
 
   # Validations
   validates :transaction_type, presence: true, inclusion: { in: %w[purchase deposit withdraw donation] }
