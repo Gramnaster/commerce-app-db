@@ -112,6 +112,7 @@ gem 'faraday-net_http'  # Default adapter
 #### 2.2 Environment Variables
 **Already Added to `.env`:**
 ```bash
+GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
 ```
 
 #### 2.3 Create GoogleMapsService
@@ -463,4 +464,5 @@ db/seeds.rb (optional: add geocoding)
 - ✅ Using Distance Matrix API (legacy but perfect for multi-origin comparison)
 - ✅ Using Geocoding API for one-time warehouse coordinate lookup
 - ✅ Hybrid approach: stored warehouse coords + on-the-fly customer geocoding
-- ✅ Google Maps API Key: AIzaSyA05IeZjtgP1v4dL6ZaJnKFZSGrHny7dDo (added to .env)
+- ✅ Google Maps API Key added to .env
+
