@@ -10,7 +10,7 @@ class Api::V1::SocialProgramReceiptsController < ApplicationController
   end
 
   def index
-    collection = SocialProgramReceipt.includes(:receipt, social_program: { address: :country }).all
+    collection = SocialProgramReceipt.includes(receipt: :user_cart_orders, social_program: { address: :country }).all
     result = paginate_collection(collection, default_per_page: 20)
     @social_program_receipts = result[:collection]
     @pagination = result[:pagination]

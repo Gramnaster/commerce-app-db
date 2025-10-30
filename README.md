@@ -2514,7 +2514,8 @@ Submit your shopping cart as an order.
 ```json
 {
   "user_cart_order": {
-    "user_address_id": 2
+    "user_address_id": 2,
+    "social_program_id": 1  // Optional: specify social program for 8% donation
   }
 }
 ```
@@ -2534,6 +2535,8 @@ Submit your shopping cart as an order.
   - **Assigns each product to nearest warehouse with stock**
   - **Creates warehouse orders automatically**
   - **Deducts inventory quantities**
+  - **Creates 8% donation receipt** (if `social_program_id` provided)
+  - **Links donation to social program** via SocialProgramReceipt
 
 **Example Response (Success)**:
 ```json
@@ -2864,10 +2867,12 @@ The receipts system provides a complete audit trail of all financial transaction
 - **Deposit**: User adds funds to their account
 - **Withdraw**: User removes funds from their account (manual or automatic payment)
 - **Purchase**: Order completion record (automatically creates TWO receipts: one withdraw for payment, one purchase for order record)
+- **Donation**: Automatic 8% donation to social program (created when order includes `social_program_id`, does not affect user balance)
 
 **Key Features:**
 - Balance tracking (before/after each transaction)
 - Complete order details for purchases (items, delivery address, products)
+- Automatic donation tracking for social programs (8% of order total)
 - User filtering (users see only their own, admins see all)
 - Admin management capabilities (view all, filter, delete)
 
@@ -2879,7 +2884,7 @@ The receipts system provides a complete audit trail of all financial transaction
 View your transaction history.
 - **Auth Required**: User JWT token
 - **Optional Query Parameters**:
-  - `transaction_type`: Filter by type (`deposit`, `withdraw`, or `purchase`)
+  - `transaction_type`: Filter by type (`deposit`, `withdraw`, `purchase`, or `donation`)
 - **Returns**: Array of receipts ordered by most recent first
 
 **Example Request:**
@@ -3033,7 +3038,7 @@ View all platform receipts with filtering and pagination.
 - **Auth Required**: Management Admin JWT token
 - **Optional Query Parameters**:
   - `user_id`: Filter by specific user
-  - `transaction_type`: Filter by type (`deposit`, `withdraw`, or `purchase`)
+  - `transaction_type`: Filter by type (`deposit`, `withdraw`, `purchase`, or `donation`)
   - `start_date`: Filter receipts from this date
   - `end_date`: Filter receipts to this date
   - `page`: Page number (default: 1)
@@ -3149,6 +3154,20 @@ Social Programs track community support initiatives where 8% of each order's tot
 - Track which receipts contributed to which programs
 - Full CRUD operations for programs and donation tracking
 - Complete donation history with user and order details
+- **Automatic donation creation**: When a UserCartOrder is created with a `social_program_id`, the system automatically:
+  - Calculates 8% of the order's total cost
+  - Creates a Receipt with `transaction_type: "donation"`
+  - Links the receipt to the social program via SocialProgramReceipt
+  - Does not affect user's balance (tracking only)
+
+**Automatic Donation Flow:**
+1. User creates order with `social_program_id` parameter
+2. Order processes normally (payment deducted, warehouse assignment, etc.)
+3. After order creation, `after_create` callback triggers
+4. System creates donation receipt: `amount = total_cost * 0.08`
+5. Receipt description: `"8% donation to [Program Name] from Order #[ID]"`
+6. SocialProgramReceipt join record created automatically
+7. Donation is tracked but doesn't fail order if tracking fails
 
 ---
 
@@ -3454,6 +3473,22 @@ curl -X POST http://localhost:3001/api/v1/user_cart_orders \
   -H "Authorization: Bearer YOUR_USER_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"user_cart_order": {"user_address_id": 2}}'
+```
+
+**Optional: Submit Order with Social Program Donation**
+```bash
+# Include social_program_id to automatically donate 8% to a social program
+curl -X POST http://localhost:3001/api/v1/user_cart_orders \
+  -H "Authorization: Bearer YOUR_USER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_cart_order": {
+      "user_address_id": 2,
+      "social_program_id": 1
+    }
+  }'
+# This automatically creates a donation receipt (8% of order total)
+# and links it to the social program via SocialProgramReceipt
 ```
 
 **7. View Transaction History**
