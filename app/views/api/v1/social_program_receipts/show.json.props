@@ -1,0 +1,64 @@
+json.status do
+  json.code 200
+  json.message "Social programs-receipts association fetched successfully"
+end
+
+json.data do
+    json.id @social_program_receipt.id
+
+    json.social_program do
+      json.id @social_program_receipt.social_program.id
+      json.title @social_program_receipt.social_program.title
+      json.description @social_program_receipt.social_program.description
+
+      json.address do
+        json.id @social_program_receipt.address.id
+        json.unit_no @social_program_receipt.address.unit_no
+        json.street_no @social_program_receipt.address.street_no
+        json.address_line1 @social_program_receipt.address.address_line1
+        json.address_line2 @social_program_receipt.address.address_line2
+        json.barangay @social_program_receipt.address.barangay
+        json.city @social_program_receipt.address.city
+        json.region @social_program_receipt.address.region
+        json.zipcode @social_program_receipt.address.zipcode
+        json.country_id @social_program_receipt.address.country_id
+        json.country @social_program_receipt.address.country.name if @social_program_receipt.address.country
+      end
+    end
+
+    json.receipt do
+      json.id @social_program_receipt.receipt.id
+      json.transaction_type @social_program_receipt.receipt.transaction_type
+      json.amount @social_program_receipt.receipt.amount.to_f
+      json.balance_before @social_program_receipt.receipt.balance_before.to_f
+      json.balance_after @social_program_receipt.receipt.balance_after.to_f
+      json.description @social_program_receipt.receipt.description
+      json.created_at @social_program_receipt.receipt.created_at
+      json.updated_at @social_program_receipt.receipt.updated_at
+
+      json.user do
+        json.id @social_program_receipt.receipt.user.id
+        json.email @social_program_receipt.receipt.user.email
+        json.first_name @social_program_receipt.receipt.user.user_detail&.first_name
+        json.last_name @social_program_receipt.receipt.user.user_detail&.last_name
+      end
+
+      if @social_program_receipt.receipt.user_cart_order.present?
+        json.order do
+          json.id @social_program_receipt.receipt.user_cart_order.id
+          json.cart_status @social_program_receipt.receipt.user_cart_order.cart_status
+          json.is_paid @social_program_receipt.receipt.user_cart_order.is_paid
+          json.total_cost @social_program_receipt.receipt.user_cart_order.total_cost.to_f
+
+          # Order items summary
+          json.items_count @social_program_receipt.receipt.user_cart_order.shopping_cart.shopping_cart_items.count
+          json.total_quantity @social_program_receipt.receipt.user_cart_order.shopping_cart.shopping_cart_items.sum(:qty)
+        end
+      else
+        json.order nil
+      end
+    end
+
+  json.created_at @social_program_receipt.created_at
+  json.updated_at @social_program_receipt.updated_at
+end
