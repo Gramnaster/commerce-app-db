@@ -57,6 +57,10 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_30_132620) do
     t.string "city", null: false
     t.bigint "country_id", null: false
     t.datetime "created_at", null: false
+    t.string "geocode_source"
+    t.datetime "geocoded_at"
+    t.decimal "latitude", precision: 10, scale: 8
+    t.decimal "longitude", precision: 11, scale: 8
     t.string "region"
     t.string "street_no", null: false
     t.string "unit_no", null: false

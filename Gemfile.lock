@@ -461,6 +461,8 @@ DEPENDENCIES
   devise-jwt
   dotenv-rails
   factory_bot_rails
+  faraday (~> 2.12)
+  faraday-net_http (~> 3.0)
   finnhub_ruby (~> 2.0.0)
   kamal
   omniauth-facebook
