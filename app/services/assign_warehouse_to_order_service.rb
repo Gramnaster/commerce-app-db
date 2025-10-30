@@ -75,8 +75,9 @@ class AssignWarehouseToOrderService
 
     Rails.logger.info("[WarehouseAssignment] Assigning product ##{product.id} (#{product.title}) - Qty: #{required_qty}")
 
-    # Find inventories for this product with sufficient stock
-    available_inventories = Inventory.where(product: product)
+    # Find inventories for this product with sufficient stock - eager load product to avoid N+1
+    available_inventories = Inventory.includes(:product)
+                                    .where(product: product)
                                     .where("qty_in_stock >= ?", required_qty)
                                     .where(company_site_id: warehouses.pluck(:id))
 
@@ -139,7 +140,8 @@ class AssignWarehouseToOrderService
       product = item.product
       required_qty = item.qty
 
-      inventory = Inventory.where(product: product)
+      inventory = Inventory.includes(:product)
+                          .where(product: product)
                           .where("qty_in_stock >= ?", required_qty)
                           .where(company_site_id: warehouses.pluck(:id))
                           .order(qty_in_stock: :desc)

@@ -8,7 +8,8 @@ class Api::V1::WarehouseOrdersController < ApplicationController
 
   # GET /api/v1/warehouse_orders (Management and Warehouse)
   def index
-    collection = WarehouseOrder.includes(:company_site, :inventory, :user, :user_cart_order).all
+    # Only include associations that are actually used in the view
+    collection = WarehouseOrder.includes(:company_site, :inventory).all
     result = paginate_collection(collection, default_per_page: 30)
     @warehouse_orders = result[:collection]
     @pagination = result[:pagination]
