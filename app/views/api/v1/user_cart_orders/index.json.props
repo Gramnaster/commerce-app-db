@@ -11,6 +11,7 @@ json.data do
     json.total_cost order.total_cost
     json.is_paid order.is_paid
     json.cart_status order.cart_status
+    json.social_program_id order.social_program_id
     json.user_address do
       json.id order.user_address.id
       json.address do
