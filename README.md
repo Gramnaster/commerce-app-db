@@ -23,7 +23,8 @@
     - [User Payment Methods](#user-payment-methods-user-only)
     - [Shopping Cart Items](#shopping-cart-items-user-only)
     - [User Cart Orders](#user-cart-orders-user-only)
-    - [Order Approval & Fulfillment (Admin/Warehouse)](#order-approval--fulfillment-management-admin--warehouse)
+    - [Warehouse Auto-Assignment](#warehouse-auto-assignment)
+    - [Warehouse Orders](#warehouse-orders-management--warehouse-admin)
   - [Transaction History (Receipts)](#transaction-history-receipts)
     - [User Receipts Endpoints](#user-receipts-endpoints)
     - [Admin Receipts Management](#admin-receipts-management-management-admin-only)
@@ -81,6 +82,8 @@ The following endpoints support pagination:
 - Promotion Categories (GET /api/v1/promotions_categories) - Default: 20 per page
 - Company Sites (GET /api/v1/company_sites) - Default: 20 per page
 - Warehouse Orders (GET /api/v1/warehouse_orders) - Default: 30 per page
+- Warehouse Orders by User - Most Recent (GET /api/v1/warehouse_orders/:user_id/most_recent) - Default: 30 per page
+- Warehouse Orders by User - Pending (GET /api/v1/warehouse_orders/:user_id/pending) - Default: 30 per page
 - User Cart Orders (GET /api/v1/user_cart_orders) - Default: 30 per page
 - Admin Receipts (GET /api/v1/admin/receipts) - Default: 20 per page
 
@@ -2495,9 +2498,11 @@ Users submit their shopping cart as an order. The system automatically:
 1. Calculates total cost from all cart items
 2. Checks if user has sufficient balance
 3. Deducts the cost from user's payment method
-4. Creates the order with `is_paid: true` and `cart_status: pending`
+4. Creates the order with `is_paid: true` and `cart_status: approved`
+5. **Auto-assigns products to nearest warehouses** (see [Warehouse Auto-Assignment](#warehouse-auto-assignment))
+6. Creates warehouse orders automatically
 
-Management admins can view and approve paid orders.
+Management admins can view and monitor orders.
 
 #### POST /api/v1/user_cart_orders (User Only)
 Submit your shopping cart as an order.
@@ -2513,12 +2518,19 @@ Submit your shopping cart as an order.
 - **Requirements**:
   - Cart must not be empty
   - User must have sufficient balance
+  - User address must exist (used for warehouse distance calculation)
 - **Automatic Actions**:
   - Calculates total cost
   - Validates sufficient funds
   - Deducts payment from balance
   - Sets `is_paid: true`
-  - Sets `cart_status: pending`
+  - Sets `cart_status: approved` (auto-approved)
+  - Creates receipt for purchase
+  - **Geocodes customer address** (if not already geocoded)
+  - **Calculates distances to all warehouses**
+  - **Assigns each product to nearest warehouse with stock**
+  - **Creates warehouse orders automatically**
+  - **Deducts inventory quantities**
 
 **Example Response (Success)**:
 ```json
@@ -2531,7 +2543,7 @@ Submit your shopping cart as an order.
     "id": 2,
     "total_cost": "286.8",
     "is_paid": true,
-    "cart_status": "pending",
+    "cart_status": "approved",
     "user_address": {
       "id": 2,
       "address": {
@@ -2551,7 +2563,7 @@ Submit your shopping cart as an order.
         "subtotal": "219.9"
       }
     ],
-    "warehouse_orders_count": 0,
+    "warehouse_orders_count": 2,
     "created_at": "2025-10-17T16:27:19.531Z",
     "updated_at": "2025-10-17T16:27:19.531Z"
   }
@@ -2608,14 +2620,191 @@ Update order payment status or reject order.
 
 ---
 
+## Warehouse Auto-Assignment
+
+### Overview
+
+The system automatically assigns products to the nearest available warehouse when a user creates an order. This ensures optimal delivery times and efficient inventory management.
+
+**Key Features:**
+- **Automatic Geocoding**: Customer addresses are geocoded using Google Maps Geocoding API
+- **Distance Calculation**: Uses Google Maps Distance Matrix API to calculate distances from customer to all warehouses
+- **Smart Assignment**: Each product is assigned to the nearest warehouse with sufficient stock
+- **Inventory Management**: Automatically deducts quantities from assigned warehouse inventories
+- **Fallback Logic**: If distance calculation fails, assigns to warehouse with most stock
+
+### How It Works
+
+1. **User Places Order**: Customer submits cart with delivery address
+2. **Address Geocoding**: System geocodes the delivery address to get latitude/longitude
+3. **Distance Calculation**: Calls Google Maps Distance Matrix API with:
+   - Origins: All warehouse addresses (pre-geocoded and stored in database)
+   - Destination: Customer address
+4. **Warehouse Selection**: For each product in the cart:
+   - Finds all warehouses with sufficient stock
+   - Selects the warehouse with shortest distance
+   - Creates warehouse order
+   - Deducts inventory quantity
+5. **Order Completion**: Returns approved order with warehouse_orders_count
+
+### API Integration
+
+**Google Maps APIs Used:**
+- **Geocoding API**: One-time geocoding of warehouse addresses (stored in database)
+- **Distance Matrix API**: Real-time distance calculation for each order
+- **API Key**: Configured in environment variable `GOOGLE_MAPS_API_KEY`
+
+### Database Schema
+
+**Addresses Table** (geolocation fields):
+```ruby
+t.decimal :latitude, precision: 10, scale: 8
+t.decimal :longitude, precision: 11, scale: 8
+t.datetime :geocoded_at
+t.string :geocode_source  # 'google_maps' or 'manual'
+```
+
+### Example Workflow
+
+**Scenario**: Customer in Dagupan, Pangasinan orders 1 Backpack + 1 Jacket
+
+1. **Order Created**: POST /api/v1/user_cart_orders with address in Dagupan
+2. **Geocoding**: Address geocoded → `15.9757° N, 120.5707° E`
+3. **Distance Calculation**:
+   - JPB Warehouse A (Tarlac): 85 km
+   - JPB Warehouse B (Malolos): 145 km
+   - JPB Warehouse C (Antipolo): 320 km
+4. **Assignment**:
+   - Both products assigned to **JPB Warehouse A** (nearest with stock)
+   - 2 warehouse orders created automatically
+   - Inventory deducted from Warehouse A
+5. **Result**: Order approved with `warehouse_orders_count: 2`
+
+### Performance & Reliability
+
+- **Caching**: Warehouse coordinates stored in database (no repeated geocoding)
+- **Fallback**: If API fails, assigns to warehouse with most stock
+- **Error Handling**: Partial failures logged, order still completes
+- **N+1 Prevention**: Eager loading for products and inventories
+
+---
+
 ### Warehouse Orders (Management & Warehouse Admin)
 
-Management creates warehouse orders for approved user orders. Warehouse admins can view and update order status.
+Warehouse orders are **automatically created** when users place orders. The system assigns each product to the nearest warehouse with sufficient stock using Google Maps distance calculation.
+
+Management creates manual warehouse orders only for special cases. Warehouse admins can view and update order status.
 
 #### GET /api/v1/warehouse_orders
 View all warehouse orders.
 - **Auth Required**: Management or Warehouse Admin JWT token
 - **Returns**: Array of warehouse orders with inventory and site details
+- **Pagination**: Default 30 per page
+
+**Example Request:**
+```bash
+curl -X GET "http://localhost:3003/api/v1/warehouse_orders?per_page=50" \
+  -H "Authorization: Bearer ADMIN_TOKEN"
+```
+
+#### GET /api/v1/warehouse_orders/:user_id/most_recent
+View most recent warehouse orders for a specific user.
+- **Auth Required**: Management or Warehouse Admin JWT token
+- **Returns**: Array of user's warehouse orders ordered by most recent first
+- **Pagination**: Default 30 per page
+
+**Example Request:**
+```bash
+curl -X GET "http://localhost:3003/api/v1/warehouse_orders/20/most_recent" \
+  -H "Authorization: Bearer ADMIN_TOKEN"
+```
+
+**Example Response:**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Warehouse orders fetched successfully"
+  },
+  "pagination": {
+    "current_page": 1,
+    "per_page": 30,
+    "total_entries": 6,
+    "total_pages": 1,
+    "next_page": null,
+    "previous_page": null
+  },
+  "data": [
+    {
+      "id": 8,
+      "qty": 1,
+      "product_status": "storage",
+      "company_site": {
+        "id": 4,
+        "title": "JPB Warehouse C",
+        "site_type": "warehouse"
+      },
+      "inventory": {
+        "id": 46,
+        "sku": "001001004972",
+        "product_id": 4
+      },
+      "user_cart_order_id": 6,
+      "created_at": "2025-10-30T15:41:33.269Z",
+      "updated_at": "2025-10-30T15:41:33.269Z"
+    }
+  ]
+}
+```
+
+#### GET /api/v1/warehouse_orders/:user_id/pending
+View pending warehouse orders for a specific user.
+- **Auth Required**: Management or Warehouse Admin JWT token
+- **Returns**: Array of user's warehouse orders with status `storage` or `progress` (excludes `delivered`)
+- **Pagination**: Default 30 per page
+- **Use Case**: Track orders that haven't been delivered yet
+
+**Example Request:**
+```bash
+curl -X GET "http://localhost:3003/api/v1/warehouse_orders/20/pending" \
+  -H "Authorization: Bearer ADMIN_TOKEN"
+```
+
+**Example Response:**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "Warehouse orders fetched successfully"
+  },
+  "pagination": {
+    "current_page": 1,
+    "per_page": 30,
+    "total_entries": 5,
+    "total_pages": 1
+  },
+  "data": [
+    {
+      "id": 8,
+      "qty": 1,
+      "product_status": "storage",
+      "company_site": {
+        "id": 4,
+        "title": "JPB Warehouse C",
+        "site_type": "warehouse"
+      },
+      "inventory": {
+        "id": 46,
+        "sku": "001001004972",
+        "product_id": 4
+      },
+      "user_cart_order_id": 6,
+      "created_at": "2025-10-30T15:41:33.269Z",
+      "updated_at": "2025-10-30T15:41:33.269Z"
+    }
+  ]
+}
+```
 
 #### GET /api/v1/warehouse_orders/:id
 View a specific warehouse order.

@@ -19,6 +19,43 @@ class Api::V1::WarehouseOrdersController < ApplicationController
   def show
   end
 
+  # GET /api/v1/warehouse_orders/:user_id/most_recent (Management and Warehouse)
+  # Returns most recent warehouse orders for a specific user
+  def user_most_recent
+    user = User.find(params[:user_id])
+
+    collection = WarehouseOrder.includes(:company_site, :inventory)
+                               .where(user_id: user.id)
+                               .order(created_at: :desc)
+
+    result = paginate_collection(collection, default_per_page: 30)
+    @warehouse_orders = result[:collection]
+    @pagination = result[:pagination]
+
+    render :index
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: "User not found" }, status: :not_found
+  end
+
+  # GET /api/v1/warehouse_orders/:user_id/pending (Management and Warehouse)
+  # Returns all warehouse orders with 'storage' or 'progress' status for a specific user
+  def user_pending
+    user = User.find(params[:user_id])
+
+    collection = WarehouseOrder.includes(:company_site, :inventory)
+                               .where(user_id: user.id)
+                               .where(product_status: [ "storage", "progress" ])
+                               .order(created_at: :desc)
+
+    result = paginate_collection(collection, default_per_page: 30)
+    @warehouse_orders = result[:collection]
+    @pagination = result[:pagination]
+
+    render :index
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: "User not found" }, status: :not_found
+  end
+
   # POST /api/v1/warehouse_orders (Management only - create warehouse order from approved cart order)
   def create
     authorize_management!
