@@ -1,0 +1,31 @@
+json.status do
+  json.code 200
+  json.message "Social programs fetched successfully"
+end
+
+json.pagination @pagination if @pagination
+
+json.data do
+  json.array! @social_programs do |program|
+    json.id program.id
+    json.description program.description
+
+    json.address do
+      json.id program.address.id
+      json.unit_no program.address.unit_no
+      json.street_no program.address.street_no
+      json.address_line1 program.address.address_line1
+      json.address_line2 program.address.address_line2
+      json.barangay program.address.barangay
+      json.city program.address.city
+      json.region program.address.region
+      json.zipcode program.address.zipcode
+      json.country_id program.address.country_id
+      json.country program.address.country.name if program.address.country
+    end
+
+
+  json.created_at program.created_at
+  json.updated_at program.updated_at
+  end
+end

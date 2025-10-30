@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_10_30_125317) do
+ActiveRecord::Schema[8.1].define(version: 2025_10_30_132620) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -249,6 +249,24 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_30_125317) do
     t.index ["user_id"], name: "index_shopping_carts_on_user_id"
   end
 
+  create_table "social_program_receipts", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "receipt_id", null: false
+    t.bigint "social_program_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["receipt_id"], name: "index_social_program_receipts_on_receipt_id"
+    t.index ["social_program_id"], name: "index_social_program_receipts_on_social_program_id"
+  end
+
+  create_table "social_programs", force: :cascade do |t|
+    t.bigint "address_id", null: false
+    t.datetime "created_at", null: false
+    t.string "description"
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.index ["address_id"], name: "index_social_programs_on_address_id"
+  end
+
   create_table "solid_cache_entries", force: :cascade do |t|
     t.integer "byte_size", null: false
     t.datetime "created_at", null: false
@@ -396,11 +414,13 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_30_125317) do
     t.datetime "created_at", null: false
     t.boolean "is_paid", default: false, null: false
     t.bigint "shopping_cart_id", null: false
+    t.bigint "social_program_id"
     t.decimal "total_cost", precision: 10, scale: 2, default: "0.0", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_address_id", null: false
     t.index ["cart_status"], name: "index_user_cart_orders_on_cart_status"
     t.index ["shopping_cart_id"], name: "index_user_cart_orders_on_shopping_cart_id"
+    t.index ["social_program_id"], name: "index_user_cart_orders_on_social_program_id"
     t.index ["user_address_id"], name: "index_user_cart_orders_on_user_address_id"
   end
 
@@ -483,9 +503,13 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_30_125317) do
   add_foreign_key "shopping_cart_items", "products"
   add_foreign_key "shopping_cart_items", "shopping_carts"
   add_foreign_key "shopping_carts", "users"
+  add_foreign_key "social_program_receipts", "receipts"
+  add_foreign_key "social_program_receipts", "social_programs"
+  add_foreign_key "social_programs", "addresses"
   add_foreign_key "user_addresses", "addresses"
   add_foreign_key "user_addresses", "users"
   add_foreign_key "user_cart_orders", "shopping_carts"
+  add_foreign_key "user_cart_orders", "social_programs"
   add_foreign_key "user_cart_orders", "user_addresses"
   add_foreign_key "user_details", "users"
   add_foreign_key "user_payment_methods", "users"
