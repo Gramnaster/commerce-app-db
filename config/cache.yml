@@ -10,7 +10,8 @@ development:
   <<: *default
 
 test:
-  database: cache
+  # Don't specify database - will use ActiveRecord::Base connection (same DB as primary)
+  # This prevents the cache adapter from trying to connect to a separate database in tests
   <<: *default
 
 production:
