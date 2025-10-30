@@ -76,8 +76,8 @@ Rails.application.routes.draw do
         resources :receipts, only: [ :index, :show, :destroy ]
       end
 
-      resources :social_programs, only: [ :index, :show ]
-      resources :social_program_receipts, only: [ :index, :show ]
+      resources :social_programs
+      resources :social_program_receipts
       # resources :stocks, only: [ :index, :show ]
       # resources :countries, only: [ :index, :show ]
       # resources :wallets, only: [ :index, :show ] do
