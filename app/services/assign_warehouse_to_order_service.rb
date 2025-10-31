@@ -71,7 +71,7 @@ class AssignWarehouseToOrderService
 
   def assign_warehouse_for_item(item, warehouses, distance_data)
     product = item.product
-    required_qty = item.qty
+    required_qty = item.qty.to_i
 
     Rails.logger.info("[WarehouseAssignment] Assigning product ##{product.id} (#{product.title}) - Qty: #{required_qty}")
 
@@ -138,7 +138,7 @@ class AssignWarehouseToOrderService
 
     cart_items.each do |item|
       product = item.product
-      required_qty = item.qty
+      required_qty = item.qty.to_i
 
       inventory = Inventory.includes(:product)
                           .where(product: product)
