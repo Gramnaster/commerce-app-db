@@ -333,4 +333,17 @@ unless Rails.env.test?
     end
   end
 
+  social_programs = [
+    { title: "Bantay Bata 163", description: "Bantay Bata 163 is a child welfare program launched in 1997 to protect disadvantaged and at-risk children through a nationwide network of social services.", address: address_records[0] },
+    { title: "Immune Deficiency Foundation", description: "The Immune Deficiency Foundation, founded in 1980, aims to improve the diagnosis, treatment, and quality of life for those with primary immunodeficiency", address: address_records[1] },
+    { title: "Doctors Without Borders.", description: "Médecins Sans Frontières, sometimes known as Doctors Without Borders, is a charity that provides humanitarian medical care.", address: address_records[2] },
+    { title: "UNICEF Philippines", description: "UNICEF Philippines is one of Philippine's offices of the United Nations Children’s Fund. Being one of the first UNICEF offices established in Asia, it works to uphold the rights of children in the Philippines, including their right to education, healthcare, protection from abuse and exploitation.", address: address_records[3] }
+  ]
+
+  social_programs.each do |attrs|
+    SocialProgram.find_or_create_by!(title: attrs[:title]) do |program|
+      program.address = attrs[:address]
+    end
+  end
+
 end
