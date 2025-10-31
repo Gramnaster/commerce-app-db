@@ -357,4 +357,132 @@ unless Rails.env.test?
     end
   end
 
+  # Seeds Regular Users for development
+  puts "Seeding Regular Users for development..."
+
+  user_addresses = [
+    { unit_no: "501", street_no: "123 Maple Ave", barangay: "Barangay 1", city: "Makati", zipcode: "1200", country_id: ph_country.id },
+    { unit_no: "302", street_no: "456 Oak Street", barangay: "San Lorenzo", city: "Pasig", zipcode: "1600", country_id: ph_country.id }
+  ]
+
+  user_address_records = user_addresses.map do |attrs|
+    Address.find_or_create_by!(attrs)
+  end
+
+  users_data = [
+    {
+      email: "test1@test.com",
+      password: "bienbien",
+      user_detail: {
+        first_name: "Maria",
+        middle_name: "Santos",
+        last_name: "Cruz",
+        dob: Date.new(1992, 5, 15)
+      },
+      phones: [
+        { phone_no: "+639171234567", phone_type: "mobile" },
+        { phone_no: "+6322345678", phone_type: "home" }
+      ],
+      user_address: {
+        address: user_address_records[0],
+        is_default: true
+      },
+      payment_method: {
+        balance: 5000.00,
+        payment_type: "e_wallet"
+      }
+    },
+    {
+      email: "test2@test.com",
+      password: "bienbien",
+      user_detail: {
+        first_name: "Juan",
+        middle_name: "Reyes",
+        last_name: "Dela Cruz",
+        dob: Date.new(1988, 11, 23)
+      },
+      phones: [
+        { phone_no: "+639189876543", phone_type: "mobile" },
+        { phone_no: "+6328765432", phone_type: "work" }
+      ],
+      user_address: {
+        address: user_address_records[1],
+        is_default: true
+      },
+      payment_method: {
+        balance: 3500.00,
+        payment_type: "e_wallet"
+      }
+    }
+  ]
+
+  ActiveRecord::Base.transaction do
+    begin
+      users_data.each do |user_data|
+        # Check if user already exists
+        user = User.find_by(email: user_data[:email])
+
+        if user
+          puts "User #{user_data[:email]} already exists, skipping..."
+          next
+        end
+
+        # Create new user with nested attributes (this prevents the after_create callback from creating empty user_detail)
+        user = User.new(
+          email: user_data[:email],
+          password: user_data[:password],
+          password_confirmation: user_data[:password],
+          confirmed_at: Time.current
+        )
+
+        # Build user_detail BEFORE saving (this prevents callback from creating empty one)
+        user.build_user_detail(
+          first_name: user_data[:user_detail][:first_name],
+          middle_name: user_data[:user_detail][:middle_name],
+          last_name: user_data[:user_detail][:last_name],
+          dob: user_data[:user_detail][:dob]
+        )
+
+        # Save user (will save user_detail too)
+        user.save!
+
+        # Create phones
+        user_data[:phones].each do |phone_data|
+          user.phones.create!(
+            phone_no: phone_data[:phone_no],
+            phone_type: phone_data[:phone_type]
+          )
+        end
+
+        # Create user_address
+        user.user_addresses.create!(
+          address: user_data[:user_address][:address],
+          is_default: user_data[:user_address][:is_default]
+        )
+
+        # Update payment method (created by callback with 0 balance)
+        if user.user_payment_methods.any?
+          user.user_payment_methods.first.update!(
+            balance: user_data[:payment_method][:balance],
+            payment_type: user_data[:payment_method][:payment_type]
+          )
+        else
+          user.user_payment_methods.create!(
+            balance: user_data[:payment_method][:balance],
+            payment_type: user_data[:payment_method][:payment_type]
+          )
+        end
+
+        # Shopping cart already created by callback
+
+        puts "Seeded user: #{user.email} (#{user.user_detail.first_name} #{user.user_detail.last_name})"
+      end
+      puts "Regular users seeded successfully."
+    rescue StandardError => e
+      puts "Failed to seed regular users. Error: #{e.message}"
+      puts e.backtrace.first(5).join("\n")
+      raise ActiveRecord::Rollback
+    end
+  end
+
 end

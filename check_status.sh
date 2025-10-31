@@ -15,9 +15,25 @@ echo ""
 
 # Check ngrok
 echo "ngrok Tunnel:"
-NGROK_URL=$(curl -s http://localhost:4040/api/tunnels 2>/dev/null | jq -r '.tunnels[] | select(.proto == "https") | .public_url')
-if [ -n "$NGROK_URL" ]; then
-    echo "  [OK] Active: $NGROK_URL"
+# Try to get ngrok URL from the container (search by image name)
+NGROK_CONTAINER=$(docker ps --filter "ancestor=ngrok/ngrok:latest" --format '{{.Names}}' | head -n 1)
+if [ -n "$NGROK_CONTAINER" ]; then
+    NGROK_URL=$(docker exec "$NGROK_CONTAINER" wget -qO- http://localhost:4040/api/tunnels 2>/dev/null | jq -r '.tunnels[] | select(.proto == "https") | .public_url' 2>/dev/null)
+    if [ -n "$NGROK_URL" ]; then
+        echo "  [OK] Active: $NGROK_URL"
+    else
+        echo "  [WARN] Container running but tunnel URL not found via API"
+        # Try alternative: check if we can manually extract from docker logs
+        echo "  [INFO] Checking docker logs for tunnel URL..."
+        NGROK_URL=$(docker logs "$NGROK_CONTAINER" 2>&1 | grep -oP 'https://[a-z0-9-]+\.ngrok-free\.dev' | tail -1)
+        if [ -n "$NGROK_URL" ]; then
+            echo "  [OK] Found: $NGROK_URL"
+        else
+            echo "  [FAIL] Could not retrieve tunnel URL"
+            echo ""
+            exit 1
+        fi
+    fi
 else
     echo "  [FAIL] Not running"
     echo ""
