@@ -12,6 +12,7 @@
   - [Admin Users](#admin-users-management--warehouse)
     - [Admin Authentication](#admin-authentication)
     - [Admin User Management](#admin-user-management)
+  - [User Management](#user-management-management-admin-only)
   - [Product Categories](#product-categories-management-admin-only)
   - [Producers](#producers-management-admin-only)
   - [Promotions](#promotions-management-admin-only)
@@ -843,6 +844,189 @@ Soft delete an admin user (disable account).
 - **Auth Required**: Management Admin JWT token
 - **Returns**: `{"message": "Admin user disabled successfully"}`
 - **Note**: This performs a soft delete (sets `deleted_at` timestamp). The admin user account is disabled but data is preserved. Used when an admin leaves the company.
+
+---
+
+### User Management (Management Admin Only)
+
+Management admins have access to comprehensive user data endpoints for system oversight and customer support.
+
+#### GET /api/v1/users
+List all regular users in the system.
+- **Auth Required**: Management Admin JWT token
+- **Supports**: Pagination (default: 20 per page)
+- **Returns**: Array of all users with basic information
+
+#### GET /api/v1/users/:id/full_details
+Get complete user details including all transactions, orders, and warehouse shipments.
+- **Auth Required**: Management Admin JWT token
+- **Returns**: Comprehensive user data including:
+  - User profile information (email, verification status)
+  - User detail (name, date of birth)
+  - Phone numbers
+  - User addresses with full address details and country
+  - Payment methods with current balance
+  - All receipts (deposits, withdrawals, purchases, donations)
+  - All cart orders with:
+    - Order total cost, status, and payment status
+    - Social program information (if donation was made)
+    - Warehouse orders (inventory ID, quantity, product status)
+
+**Example Request:**
+```bash
+curl -X GET http://localhost:3003/api/v1/users/24/full_details \
+  -H "Authorization: Bearer MANAGEMENT_ADMIN_TOKEN"
+```
+
+**Example Response:**
+```json
+{
+  "status": {
+    "code": 200,
+    "message": "User full details retrieved successfully."
+  },
+  "data": {
+    "id": 24,
+    "email": "user@example.com",
+    "is_verified": true,
+    "confirmed_at": "2025-10-28T15:52:36.657Z",
+    "created_at": "2025-10-28T15:51:57.822Z",
+    "updated_at": "2025-10-28T15:52:36.658Z",
+    "user_detail": {
+      "id": 14,
+      "first_name": "John",
+      "middle_name": "M",
+      "last_name": "Doe",
+      "dob": "1990-01-15"
+    },
+    "phones": [
+      {
+        "id": 1,
+        "phone_no": "+639171234567",
+        "phone_type": "mobile"
+      }
+    ],
+    "user_addresses": [
+      {
+        "id": 7,
+        "is_default": true,
+        "address": {
+          "id": 18,
+          "unit_no": "123",
+          "street_no": "456",
+          "address_line1": "Main Street",
+          "address_line2": "Subdivision",
+          "barangay": "Barangay 1",
+          "city": "Manila",
+          "region": "NCR",
+          "zipcode": "1000",
+          "country_id": 1,
+          "country": "Philippines"
+        }
+      }
+    ],
+    "user_payment_methods": [
+      {
+        "id": 12,
+        "balance": "3226.01",
+        "payment_type": "e_wallet"
+      }
+    ],
+    "receipts": [
+      {
+        "id": 45,
+        "transaction_type": "purchase",
+        "amount": "1773.99",
+        "balance_before": "5000.0",
+        "balance_after": "3226.01",
+        "description": "Purchase - Order #8",
+        "user_cart_order_id": 8,
+        "created_at": "2025-11-01T10:31:24.000Z"
+      },
+      {
+        "id": 46,
+        "transaction_type": "withdraw",
+        "amount": "1773.99",
+        "balance_before": "5000.0",
+        "balance_after": "3226.01",
+        "description": "Payment for Order #8",
+        "user_cart_order_id": null,
+        "created_at": "2025-11-01T10:31:24.000Z"
+      },
+      {
+        "id": 47,
+        "transaction_type": "donation",
+        "amount": "141.92",
+        "balance_before": "3226.01",
+        "balance_after": "3226.01",
+        "description": "Donation to Community Food Program (8% of Order #8)",
+        "user_cart_order_id": 8,
+        "created_at": "2025-11-01T10:31:24.000Z",
+        "social_programs": [
+          {
+            "id": 1,
+            "title": "Community Food Program",
+            "description": "Providing meals to families in need"
+          }
+        ]
+      }
+    ],
+    "user_cart_orders": [
+      {
+        "id": 8,
+        "total_cost": "1773.99",
+        "is_paid": true,
+        "cart_status": "approved",
+        "user_address_id": 7,
+        "social_program_id": 1,
+        "created_at": "2025-11-01T10:31:24.000Z",
+        "updated_at": "2025-11-01T10:31:24.000Z",
+        "social_program": {
+          "id": 1,
+          "title": "Community Food Program",
+          "description": "Providing meals to families in need"
+        },
+        "warehouse_orders": [
+          {
+            "id": 9,
+            "inventory_id": 47,
+            "company_site_id": 2,
+            "qty": 2,
+            "product_status": "storage",
+            "created_at": "2025-11-01T10:31:24.000Z",
+            "updated_at": "2025-11-01T10:31:24.000Z"
+          },
+          {
+            "id": 10,
+            "inventory_id": 52,
+            "company_site_id": 2,
+            "qty": 3,
+            "product_status": "storage",
+            "created_at": "2025-11-01T10:31:24.000Z",
+            "updated_at": "2025-11-01T10:31:24.000Z"
+          },
+          {
+            "id": 11,
+            "inventory_id": 57,
+            "company_site_id": 2,
+            "qty": 1,
+            "product_status": "storage",
+            "created_at": "2025-11-01T10:31:24.000Z",
+            "updated_at": "2025-11-01T10:31:24.000Z"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**Use Cases:**
+- Customer support: View complete customer history and order status
+- Order fulfillment: Access all warehouse orders for a specific user
+- Financial tracking: Review all user transactions including donations
+- Issue resolution: Investigate user complaints with full context
+- Analytics: Analyze user purchasing patterns and social program participation
 
 ---
 
