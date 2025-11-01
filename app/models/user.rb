@@ -14,6 +14,7 @@ class User < ApplicationRecord
   has_many :user_payment_methods, dependent: :destroy
   has_one :shopping_cart, dependent: :destroy
   has_many :shopping_cart_items, through: :shopping_cart
+  has_many :user_cart_orders, dependent: :destroy
   has_many :warehouse_orders, dependent: :destroy
   has_many :receipts, dependent: :destroy
 
