@@ -37,8 +37,8 @@ class Api::V1::UserCartOrdersController < ApplicationController
       return render json: { error: "Cart is empty" }, status: :unprocessable_content
     end
 
-    # Eager load products for shopping cart items to avoid N+1
-    shopping_cart_items = shopping_cart.shopping_cart_items.includes(:product)
+    # Eager load products with promotion and product_category for final_price calculation
+    shopping_cart_items = shopping_cart.shopping_cart_items.includes(product: [ :promotion, :product_category ])
 
     # Calculate total cost with promotions applied
     total_cost = shopping_cart_items.sum { |item| item.product.final_price.to_f * item.qty }

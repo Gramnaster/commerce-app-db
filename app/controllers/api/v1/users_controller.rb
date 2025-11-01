@@ -41,8 +41,8 @@ class Api::V1::UsersController < Api::V1::BaseController
       :phones,
       { user_addresses: { address: :country } },
       :user_payment_methods,
-      { receipts: [ :user_cart_order, :social_program_receipts ] },
-      { shopping_cart: { user_cart_orders: [ { warehouse_orders: [ :inventory, :company_site ] }, :social_program ] } }
+      { receipts: { social_program_receipts: :social_program } },
+      { shopping_cart: { user_cart_orders: [ :warehouse_orders, :social_program ] } }
     ).find(params[:id])
 
     render :full_details
