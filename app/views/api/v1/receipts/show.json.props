@@ -70,7 +70,7 @@ if @receipt.user_cart_order.present?
       end
     end
 
-    json.items_count @receipt.user_cart_order.shopping_cart.shopping_cart_items.count
+    json.items_count @receipt.user_cart_order.shopping_cart.shopping_cart_items_count
     json.total_quantity @receipt.user_cart_order.shopping_cart.shopping_cart_items.sum(:qty)
   end
 else

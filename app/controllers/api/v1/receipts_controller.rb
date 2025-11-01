@@ -17,13 +17,13 @@ class Api::V1::ReceiptsController < ApplicationController
         Receipt.all
       end.includes(
         { user: :user_detail },
-        { user_cart_order: { shopping_cart: :shopping_cart_items } }
+        { user_cart_order: :shopping_cart }
       ).recent
     else
       # Regular users see only their own receipts
       collection = current_user.receipts.includes(
         { user: :user_detail },
-        { user_cart_order: { shopping_cart: :shopping_cart_items } }
+        { user_cart_order: :shopping_cart }
       ).recent
     end
 
