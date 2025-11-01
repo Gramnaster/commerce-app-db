@@ -72,6 +72,38 @@ if @receipt.user_cart_order.present?
 
     json.items_count @receipt.user_cart_order.shopping_cart.shopping_cart_items_count
     json.total_quantity @receipt.user_cart_order.shopping_cart.shopping_cart_items.sum(:qty)
+
+    # Delivery orders - warehouse orders grouped by company site
+    if @receipt.user_cart_order.warehouse_orders.any?
+      json.delivery_orders do
+        # Group warehouse orders by company_site
+        grouped_orders = @receipt.user_cart_order.warehouse_orders.group_by(&:company_site)
+
+        json.array! grouped_orders.to_a do |(company_site, orders)|
+          json.company_site do
+            json.id company_site.id
+            json.title company_site.title
+          end
+
+          # Overall delivery status - only changes when ALL orders reach the same status
+          statuses = orders.map(&:product_status).uniq
+          overall_status = if statuses.length == 1
+            # All orders have the same status
+            statuses.first
+          elsif statuses.include?("storage")
+            # Mixed statuses, still in storage phase
+            "storage"
+          elsif statuses.include?("progress")
+            # Mixed statuses, in progress phase
+            "progress"
+          else
+            # All delivered
+            "delivered"
+          end
+          json.status overall_status
+        end
+      end
+    end
   end
 else
   json.order nil

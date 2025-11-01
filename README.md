@@ -3208,10 +3208,33 @@ curl -X GET http://localhost:3001/api/v1/receipts/4 \
       }
     ],
     "items_count": 2,
-    "total_quantity": "5.0"
+    "total_quantity": "5.0",
+    "delivery_orders": [
+      {
+        "company_site": {
+          "id": 4,
+          "title": "JPB Warehouse C"
+        },
+        "status": "storage"
+      }
+    ]
   }
 }
 ```
+
+**Delivery Orders Tracking:**
+
+The `delivery_orders` array shows the warehouse fulfillment status for purchase receipts. When you place an order, products may be fulfilled from multiple warehouses. Each delivery order represents a batch of items coming from a single warehouse.
+
+- **company_site**: The warehouse fulfilling this part of your order
+- **status**: Current delivery status for this batch
+  - `storage`: Items are being prepared at the warehouse
+  - `progress`: Items are out for delivery
+  - `delivered`: Items have been delivered
+
+**Status Logic:** The delivery status only changes when ALL items from that warehouse reach the same status. For example, if a warehouse is shipping 3 items to you, the status remains "storage" until all 3 items move to "progress", then stays "progress" until all 3 are "delivered".
+
+**Multiple Warehouses:** If your order contains items from 2 different warehouses, you'll see 2 delivery orders - one for each warehouse. This allows you to track each shipment independently.
 
 ---
 
