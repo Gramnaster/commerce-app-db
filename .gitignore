@@ -30,3 +30,7 @@
 
 # Ignore master key for decrypting credentials and more.
 /config/master.key
+
+# Ignore documentation/planning files
+/EAGERLOADING.md
+/REFACTOR_USER_CART_ORDERS_PLAN.md
