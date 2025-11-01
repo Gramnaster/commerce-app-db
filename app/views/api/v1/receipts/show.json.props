@@ -101,6 +101,9 @@ if @receipt.user_cart_order.present?
             "delivered"
           end
           json.status overall_status
+
+          # Last status update timestamp (uses updated_at from most recent warehouse order update)
+          json.delivered_at orders.map(&:updated_at).max
         end
       end
     end
