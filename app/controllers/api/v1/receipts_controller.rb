@@ -1,19 +1,31 @@
 class Api::V1::ReceiptsController < ApplicationController
   include Paginatable
 
+  before_action :authenticate_user_or_admin!
   before_action :set_receipt, only: [ :show ]
+  before_action :authorize_receipt_access!, only: [ :show ]
 
   respond_to :json
 
   # GET /api/v1/receipts (Users only - view their own transaction history)
   def index
-    authenticate_user!
-
-    # Eager load associations used in view: user_cart_order.shopping_cart.shopping_cart_items, user.user_detail
-    collection = current_user.receipts.includes(
-      { user: :user_detail },
-      { user_cart_order: { shopping_cart: :shopping_cart_items } }
-    ).recent
+    # Management admins can view all receipts with optional user_id filter
+    if current_admin_user&.management?
+      collection = if params[:user_id].present?
+        Receipt.where(user_id: params[:user_id])
+      else
+        Receipt.all
+      end.includes(
+        { user: :user_detail },
+        { user_cart_order: { shopping_cart: :shopping_cart_items } }
+      ).recent
+    else
+      # Regular users see only their own receipts
+      collection = current_user.receipts.includes(
+        { user: :user_detail },
+        { user_cart_order: { shopping_cart: :shopping_cart_items } }
+      ).recent
+    end
 
     # Optional filtering by transaction type
     if params[:transaction_type].present?
@@ -25,13 +37,9 @@ class Api::V1::ReceiptsController < ApplicationController
     @pagination = result[:pagination]
   end
 
-  # GET /api/v1/receipts/:id (Users only - view their own receipt detail)
+  # GET /api/v1/receipts/:id (Users view their own, Management admins view any)
   def show
-    authenticate_user!
-
-    unless @receipt.user_id == current_user.id
-      render json: { error: "Access denied. You can only view your own receipts." }, status: :forbidden
-    end
+    # Authorization handled by before_action :authorize_receipt_access!
   end
 
   private
