@@ -1,0 +1,130 @@
+json.status do
+  json.code 200
+  json.message "User full details retrieved successfully."
+end
+
+json.data do
+  # Basic user information
+  json.id @user.id
+  json.email @user.email
+  json.is_verified @user.is_verified
+  json.confirmed_at @user.confirmed_at
+  json.created_at @user.created_at
+  json.updated_at @user.updated_at
+
+  # User details
+  if @user.user_detail
+    json.user_detail do
+      json.id @user.user_detail.id
+      json.first_name @user.user_detail.first_name
+      json.middle_name @user.user_detail.middle_name
+      json.last_name @user.user_detail.last_name
+      json.dob @user.user_detail.dob
+    end
+  end
+
+  # Phones
+  json.phones do
+    json.array! @user.phones do |phone_number|
+      json.id phone_number.id
+      json.phone_no phone_number.phone_no
+      json.phone_type phone_number.phone_type
+    end
+  end
+
+  # User addresses with nested address details
+  json.user_addresses do
+    json.array! @user.user_addresses do |user_address|
+      json.id user_address.id
+      json.is_default user_address.is_default
+
+      if user_address.address
+        json.address do
+          json.id user_address.address.id
+          json.unit_no user_address.address.unit_no
+          json.street_no user_address.address.street_no
+          json.address_line1 user_address.address.address_line1
+          json.address_line2 user_address.address.address_line2
+          json.barangay user_address.address.barangay
+          json.city user_address.address.city
+          json.region user_address.address.region
+          json.zipcode user_address.address.zipcode
+          json.country_id user_address.address.country_id
+          json.country user_address.address.country.name if user_address.address.country
+        end
+      end
+    end
+  end
+
+  # User payment methods
+  json.user_payment_methods do
+    json.array! @user.user_payment_methods do |payment_method|
+      json.id payment_method.id
+      json.balance payment_method.balance
+      json.payment_type payment_method.payment_type
+    end
+  end
+
+  # All receipts
+  json.receipts do
+    json.array! @user.receipts do |receipt|
+      json.id receipt.id
+      json.transaction_type receipt.transaction_type
+      json.amount receipt.amount
+      json.balance_before receipt.balance_before
+      json.balance_after receipt.balance_after
+      json.description receipt.description
+      json.user_cart_order_id receipt.user_cart_order_id
+      json.created_at receipt.created_at
+
+      # Include social program info if this is a donation receipt
+      if receipt.social_program_receipts.any?
+        json.social_programs do
+          json.array! receipt.social_program_receipts.map(&:social_program).compact do |program|
+            json.id program.id
+            json.title program.title
+            json.description program.description
+          end
+        end
+      end
+    end
+  end
+
+  # All user cart orders (accessed through shopping cart)
+  json.user_cart_orders do
+    if @user.shopping_cart
+      json.array! @user.shopping_cart.user_cart_orders do |cart_order|
+        json.id cart_order.id
+        json.total_cost cart_order.total_cost
+        json.is_paid cart_order.is_paid
+        json.cart_status cart_order.cart_status
+        json.user_address_id cart_order.user_address_id
+        json.social_program_id cart_order.social_program_id
+        json.created_at cart_order.created_at
+        json.updated_at cart_order.updated_at
+
+        # Include social program details if present
+        if cart_order.social_program
+          json.social_program do
+            json.id cart_order.social_program.id
+            json.title cart_order.social_program.title
+            json.description cart_order.social_program.description
+          end
+        end
+
+        # Warehouse orders for this cart order
+        json.warehouse_orders do
+          json.array! cart_order.warehouse_orders do |warehouse_order|
+            json.id warehouse_order.id
+            json.product_id warehouse_order.product_id
+            json.company_site_id warehouse_order.company_site_id
+            json.qty_ordered warehouse_order.qty_ordered
+            json.status warehouse_order.status
+            json.created_at warehouse_order.created_at
+            json.updated_at warehouse_order.updated_at
+          end
+        end
+      end
+    end
+  end
+end
