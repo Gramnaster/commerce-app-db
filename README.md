@@ -35,6 +35,43 @@
   - [Complete User Purchase Flow](#complete-user-purchase-flow)
   - [Test Credentials](#test-credentials)
 
+---
+
+## Recent Changes
+
+### November 2025: User Cart Orders Refactoring
+
+**Breaking Change:** The `user_cart_orders` endpoint parameter has changed:
+
+- **Old:** `user_address_id` (referenced join table)
+- **New:** `address_id` (direct reference to addresses table)
+
+**What Changed:**
+- Orders now directly reference the `addresses` table instead of going through the `user_addresses` join table
+- Simplifies queries: `@order.address` instead of `@order.user_address.address`
+- Better performance (fewer joins)
+- Preserves order history even if user removes address from saved addresses
+
+**Migration:**
+- All existing orders automatically migrated to new structure
+- Response JSON structure unchanged (frontend compatible)
+- User ID now stored directly on order (not inferred from shopping cart)
+
+**New API Usage:**
+```json
+POST /api/v1/user_cart_orders
+{
+  "user_cart_order": {
+    "address_id": 20,  // Changed from user_address_id
+    "social_program_id": 1
+  }
+}
+```
+
+For detailed refactoring documentation, see [REFACTOR_USER_CART_ORDERS_PLAN.md](REFACTOR_USER_CART_ORDERS_PLAN.md)
+
+---
+
 
 This README would normally document whatever steps are necessary to get the
 application up and running.
@@ -977,7 +1014,7 @@ curl -X GET http://localhost:3003/api/v1/users/24/full_details \
         "total_cost": "1773.99",
         "is_paid": true,
         "cart_status": "approved",
-        "user_address_id": 7,
+        "user_address_id": 20,  // Note: JSON key unchanged for frontend compatibility, but now references address_id directly
         "social_program_id": 1,
         "created_at": "2025-11-01T10:31:24.000Z",
         "updated_at": "2025-11-01T10:31:24.000Z",
@@ -2698,7 +2735,7 @@ Submit your shopping cart as an order.
 ```json
 {
   "user_cart_order": {
-    "user_address_id": 2,
+    "address_id": 20,
     "social_program_id": 1  // Optional: specify social program for 8% donation
   }
 }
@@ -2706,7 +2743,7 @@ Submit your shopping cart as an order.
 - **Requirements**:
   - Cart must not be empty
   - User must have sufficient balance
-  - User address must exist (used for warehouse distance calculation)
+  - Address must exist (FK constraint enforced)
 - **Automatic Actions**:
   - Calculates total cost
   - Validates sufficient funds
@@ -2721,6 +2758,8 @@ Submit your shopping cart as an order.
   - **Deducts inventory quantities**
   - **Creates 8% donation receipt** (if `social_program_id` provided)
   - **Links donation to social program** via SocialProgramReceipt
+
+**Note**: Changed from `user_address_id` to `address_id` (November 2025). Orders now directly reference addresses table, not the user_addresses join table. This simplifies queries and preserves order history even if user removes address from saved addresses.
 
 **Example Response (Success)**:
 ```json
@@ -3684,7 +3723,7 @@ curl -X GET http://localhost:3001/api/v1/shopping_cart_items \
 curl -X POST http://localhost:3001/api/v1/user_cart_orders \
   -H "Authorization: Bearer YOUR_USER_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"user_cart_order": {"user_address_id": 2}}'
+  -d '{"user_cart_order": {"address_id": 20}}'
 ```
 
 **Optional: Submit Order with Social Program Donation**
@@ -3695,7 +3734,7 @@ curl -X POST http://localhost:3001/api/v1/user_cart_orders \
   -H "Content-Type: application/json" \
   -d '{
     "user_cart_order": {
-      "user_address_id": 2,
+      "address_id": 20,
       "social_program_id": 1
     }
   }'

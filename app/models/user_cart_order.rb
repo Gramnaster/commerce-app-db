@@ -1,6 +1,7 @@
 class UserCartOrder < ApplicationRecord
   belongs_to :shopping_cart
-  belongs_to :user_address
+  belongs_to :address
+  belongs_to :user
   belongs_to :social_program, optional: true
   has_many :warehouse_orders, dependent: :destroy
 

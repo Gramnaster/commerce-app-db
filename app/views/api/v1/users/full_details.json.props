@@ -98,7 +98,7 @@ json.data do
         json.total_cost cart_order.total_cost
         json.is_paid cart_order.is_paid
         json.cart_status cart_order.cart_status
-        json.user_address_id cart_order.user_address_id
+        json.user_address_id cart_order.address_id
         json.social_program_id cart_order.social_program_id
         json.created_at cart_order.created_at
         json.updated_at cart_order.updated_at

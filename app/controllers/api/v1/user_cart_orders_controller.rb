@@ -10,12 +10,8 @@ class Api::V1::UserCartOrdersController < ApplicationController
     authenticate_admin_user!
     authorize_management!
 
-    # Eager load associations used in view: user_address.address, shopping_cart.shopping_cart_items
-    collection = UserCartOrder.includes(
-      { user_address: :address },
-      { shopping_cart: :shopping_cart_items },
-      :warehouse_orders
-    ).all
+    # Eager load associations used in index view: address, shopping_cart (for counter cache)
+    collection = UserCartOrder.includes(:address, :shopping_cart).all
     result = paginate_collection(collection, default_per_page: 30)
     @user_cart_orders = result[:collection]
     @pagination = result[:pagination]
@@ -24,7 +20,10 @@ class Api::V1::UserCartOrdersController < ApplicationController
   # GET /api/v1/user_cart_orders/:id (Management only)
   def show
     authenticate_admin_user!
+    return if performed?
+
     authorize_management!
+    nil if performed?
   end
 
   # POST /api/v1/user_cart_orders (Users only - submit their cart as an order)
@@ -64,7 +63,8 @@ class Api::V1::UserCartOrdersController < ApplicationController
     ActiveRecord::Base.transaction do
       @user_cart_order = UserCartOrder.new(
         shopping_cart: shopping_cart,
-        user_address_id: user_cart_order_params[:user_address_id],
+        address_id: user_cart_order_params[:address_id],
+        user_id: current_user.id,
         social_program_id: user_cart_order_params[:social_program_id],
         total_cost: total_cost,
         is_paid: true,
@@ -146,8 +146,9 @@ class Api::V1::UserCartOrdersController < ApplicationController
 
   def set_user_cart_order
     @user_cart_order = UserCartOrder.includes(
+      :address,
+      :user,
       shopping_cart: { shopping_cart_items: :product },
-      user_address: :address,
       warehouse_orders: [ :inventory, :company_site ]
     ).find(params[:id])
   rescue ActiveRecord::RecordNotFound
@@ -155,7 +156,7 @@ class Api::V1::UserCartOrdersController < ApplicationController
   end
 
   def user_cart_order_params
-    params.require(:user_cart_order).permit(:user_address_id, :is_paid, :cart_status, :social_program_id)
+    params.require(:user_cart_order).permit(:address_id, :is_paid, :cart_status, :social_program_id)
   end
 
   # JWT authentication for regular users
@@ -200,7 +201,7 @@ class Api::V1::UserCartOrdersController < ApplicationController
 
   def authorize_management!
     unless @current_admin_user&.admin_role == "management"
-      render json: { error: "Access denied. Management role required." }, status: :forbidden and return
+      render json: { error: "Access denied. Management role required." }, status: :forbidden
     end
   end
 

@@ -16,7 +16,7 @@ class AssignWarehouseToOrderService
       end
 
       # Get customer address
-      customer_address = @order.user_address.address
+      customer_address = @order.address
       customer_address_string = customer_address.full_address
 
       Rails.logger.info("[WarehouseAssignment] Processing order ##{@order.id} with #{cart_items.count} items")
@@ -119,7 +119,7 @@ class AssignWarehouseToOrderService
     warehouse_order = WarehouseOrder.create!(
       company_site: selected_warehouse,
       inventory: selected_inventory,
-      user: @order.shopping_cart.user,
+      user: @order.user,
       user_cart_order: @order,
       qty: required_qty.to_i,
       product_status: "storage"
@@ -151,7 +151,7 @@ class AssignWarehouseToOrderService
         _warehouse_order = WarehouseOrder.create!(
           company_site: inventory.company_site,
           inventory: inventory,
-          user: @order.shopping_cart.user,
+          user: @order.user,
           user_cart_order: @order,
           qty: required_qty.to_i,
           product_status: "storage"

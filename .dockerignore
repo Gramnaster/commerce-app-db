@@ -43,3 +43,7 @@
 # Ignore Docker-related files
 /.dockerignore
 /Dockerfile*
+
+# Ignore documentation/planning files
+/EAGERLOADING.md
+/REFACTOR_USER_CART_ORDERS_PLAN.md

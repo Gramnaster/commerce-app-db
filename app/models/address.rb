@@ -6,6 +6,7 @@ class Address < ApplicationRecord
   has_many :admin_users, through: :admin_addresses
   has_many :producers, dependent: :destroy
   has_many :company_sites, dependent: :destroy
+  has_many :user_cart_orders, dependent: :restrict_with_error
 
   validates :unit_no, :street_no, :barangay, :city, :zipcode, :country_id, presence: true
   validates :latitude, numericality: { greater_than_or_equal_to: -90, less_than_or_equal_to: 90 }, allow_nil: true

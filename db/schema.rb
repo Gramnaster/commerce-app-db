@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_01_151308) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_01_193600) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -411,6 +411,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_01_151308) do
   end
 
   create_table "user_cart_orders", force: :cascade do |t|
+    t.bigint "address_id", null: false
     t.enum "cart_status", default: "pending", null: false, enum_type: "cart_status"
     t.datetime "created_at", null: false
     t.boolean "is_paid", default: false, null: false
@@ -418,11 +419,12 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_01_151308) do
     t.bigint "social_program_id"
     t.decimal "total_cost", precision: 10, scale: 2, default: "0.0", null: false
     t.datetime "updated_at", null: false
-    t.bigint "user_address_id", null: false
+    t.bigint "user_id", null: false
+    t.index ["address_id"], name: "index_user_cart_orders_on_address_id"
     t.index ["cart_status"], name: "index_user_cart_orders_on_cart_status"
     t.index ["shopping_cart_id"], name: "index_user_cart_orders_on_shopping_cart_id"
     t.index ["social_program_id"], name: "index_user_cart_orders_on_social_program_id"
-    t.index ["user_address_id"], name: "index_user_cart_orders_on_user_address_id"
+    t.index ["user_id"], name: "index_user_cart_orders_on_user_id"
   end
 
   create_table "user_details", force: :cascade do |t|
@@ -509,9 +511,10 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_01_151308) do
   add_foreign_key "social_programs", "addresses"
   add_foreign_key "user_addresses", "addresses"
   add_foreign_key "user_addresses", "users"
+  add_foreign_key "user_cart_orders", "addresses"
   add_foreign_key "user_cart_orders", "shopping_carts"
   add_foreign_key "user_cart_orders", "social_programs"
-  add_foreign_key "user_cart_orders", "user_addresses"
+  add_foreign_key "user_cart_orders", "users"
   add_foreign_key "user_details", "users"
   add_foreign_key "user_payment_methods", "users"
   add_foreign_key "warehouse_orders", "company_sites"
