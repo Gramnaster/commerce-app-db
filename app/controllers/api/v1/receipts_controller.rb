@@ -49,7 +49,8 @@ class Api::V1::ReceiptsController < ApplicationController
       :user,
       user_cart_order: {
         shopping_cart: { shopping_cart_items: :product },
-        user_address: { address: :country }
+        user_address: { address: :country },
+        warehouse_orders: :company_site
       }
     ).find(params[:id])
   rescue ActiveRecord::RecordNotFound
