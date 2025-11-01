@@ -116,10 +116,10 @@ json.data do
         json.warehouse_orders do
           json.array! cart_order.warehouse_orders do |warehouse_order|
             json.id warehouse_order.id
-            json.product_id warehouse_order.product_id
+            json.inventory_id warehouse_order.inventory_id
             json.company_site_id warehouse_order.company_site_id
-            json.qty_ordered warehouse_order.qty_ordered
-            json.status warehouse_order.status
+            json.qty warehouse_order.qty
+            json.product_status warehouse_order.product_status
             json.created_at warehouse_order.created_at
             json.updated_at warehouse_order.updated_at
           end
