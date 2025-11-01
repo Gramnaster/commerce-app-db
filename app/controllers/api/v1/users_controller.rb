@@ -26,6 +26,30 @@ class Api::V1::UsersController < Api::V1::BaseController
   def show
   end
 
+  # GET /api/v1/users/:id/full_details
+  # Returns complete user information including receipts, cart orders, and warehouse orders
+  # Only accessible by management admin users
+  def full_details
+    # Only management admins can access full details
+    unless current_admin_user&.management?
+      return render json: { error: "Unauthorized. Management role required." }, status: :forbidden
+    end
+
+    # Eager load all associations to avoid N+1 queries
+    @user = User.includes(
+      :user_detail,
+      :phones,
+      { user_addresses: { address: :country } },
+      :user_payment_methods,
+      { receipts: [ :user_cart_order, :social_program_receipts ] },
+      { shopping_cart: { user_cart_orders: [ :warehouse_orders, :social_program ] } }
+    ).find(params[:id])
+
+    render :full_details
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: "User not found" }, status: :not_found
+  end
+
   def create
     @user = User.new(user_params)
     @user.password = params[:password] if params[:password].present?
