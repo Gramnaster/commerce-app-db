@@ -23,7 +23,7 @@ json.data do
         json.zipcode order.address.zipcode
       end
     end
-    json.items_count order.shopping_cart.shopping_cart_items.count
+    json.items_count order.shopping_cart.shopping_cart_items_count
     json.created_at order.created_at
     json.updated_at order.updated_at
   end
