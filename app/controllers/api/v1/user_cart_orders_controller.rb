@@ -10,9 +10,10 @@ class Api::V1::UserCartOrdersController < ApplicationController
     authenticate_admin_user!
     authorize_management!
 
-    # Eager load associations used in view: user_address.address, shopping_cart.shopping_cart_items
+    # Eager load associations used in view: address, shopping_cart.shopping_cart_items
     collection = UserCartOrder.includes(
-      { user_address: :address },
+      :address,
+      :user,
       { shopping_cart: :shopping_cart_items },
       :warehouse_orders
     ).all
@@ -64,7 +65,8 @@ class Api::V1::UserCartOrdersController < ApplicationController
     ActiveRecord::Base.transaction do
       @user_cart_order = UserCartOrder.new(
         shopping_cart: shopping_cart,
-        user_address_id: user_cart_order_params[:user_address_id],
+        address_id: user_cart_order_params[:address_id],
+        user_id: current_user.id,
         social_program_id: user_cart_order_params[:social_program_id],
         total_cost: total_cost,
         is_paid: true,
@@ -146,8 +148,9 @@ class Api::V1::UserCartOrdersController < ApplicationController
 
   def set_user_cart_order
     @user_cart_order = UserCartOrder.includes(
+      :address,
+      :user,
       shopping_cart: { shopping_cart_items: :product },
-      user_address: :address,
       warehouse_orders: [ :inventory, :company_site ]
     ).find(params[:id])
   rescue ActiveRecord::RecordNotFound
@@ -155,7 +158,7 @@ class Api::V1::UserCartOrdersController < ApplicationController
   end
 
   def user_cart_order_params
-    params.require(:user_cart_order).permit(:user_address_id, :is_paid, :cart_status, :social_program_id)
+    params.require(:user_cart_order).permit(:address_id, :is_paid, :cart_status, :social_program_id)
   end
 
   # JWT authentication for regular users
