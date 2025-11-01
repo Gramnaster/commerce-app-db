@@ -29,7 +29,11 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       get "products/top_newest", to: "products#top_newest"
-      resources :users, only: [ :index, :show, :update, :destroy ]
+      resources :users, only: [ :index, :show, :update, :destroy ] do
+        member do
+          get :full_details
+        end
+      end
       resources :admin_users, only: [ :index, :show, :update, :destroy ]
       resources :countries, only: [ :index, :show ]
       resources :products, only: [ :index, :show, :create, :update, :destroy ] do
