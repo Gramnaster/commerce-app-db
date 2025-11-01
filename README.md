@@ -3215,7 +3215,8 @@ curl -X GET http://localhost:3001/api/v1/receipts/4 \
           "id": 4,
           "title": "JPB Warehouse C"
         },
-        "status": "storage"
+        "status": "storage",
+        "delivered_at": "2025-11-01T10:31:24.665Z"
       }
     ]
   }
@@ -3228,6 +3229,10 @@ The `delivery_orders` array shows the warehouse fulfillment status for purchase 
 
 - **company_site**: The warehouse fulfilling this part of your order
 - **status**: Current delivery status for this batch
+  - `storage`: Items are being prepared at the warehouse
+  - `progress`: Items are out for delivery
+  - `delivered`: Items have been delivered
+- **delivered_at**: Timestamp of the last status update for this delivery batch
   - `storage`: Items are being prepared at the warehouse
   - `progress`: Items are out for delivery
   - `delivered`: Items have been delivered
