@@ -51,3 +51,10 @@ curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[] | "\(.proto)://\(.
 - **Free tier limitation**: Can only run 1 tunnel at a time without paid plan
 - **For multiple tunnels**: Need ngrok Pro ($10/month) or higher
 - **Alternative**: Use public IP (180.191.170.229) with proper port forwarding instead of ngrok for one service
+
+## Activating Ngrok Tunnel
+```
+docker run -it --rm --network dokploy-network \
+  -e NGROK_AUTHTOKEN="34lubvn5cHQe4cIc6a0uRlUOrHu_85rFwTt1YRza35FLt1Qs6" \
+  ngrok/ngrok:latest http commerceapp-commerceappbe-rh8wgx:3001
+```
