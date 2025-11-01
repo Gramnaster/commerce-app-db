@@ -25,7 +25,10 @@ class Api::V1::UserCartOrdersController < ApplicationController
   # GET /api/v1/user_cart_orders/:id (Management only)
   def show
     authenticate_admin_user!
+    return if performed?
+
     authorize_management!
+    nil if performed?
   end
 
   # POST /api/v1/user_cart_orders (Users only - submit their cart as an order)
@@ -203,7 +206,7 @@ class Api::V1::UserCartOrdersController < ApplicationController
 
   def authorize_management!
     unless @current_admin_user&.admin_role == "management"
-      render json: { error: "Access denied. Management role required." }, status: :forbidden and return
+      render json: { error: "Access denied. Management role required." }, status: :forbidden
     end
   end
 
