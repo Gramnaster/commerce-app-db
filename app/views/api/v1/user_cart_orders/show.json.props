@@ -11,14 +11,14 @@ json.data do
   json.social_program_id @user_cart_order.social_program_id
 
   json.user_address do
-    json.id @user_cart_order.user_address.id
+    json.id @user_cart_order.address.id
     json.address do
-      json.unit_no @user_cart_order.user_address.address.unit_no
-      json.street_no @user_cart_order.user_address.address.street_no
-      json.barangay @user_cart_order.user_address.address.barangay
-      json.city @user_cart_order.user_address.address.city
-      json.region @user_cart_order.user_address.address.region
-      json.zipcode @user_cart_order.user_address.address.zipcode
+      json.unit_no @user_cart_order.address.unit_no
+      json.street_no @user_cart_order.address.street_no
+      json.barangay @user_cart_order.address.barangay
+      json.city @user_cart_order.address.city
+      json.region @user_cart_order.address.region
+      json.zipcode @user_cart_order.address.zipcode
     end
   end
 

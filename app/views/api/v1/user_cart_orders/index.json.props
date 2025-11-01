@@ -13,14 +13,14 @@ json.data do
     json.cart_status order.cart_status
     json.social_program_id order.social_program_id
     json.user_address do
-      json.id order.user_address.id
+      json.id order.address.id
       json.address do
-        json.unit_no order.user_address.address.unit_no
-        json.street_no order.user_address.address.street_no
-        json.barangay order.user_address.address.barangay
-        json.city order.user_address.address.city
-        json.region order.user_address.address.region
-        json.zipcode order.user_address.address.zipcode
+        json.unit_no order.address.unit_no
+        json.street_no order.address.street_no
+        json.barangay order.address.barangay
+        json.city order.address.city
+        json.region order.address.region
+        json.zipcode order.address.zipcode
       end
     end
     json.items_count order.shopping_cart.shopping_cart_items.count
