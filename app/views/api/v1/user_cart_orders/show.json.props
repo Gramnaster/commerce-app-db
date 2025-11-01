@@ -32,6 +32,29 @@ json.data do
     end
   end
 
+  json.warehouse_orders do
+    json.array! @user_cart_order.warehouse_orders do |warehouse_order|
+      json.id warehouse_order.id
+      json.qty warehouse_order.qty
+      json.product_status warehouse_order.product_status
+      json.created_at warehouse_order.created_at
+      json.updated_at warehouse_order.updated_at
+
+      json.inventory do
+        json.id warehouse_order.inventory.id
+        json.sku warehouse_order.inventory.sku
+        json.product_id warehouse_order.inventory.product_id
+        json.qty_in_stock warehouse_order.inventory.qty_in_stock
+      end
+
+      json.company_site do
+        json.id warehouse_order.company_site.id
+        json.title warehouse_order.company_site.title
+        json.site_type warehouse_order.company_site.site_type
+      end
+    end
+  end
+
   json.warehouse_orders_count @user_cart_order.warehouse_orders.count
   json.created_at @user_cart_order.created_at
   json.updated_at @user_cart_order.updated_at

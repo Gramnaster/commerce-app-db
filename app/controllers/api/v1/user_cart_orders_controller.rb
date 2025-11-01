@@ -147,7 +147,7 @@ class Api::V1::UserCartOrdersController < ApplicationController
   def set_user_cart_order
     @user_cart_order = UserCartOrder.includes(
       shopping_cart: { shopping_cart_items: :product },
-      user_address: { address: :country },
+      user_address: :address,
       warehouse_orders: [ :inventory, :company_site ]
     ).find(params[:id])
   rescue ActiveRecord::RecordNotFound

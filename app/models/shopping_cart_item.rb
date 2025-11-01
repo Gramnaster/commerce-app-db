@@ -1,5 +1,5 @@
 class ShoppingCartItem < ApplicationRecord
-  belongs_to :shopping_cart
+  belongs_to :shopping_cart, counter_cache: true
   belongs_to :product
 
   validates :qty, presence: true, numericality: { greater_than: 0 }
