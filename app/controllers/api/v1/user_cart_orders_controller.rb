@@ -208,7 +208,7 @@ class Api::V1::UserCartOrdersController < ApplicationController
 
   def authorize_management!
     unless @current_admin_user&.admin_role == "management"
-      render json: { error: "Access denied. Management role required." }, status: :forbidden
+      render json: { error: "Access denied. Management role required." }, status: :forbidden and return
     end
   end
 
