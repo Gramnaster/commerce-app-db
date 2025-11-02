@@ -166,10 +166,6 @@ class Api::V1::UserCartOrdersController < ApplicationController
     params.require(:user_cart_order).permit(:address_id, :is_paid, :cart_status, :social_program_id)
   end
 
-  def social_program_receipt_params
-    params.require(:social_program_receipt_params).permit(:social_program_id, :receipt_id)
-  end
-
   # JWT authentication for regular users
   def authenticate_user!
     token = request.headers["Authorization"]&.split(" ")&.last
