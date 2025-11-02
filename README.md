@@ -3269,15 +3269,23 @@ curl -X GET http://localhost:3001/api/v1/receipts/4 \
 
 #### GET /api/v1/receipts/latest
 Get the most recent receipt for the authenticated user. Perfect for redirecting after checkout!
-- **Auth Required**: User JWT token
-- **Authorization**: Users can only view their own receipts
+- **Auth Required**: User JWT token OR Management Admin JWT token
+- **Authorization**: 
+  - Users can only view their own latest receipt
+  - Management admins must provide `user_id` parameter
 - **Returns**: Same format as GET /api/v1/receipts/:id
 - **Error**: Returns 404 if user has no receipts
 
-**Example Request:**
+**Example Request (User):**
 ```bash
 curl -X GET http://localhost:3001/api/v1/receipts/latest \
   -H "Authorization: Bearer YOUR_USER_TOKEN"
+```
+
+**Example Request (Admin):**
+```bash
+curl -X GET "http://localhost:3001/api/v1/receipts/latest?user_id=5" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
 ```
 
 **Example Response:**
