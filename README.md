@@ -39,6 +39,44 @@
 
 ## Recent Changes
 
+### November 2025: Receipts Response Structure Update
+
+**Breaking Change:** Receipt items are now returned via `warehouse_orders` instead of `shopping_cart_items`:
+
+**What Changed:**
+- **Old structure:** `receipt.order.shopping_cart.shopping_cart_items` (empty after order creation)
+- **New structure:** `receipt.order.warehouse_orders` (persists order history)
+
+**Why This Changed:**
+- `shopping_cart_items` are cleared after order creation to prevent old items appearing in active cart
+- `warehouse_orders` are created during order processing and persist as the historical record
+- This provides accurate order history and warehouse assignment tracking
+
+**Frontend Migration Required:**
+```javascript
+// OLD (now returns empty array)
+receipt.order.shopping_cart.shopping_cart_items.forEach(item => {
+  const product = item.product;
+  const qty = item.qty;
+});
+
+// NEW (correct approach)
+receipt.order.warehouse_orders.forEach(order => {
+  const product = order.inventory.product;
+  const qty = order.qty;
+  const warehouse = order.company_site;
+  const status = order.product_status; // e.g., "on_delivery", "storage"
+});
+```
+
+**Response Changes:**
+- `items_count`: Now counts `warehouse_orders` instead of `shopping_cart_items`
+- `total_quantity`: Now sums from `warehouse_orders`
+- Each item now includes warehouse assignment and delivery status
+- Product access via: `warehouse_order.inventory.product`
+
+---
+
 ### November 2025: User Cart Orders Refactoring
 
 **Breaking Change:** The `user_cart_orders` endpoint parameter has changed:
@@ -3300,40 +3338,49 @@ curl -X GET http://localhost:3001/api/v1/receipts/4 \
     },
     "items": [
       {
-        "id": 6,
+        "id": 1,
         "qty": "2.0",
         "subtotal": "219.9",
+        "warehouse": {
+          "id": 4,
+          "title": "JPB Warehouse C"
+        },
+        "product_status": "on_delivery",
         "product": {
           "id": 1,
           "title": "Fjallraven - Foldsack No. 1 Backpack",
           "description": "Your perfect pack for everyday use...",
-          "price": 109.95
+          "price": 109.95,
+          "image": "https://fakestoreapi.com/img/backpack.jpg",
+          "product_images": [
+            {
+              "id": 1,
+              "url": "https://fakestoreapi.com/img/backpack.jpg"
+            }
+          ]
         }
       },
       {
-        "id": 7,
+        "id": 2,
         "qty": "3.0",
         "subtotal": "66.9",
+        "warehouse": {
+          "id": 4,
+          "title": "JPB Warehouse C"
+        },
+        "product_status": "storage",
         "product": {
           "id": 2,
           "title": "Mens Casual Premium Slim Fit T-Shirts",
           "description": "Slim-fitting style...",
-          "price": 22.3
+          "price": 22.3,
+          "image": null,
+          "product_images": []
         }
       }
     ],
     "items_count": 2,
-    "total_quantity": "5.0",
-    "delivery_orders": [
-      {
-        "company_site": {
-          "id": 4,
-          "title": "JPB Warehouse C"
-        },
-        "status": "storage",
-        "delivered_at": "2025-11-01T10:31:24.665Z"
-      }
-    ]
+    "total_quantity": "5.0"
   }
 }
 ```

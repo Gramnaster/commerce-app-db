@@ -27,9 +27,9 @@ json.data do
         json.is_paid receipt.user_cart_order.is_paid
         json.total_cost receipt.user_cart_order.total_cost.to_f
 
-        # Order items summary
-        json.items_count receipt.user_cart_order.shopping_cart.shopping_cart_items_count
-        json.total_quantity receipt.user_cart_order.shopping_cart.shopping_cart_items.sum(:qty)
+        # Order items summary - use warehouse_orders since shopping_cart_items are cleared
+        json.items_count receipt.user_cart_order.warehouse_orders.count
+        json.total_quantity receipt.user_cart_order.warehouse_orders.sum(:qty)
       end
     else
       json.order nil
