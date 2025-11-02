@@ -54,7 +54,7 @@ class Api::V1::ReceiptsController < ApplicationController
             user_cart_order: {
               shopping_cart: :shopping_cart_items,
               address: :country,
-              warehouse_orders: { inventory: :product, company_site: true }
+              warehouse_orders: { inventory: :product, company_site: :address }
             }
           )
           .order(created_at: :desc)
@@ -69,7 +69,7 @@ class Api::V1::ReceiptsController < ApplicationController
           user_cart_order: {
             shopping_cart: :shopping_cart_items,
             address: :country,
-            warehouse_orders: { inventory: :product, company_site: true }
+            warehouse_orders: { inventory: :product, company_site: :address }
           }
         )
         .order(created_at: :desc)
@@ -93,7 +93,7 @@ class Api::V1::ReceiptsController < ApplicationController
       user_cart_order: {
         shopping_cart: :shopping_cart_items,
         address: :country,
-        warehouse_orders: { inventory: :product, company_site: true }
+        warehouse_orders: { inventory: :product, company_site: :address }
       }
     ).find(params[:id])
   rescue ActiveRecord::RecordNotFound
