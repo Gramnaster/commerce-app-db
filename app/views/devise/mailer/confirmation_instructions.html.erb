@@ -1,60 +1,61 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8">
-    <style>
-      .container { max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; }
-      .header { background: #28a745; color: white; padding: 20px; text-align: center; }
-      .content { padding: 30px 20px; }
-      .button { background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0; font-weight: bold; }
-      .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; }
-      .highlight { background: #e3f2fd; padding: 15px; border-radius: 5px; border-left: 4px solid #2196f3; margin: 20px 0; }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <div class="header">
-        <h1>✉️ Please Confirm Your Email</h1>
-      </div>
-      
-      <div class="content">
-        <h2>Welcome <%= @email %>!</h2>
-        
-        <p>Thank you for signing up with Stock Trader App! To complete your registration, please confirm your email address.</p>
-        
-        <div class="highlight">
-          <p><strong>🔐 Email Confirmation Required</strong></p>
-          <p>Click the button below to verify your email address and activate your account:</p>
-        </div>
-        
-        <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
-          <tr>
-            <td>
-              <a href="<%= @confirmation_url %>" style="background:#007bff;color:#fff;padding:12px 24px;text-decoration:none;border-radius:5px;display:inline-block;font-weight:bold;">Confirm My Email Address</a>
-            </td>
-          </tr>
-        </table>
-        
-        <p><strong>What happens after confirmation?</strong></p>
-        <ol>
-          <li>✅ Your email will be verified</li>
-          <li>🔓 You'll be able to log in to your account</li>
-          <li>📊 Your account will be reviewed for trading approval</li>
-          <li>💰 Start trading once approved by our team!</li>
-        </ol>
-        
-        <p style="color: #666; font-size: 14px;">
-          <strong>Trouble with the button?</strong> Copy and paste this link into your browser:<br>
-          <%= @confirmation_url %>
-        </p>
-        
-        <p>If you didn't create an account with us, please ignore this email.</p>
-      </div>
-      
-      <div class="footer">
-        <p>© 2025 Stock Trader App. Secure trading platform.</p>
-        <p style="font-size: 12px;">This email was sent to <%= @email %></p>
-      </div>
-    </div>
-  </body>
-</html>
+      <meta charset="utf-8">
+          <style>
+                .container { max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; }
+                      .header { background: #BE493D; color: white; padding: 20px; text-align: center; }
+                            .content { padding: 30px 20px; }
+                                  .button { background: #003566; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0; font-weight: bold; }
+                                        .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; }
+                                              .highlight { background: #e3f2fd; padding: 15px; border-radius: 5px; border-left: 4px solid #003566; margin: 20px 0; }
+                                                  </style>
+                                                    </head>
+                                                      <body>
+                                                          <div class="container">
+                                                                <div class="header">
+                                                                        <h1>✉️ Please Confirm Your Email</h1>
+                                                                              </div>
+                                                                                    
+                                                                                          <div class="content">
+                                                                                                  <h2>Welcome to JP & B, <%= @email %>!</h2>
+                                                                                                          
+                                                                                                                  <p>Thank you for signing up with us! To complete your registration, please confirm your email address.</p>
+                                                                                                                          
+                                                                                                                                  <div class="highlight">
+                                                                                                                                            <p><strong>🔐 Email Confirmation Required</strong></p>
+                                                                                                                                                      <p>Click the button below to verify your email address and activate your account:</p>
+                                                                                                                                                              </div>
+                                                                                                                                                                      
+                                                                                                                                                                              <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
+                                                                                                                                                                                        <tr>
+                                                                                                                                                                                                    <td>
+                                                                                                                                                                                                                  <a href="<%= @confirmation_url %>" style="background:#003566;color:#fff;padding:12px 24px;text-decoration:none;border-radius:5px;display:inline-block;font-weight:bold;">Confirm My Email Address</a>
+                                                                                                                                                                                                                              </td>
+                                                                                                                                                                                                                                        </tr>
+                                                                                                                                                                                                                                                </table>
+                                                                                                                                                                                                                                                        
+                                                                                                                                                                                                                                                                <p><strong>What happens after confirmation?</strong></p>
+                                                                                                                                                                                                                                                                        <ol>
+                                                                                                                                                                                                                                                                                  <li>✅ Your email will be verified</li>
+                                                                                                                                                                                                                                                                                            <li>🔓 You'll be able to log in to your account</li>
+                                                                                                                                                                                                                                                                                                      <li>📊 Your account will be reviewed for trading approval</li>
+                                                                                                                                                                                                                                                                                                                <li>💰 Start trading once approved by our team!</li>
+                                                                                                                                                                                                                                                                                                                        </ol>
+                                                                                                                                                                                                                                                                                                                                
+                                                                                                                                                                                                                                                                                                                                        <p style="color: #666; font-size: 14px;">
+                                                                                                                                                                                                                                                                                                                                                  <strong>Having issues confirming?</strong> Copy and paste this link into your browser:<br>
+                                                                                                                                                                                                                                                                                                                                                            <%= @confirmation_url %>
+                                                                                                                                                                                                                                                                                                                                                                    </p>
+                                                                                                                                                                                                                                                                                                                                                                            
+                                                                                                                                                                                                                                                                                                                                                                                    <p>If you didn't create an account with us, please ignore this email.</p>
+                                                                                                                                                                                                                                                                                                                                                                                          </div>
+                                                                                                                                                                                                                                                                                                                                                                                                
+                                                                                                                                                                                                                                                                                                                                                                                                      <div class="footer">
+                                                                                                                                                                                                                                                                                                                                                                                                              <p>© 2025 JP & B App. Mabuhay!</p>
+                                                                                                                                                                                                                                                                                                                                                                                                                      <p style="font-size: 12px;">This email was sent to <%= @email %></p>
+                                                                                                                                                                                                                                                                                                                                                                                                                            </div>
+                                                                                                                                                                                                                                                                                                                                                                                                                                </div>
+                                                                                                                                                                                                                                                                                                                                                                                                                                  </body>
+                                                                                                                                                                                                                                                                                                                                                                                                                                  </html>
+                                                                                                                                                                                                                                                                                                                                                                                                                                  >
