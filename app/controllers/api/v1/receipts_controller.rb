@@ -42,6 +42,27 @@ class Api::V1::ReceiptsController < ApplicationController
     # Authorization handled by before_action :authorize_receipt_access!
   end
 
+  # GET /api/v1/receipts/latest (Get the most recent receipt for the current user)
+  def latest
+    @receipt = current_user.receipts
+      .includes(
+        :user,
+        user_cart_order: {
+          shopping_cart: { shopping_cart_items: :product },
+          address: :country,
+          warehouse_orders: :company_site
+        }
+      )
+      .order(created_at: :desc)
+      .first
+
+    if @receipt
+      render :show
+    else
+      render json: { error: "No receipts found" }, status: :not_found
+    end
+  end
+
   private
 
   def set_receipt

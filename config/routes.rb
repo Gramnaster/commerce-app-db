@@ -76,7 +76,11 @@ Rails.application.routes.draw do
       end
 
       # Receipts / Transaction History (Users only - view their own receipts)
-      resources :receipts, only: [ :index, :show ]
+      resources :receipts, only: [ :index, :show ] do
+        collection do
+          get :latest
+        end
+      end
 
       # Admin routes
       namespace :admin do
