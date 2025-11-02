@@ -2758,6 +2758,9 @@ Submit your shopping cart as an order.
   - **Deducts inventory quantities**
   - **Creates 8% donation receipt** (if `social_program_id` provided)
   - **Links donation to social program** via SocialProgramReceipt
+  - **Clears shopping cart items** (cart becomes empty after successful order)
+
+**Important**: After a successful order, all shopping cart items are automatically deleted. This ensures your cart is empty for the next purchase and prevents old items from reappearing.
 
 **Note**: Changed from `user_address_id` to `address_id` (November 2025). Orders now directly reference addresses table, not the user_addresses join table. This simplifies queries and preserves order history even if user removes address from saved addresses.
 
@@ -3261,6 +3264,36 @@ curl -X GET http://localhost:3001/api/v1/receipts/4 \
   }
 }
 ```
+
+---
+
+#### GET /api/v1/receipts/latest
+Get the most recent receipt for the authenticated user. Perfect for redirecting after checkout!
+- **Auth Required**: User JWT token
+- **Authorization**: Users can only view their own receipts
+- **Returns**: Same format as GET /api/v1/receipts/:id
+- **Error**: Returns 404 if user has no receipts
+
+**Example Request:**
+```bash
+curl -X GET http://localhost:3001/api/v1/receipts/latest \
+  -H "Authorization: Bearer YOUR_USER_TOKEN"
+```
+
+**Example Response:**
+Same response format as `GET /api/v1/receipts/:id` (see above)
+
+**Use Case:**
+```javascript
+// After successful checkout, redirect to latest receipt
+const response = await fetch('/api/v1/receipts/latest', {
+  headers: { 'Authorization': `Bearer ${userToken}` }
+});
+const receipt = await response.json();
+window.location.href = `/transactions/${receipt.id}`;
+```
+
+---
 
 **Delivery Orders Tracking:**
 
