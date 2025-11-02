@@ -29,26 +29,24 @@ if @receipt.user_cart_order.present?
     json.created_at @receipt.user_cart_order.created_at
 
     # Delivery address
-    if @receipt.user_cart_order.user_address.present?
+    if @receipt.user_cart_order.address.present?
       json.delivery_address do
-        json.id @receipt.user_cart_order.user_address.id
+        json.id @receipt.user_cart_order.address.id
 
-        if @receipt.user_cart_order.user_address.address.present?
-          address = @receipt.user_cart_order.user_address.address
-          json.unit_no address.unit_no
-          json.street_no address.street_no
-          json.address_line1 address.address_line1
-          json.address_line2 address.address_line2
-          json.city address.city
-          json.region address.region
-          json.zipcode address.zipcode
+        address = @receipt.user_cart_order.address
+        json.unit_no address.unit_no
+        json.street_no address.street_no
+        json.address_line1 address.address_line1
+        json.address_line2 address.address_line2
+        json.city address.city
+        json.region address.region
+        json.zipcode address.zipcode
 
-          if address.country.present?
-            json.country do
-              json.id address.country.id
-              json.name address.country.name
-              json.code address.country.code
-            end
+        if address.country.present?
+          json.country do
+            json.id address.country.id
+            json.name address.country.name
+            json.code address.country.code
           end
         end
       end
@@ -70,8 +68,43 @@ if @receipt.user_cart_order.present?
       end
     end
 
-    json.items_count @receipt.user_cart_order.shopping_cart.shopping_cart_items.count
+    json.items_count @receipt.user_cart_order.shopping_cart.shopping_cart_items_count
     json.total_quantity @receipt.user_cart_order.shopping_cart.shopping_cart_items.sum(:qty)
+
+    # Delivery orders - warehouse orders grouped by company site
+    if @receipt.user_cart_order.warehouse_orders.any?
+      json.delivery_orders do
+        # Group warehouse orders by company_site
+        grouped_orders = @receipt.user_cart_order.warehouse_orders.group_by(&:company_site)
+
+        json.array! grouped_orders.to_a do |(company_site, orders)|
+          json.company_site do
+            json.id company_site.id
+            json.title company_site.title
+          end
+
+          # Overall delivery status - only changes when ALL orders reach the same status
+          statuses = orders.map(&:product_status).uniq
+          overall_status = if statuses.length == 1
+            # All orders have the same status
+            statuses.first
+          elsif statuses.include?("storage")
+            # Mixed statuses, still in storage phase
+            "storage"
+          elsif statuses.include?("progress")
+            # Mixed statuses, in progress phase
+            "progress"
+          else
+            # All delivered
+            "delivered"
+          end
+          json.status overall_status
+
+          # Last status update timestamp (uses updated_at from most recent warehouse order update)
+          json.delivered_at orders.map(&:updated_at).max
+        end
+      end
+    end
   end
 else
   json.order nil

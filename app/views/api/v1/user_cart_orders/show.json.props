@@ -11,14 +11,14 @@ json.data do
   json.social_program_id @user_cart_order.social_program_id
 
   json.user_address do
-    json.id @user_cart_order.user_address.id
+    json.id @user_cart_order.address.id
     json.address do
-      json.unit_no @user_cart_order.user_address.address.unit_no
-      json.street_no @user_cart_order.user_address.address.street_no
-      json.barangay @user_cart_order.user_address.address.barangay
-      json.city @user_cart_order.user_address.address.city
-      json.region @user_cart_order.user_address.address.region
-      json.zipcode @user_cart_order.user_address.address.zipcode
+      json.unit_no @user_cart_order.address.unit_no
+      json.street_no @user_cart_order.address.street_no
+      json.barangay @user_cart_order.address.barangay
+      json.city @user_cart_order.address.city
+      json.region @user_cart_order.address.region
+      json.zipcode @user_cart_order.address.zipcode
     end
   end
 
@@ -29,6 +29,29 @@ json.data do
       json.qty item.qty
       json.price item.product.price
       json.subtotal (item.product.price.to_f * item.qty).round(2)
+    end
+  end
+
+  json.warehouse_orders do
+    json.array! @user_cart_order.warehouse_orders do |warehouse_order|
+      json.id warehouse_order.id
+      json.qty warehouse_order.qty
+      json.product_status warehouse_order.product_status
+      json.created_at warehouse_order.created_at
+      json.updated_at warehouse_order.updated_at
+
+      json.inventory do
+        json.id warehouse_order.inventory.id
+        json.sku warehouse_order.inventory.sku
+        json.product_id warehouse_order.inventory.product_id
+        json.qty_in_stock warehouse_order.inventory.qty_in_stock
+      end
+
+      json.company_site do
+        json.id warehouse_order.company_site.id
+        json.title warehouse_order.company_site.title
+        json.site_type warehouse_order.company_site.site_type
+      end
     end
   end
 
