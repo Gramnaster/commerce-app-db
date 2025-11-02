@@ -1,15 +1,15 @@
 class Api::V1::UserCartOrdersController < ApplicationController
   include Paginatable
 
+  before_action :authenticate_admin_user!, only: [ :index, :by_warehouse, :show, :update, :approve ]
+  before_action :authorize_management!, only: [ :index, :by_warehouse, :show, :update, :approve ]
+  before_action :authenticate_user!, only: [ :create ]
   before_action :set_user_cart_order, only: [ :show, :update, :approve ]
 
   respond_to :json
 
   # GET /api/v1/user_cart_orders (Management only - view all orders)
   def index
-    authenticate_admin_user!
-    authorize_management!
-
     # Eager load associations used in index view: address, shopping_cart (for counter cache)
     collection = UserCartOrder.includes(:address, :shopping_cart).all
     result = paginate_collection(collection, default_per_page: 30)
@@ -17,19 +17,28 @@ class Api::V1::UserCartOrdersController < ApplicationController
     @pagination = result[:pagination]
   end
 
+  # GET /api/v1/user_cart_orders/warehouse/:warehouse_id (Management only - view orders for specific warehouse)
+  def by_warehouse
+    # Get orders that have warehouse_orders for this specific warehouse (company_site)
+    collection = UserCartOrder.includes(:address, :shopping_cart)
+                              .joins(:warehouse_orders)
+                              .where(warehouse_orders: { company_site_id: params[:warehouse_id] })
+                              .distinct
+
+    result = paginate_collection(collection, default_per_page: 30)
+    @user_cart_orders = result[:collection]
+    @pagination = result[:pagination]
+
+    # Reuse the index view
+    render :index
+  end
+
   # GET /api/v1/user_cart_orders/:id (Management only)
   def show
-    authenticate_admin_user!
-    return if performed?
-
-    authorize_management!
-    nil if performed?
   end
 
   # POST /api/v1/user_cart_orders (Users only - submit their cart as an order)
   def create
-    authenticate_user!
-
     shopping_cart = current_user.shopping_cart
 
     unless shopping_cart && shopping_cart.shopping_cart_items.any?
@@ -123,9 +132,6 @@ class Api::V1::UserCartOrdersController < ApplicationController
 
   # PATCH /api/v1/user_cart_orders/:id/approve (Management only - approve paid orders)
   def approve
-    authenticate_admin_user!
-    authorize_management!
-
     unless @user_cart_order.is_paid
       return render json: { error: "Cannot approve unpaid order" }, status: :unprocessable_content
     end
@@ -139,9 +145,6 @@ class Api::V1::UserCartOrdersController < ApplicationController
 
   # PATCH /api/v1/user_cart_orders/:id (Management only - update payment status or reject)
   def update
-    authenticate_admin_user!
-    authorize_management!
-
     if @user_cart_order.update(user_cart_order_params)
       render :show
     else
