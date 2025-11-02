@@ -62,6 +62,9 @@ Rails.application.routes.draw do
 
       # User cart orders (Users create, Management views/approves)
       resources :user_cart_orders, only: [ :index, :show, :create, :update ] do
+        collection do
+          get "warehouse/:warehouse_id", to: "user_cart_orders#by_warehouse"
+        end
         member do
           patch :approve
         end

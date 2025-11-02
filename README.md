@@ -2877,6 +2877,21 @@ View all user orders.
 - **Auth Required**: Management Admin JWT token
 - **Returns**: Array of all orders with user address and item details
 
+#### GET /api/v1/user_cart_orders/warehouse/:warehouse_id (Management Only)
+View orders for a specific warehouse.
+- **Auth Required**: Management Admin JWT token
+- **Path Parameter**: `warehouse_id` - The company_site ID (warehouse)
+- **Returns**: Array of orders that have items fulfilled by this warehouse
+- **Note**: An order may appear if it has ANY items from this warehouse (even if other items come from different warehouses)
+
+**Example Request:**
+```bash
+curl -X GET http://localhost:3001/api/v1/user_cart_orders/warehouse/5 \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
+```
+
+**Use Case:** Warehouse admins can see all orders they need to fulfill.
+
 #### GET /api/v1/user_cart_orders/:id (Management Only)
 View a specific order.
 - **Auth Required**: Management Admin JWT token
