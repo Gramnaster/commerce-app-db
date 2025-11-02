@@ -74,6 +74,7 @@ jobs:
           PGHOST: localhost
           PGUSER: postgres
           PGPASSWORD: postgres
+          DEVISE_JWT_SECRET_KEY: test_secret_key_for_ci_testing_only
         run: |
           bin/rails db:prepare
           bundle exec rspec
