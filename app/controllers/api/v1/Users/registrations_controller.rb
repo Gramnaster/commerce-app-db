@@ -32,10 +32,28 @@ class Api::V1::Users::RegistrationsController < Devise::RegistrationsController
       # The JWT will be in the response headers automatically.
       render :create, status: :created
     else
-      # If saving failed, render the errors as JSON.
-      render json: {
-        status: { message: "User couldn't be created. #{resource.errors.full_messages.to_sentence}" }
-      }, status: :unprocessable_content
+      # If saving failed, render detailed errors as JSON
+      errors = resource.errors.full_messages
+
+      # Build a structured error response
+      error_details = {
+        message: "User registration failed",
+        errors: errors
+      }
+
+      # Add specific error codes for common issues
+      if resource.errors[:email].include?("has already been taken")
+        error_details[:code] = "email_already_exists"
+        error_details[:field] = "email"
+      elsif resource.errors[:password].any?
+        error_details[:code] = "invalid_password"
+        error_details[:field] = "password"
+      elsif resource.errors[:password_confirmation].any?
+        error_details[:code] = "password_mismatch"
+        error_details[:field] = "password_confirmation"
+      end
+
+      render json: { status: error_details }, status: :unprocessable_content
     end
   end
 

@@ -225,6 +225,64 @@ Create a new user account. Only basic information is required for registration.
 }
 ```
 
+**Error Responses:**
+
+*Email Already Exists (422):*
+```json
+{
+  "status": {
+    "message": "User registration failed",
+    "errors": ["Email has already been taken"],
+    "code": "email_already_exists",
+    "field": "email"
+  }
+}
+```
+
+*Invalid Password (422):*
+```json
+{
+  "status": {
+    "message": "User registration failed",
+    "errors": ["Password is too short (minimum is 6 characters)"],
+    "code": "invalid_password",
+    "field": "password"
+  }
+}
+```
+
+*Password Mismatch (422):*
+```json
+{
+  "status": {
+    "message": "User registration failed",
+    "errors": ["Password confirmation doesn't match Password"],
+    "code": "password_mismatch",
+    "field": "password_confirmation"
+  }
+}
+```
+
+*Multiple Errors (422):*
+```json
+{
+  "status": {
+    "message": "User registration failed",
+    "errors": [
+      "Email has already been taken",
+      "Password is too short (minimum is 6 characters)"
+    ],
+    "code": "email_already_exists",
+    "field": "email"
+  }
+}
+```
+
+**Error Codes:**
+- `email_already_exists` - Email is already registered
+- `invalid_password` - Password doesn't meet requirements
+- `password_mismatch` - Password confirmation doesn't match
+
 **What Gets Auto-Created:**
 - `user_detail`: Created with provided first_name, last_name, dob
 - `user_payment_method`: Auto-created with balance=0.0 and payment_type=null
