@@ -107,6 +107,13 @@ class Api::V1::UserCartOrdersController < ApplicationController
           Rails.logger.error("[UserCartOrder] Warehouse assignment failed for order ##{@user_cart_order.id}: #{assignment_result[:errors].join(', ')}")
         end
 
+        # Clears shopping cart after order creation
+        # Because they'd show up at the front even after the user has ordered the items
+        # Without this, GET /shopping_cart_items returns all previous purchases
+        # Which is clearly stupid as heck lmao
+        shopping_cart.shopping_cart_items.destroy_all
+        Rails.logger.info("[UserCartOrder] Cleared cart items after order ##{@user_cart_order.id}")
+
         render :show, status: :created
       else
         render json: { errors: @user_cart_order.errors.full_messages }, status: :unprocessable_content
