@@ -83,7 +83,7 @@ class Api::V1::UserCartOrdersController < ApplicationController
         end
 
         # Create receipt for the purchase
-        receipt = Receipt.create!(
+        Receipt.create!(
           user: current_user,
           user_cart_order: @user_cart_order,
           transaction_type: "purchase",
@@ -92,13 +92,6 @@ class Api::V1::UserCartOrdersController < ApplicationController
           balance_after: payment_method.balance,
           description: "Purchase - Order ##{@user_cart_order.id}"
         )
-
-        if @user_cart_order.social_program_id.present?
-          SocialProgramReceipt.create!(
-            social_program_id: @user_cart_order.social_program_id,
-            receipt_id: receipt.id
-          )
-        end
 
         # Automatically assign warehouses and create warehouse orders
         assignment_service = AssignWarehouseToOrderService.new(@user_cart_order)
