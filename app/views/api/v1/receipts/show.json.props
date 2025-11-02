@@ -52,24 +52,35 @@ if @receipt.user_cart_order.present?
       end
     end
 
-    # Order items
+    # Order items - use warehouse_orders since shopping_cart_items are cleared after order
     json.items do
-      json.array! @receipt.user_cart_order.shopping_cart.shopping_cart_items do |item|
-        json.id item.id
-        json.qty item.qty
-        json.subtotal (item.product.price.to_f * item.qty).round(2)
+      json.array! @receipt.user_cart_order.warehouse_orders do |warehouse_order|
+        json.id warehouse_order.id
+        json.qty warehouse_order.qty
+        json.subtotal (warehouse_order.inventory.product.price.to_f * warehouse_order.qty).round(2)
 
         json.product do
-          json.id item.product.id
-          json.title item.product.title
-          json.description item.product.description
-          json.price item.product.price.to_f
+          json.id warehouse_order.inventory.product.id
+          json.title warehouse_order.inventory.product.title
+          json.description warehouse_order.inventory.product.description
+          json.price warehouse_order.inventory.product.price.to_f
+
+          if warehouse_order.inventory.product.product_image.attached?
+            json.image_url url_for(warehouse_order.inventory.product.product_image)
+          end
         end
+
+        json.warehouse do
+          json.id warehouse_order.company_site.id
+          json.title warehouse_order.company_site.title
+        end
+
+        json.status warehouse_order.product_status
       end
     end
 
-    json.items_count @receipt.user_cart_order.shopping_cart.shopping_cart_items_count
-    json.total_quantity @receipt.user_cart_order.shopping_cart.shopping_cart_items.sum(:qty)
+    json.items_count @receipt.user_cart_order.warehouse_orders.count
+    json.total_quantity @receipt.user_cart_order.warehouse_orders.sum(:qty)
 
     # Delivery orders - warehouse orders grouped by company site
     if @receipt.user_cart_order.warehouse_orders.any?

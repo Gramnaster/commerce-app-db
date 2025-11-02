@@ -17,13 +17,13 @@ class Api::V1::ReceiptsController < ApplicationController
         Receipt.all
       end.includes(
         { user: :user_detail },
-        { user_cart_order: :shopping_cart }
+        { user_cart_order: :warehouse_orders }
       ).recent
     else
       # Regular users see only their own receipts
       collection = current_user.receipts.includes(
         { user: :user_detail },
-        { user_cart_order: :shopping_cart }
+        { user_cart_order: :warehouse_orders }
       ).recent
     end
 
@@ -52,9 +52,9 @@ class Api::V1::ReceiptsController < ApplicationController
           .includes(
             :user,
             user_cart_order: {
-              shopping_cart: { shopping_cart_items: :product },
+              shopping_cart: :shopping_cart_items,
               address: :country,
-              warehouse_orders: :company_site
+              warehouse_orders: { inventory: :product, company_site: true }
             }
           )
           .order(created_at: :desc)
@@ -67,9 +67,9 @@ class Api::V1::ReceiptsController < ApplicationController
         .includes(
           :user,
           user_cart_order: {
-            shopping_cart: { shopping_cart_items: :product },
+            shopping_cart: :shopping_cart_items,
             address: :country,
-            warehouse_orders: :company_site
+            warehouse_orders: { inventory: :product, company_site: true }
           }
         )
         .order(created_at: :desc)
@@ -91,9 +91,9 @@ class Api::V1::ReceiptsController < ApplicationController
     @receipt = Receipt.includes(
       :user,
       user_cart_order: {
-        shopping_cart: { shopping_cart_items: :product },
+        shopping_cart: :shopping_cart_items,
         address: :country,
-        warehouse_orders: :company_site
+        warehouse_orders: { inventory: :product, company_site: true }
       }
     ).find(params[:id])
   rescue ActiveRecord::RecordNotFound
