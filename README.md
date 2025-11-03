@@ -37,80 +37,6 @@
 
 ---
 
-## Recent Changes
-
-### November 2025: Receipts Response Structure Update
-
-**Breaking Change:** Receipt items are now returned via `warehouse_orders` instead of `shopping_cart_items`:
-
-**What Changed:**
-- **Old structure:** `receipt.order.shopping_cart.shopping_cart_items` (empty after order creation)
-- **New structure:** `receipt.order.warehouse_orders` (persists order history)
-
-**Why This Changed:**
-- `shopping_cart_items` are cleared after order creation to prevent old items appearing in active cart
-- `warehouse_orders` are created during order processing and persist as the historical record
-- This provides accurate order history and warehouse assignment tracking
-
-**Frontend Migration Required:**
-```javascript
-// OLD (now returns empty array)
-receipt.order.shopping_cart.shopping_cart_items.forEach(item => {
-  const product = item.product;
-  const qty = item.qty;
-});
-
-// NEW (correct approach)
-receipt.order.warehouse_orders.forEach(order => {
-  const product = order.inventory.product;
-  const qty = order.qty;
-  const warehouse = order.company_site;
-  const status = order.product_status; // e.g., "on_delivery", "storage"
-});
-```
-
-**Response Changes:**
-- `items_count`: Now counts `warehouse_orders` instead of `shopping_cart_items`
-- `total_quantity`: Now sums from `warehouse_orders`
-- Each item now includes warehouse assignment and delivery status
-- Product access via: `warehouse_order.inventory.product`
-
----
-
-### November 2025: User Cart Orders Refactoring
-
-**Breaking Change:** The `user_cart_orders` endpoint parameter has changed:
-
-- **Old:** `user_address_id` (referenced join table)
-- **New:** `address_id` (direct reference to addresses table)
-
-**What Changed:**
-- Orders now directly reference the `addresses` table instead of going through the `user_addresses` join table
-- Simplifies queries: `@order.address` instead of `@order.user_address.address`
-- Better performance (fewer joins)
-- Preserves order history even if user removes address from saved addresses
-
-**Migration:**
-- All existing orders automatically migrated to new structure
-- Response JSON structure unchanged (frontend compatible)
-- User ID now stored directly on order (not inferred from shopping cart)
-
-**New API Usage:**
-```json
-POST /api/v1/user_cart_orders
-{
-  "user_cart_order": {
-    "address_id": 20,  // Changed from user_address_id
-    "social_program_id": 1
-  }
-}
-```
-
-For detailed refactoring documentation, see [REFACTOR_USER_CART_ORDERS_PLAN.md](REFACTOR_USER_CART_ORDERS_PLAN.md)
-
----
-
-
 This README would normally document whatever steps are necessary to get the
 application up and running.
 
@@ -146,7 +72,7 @@ Most endpoints that return lists of items support pagination to improve performa
 The following endpoints support pagination:
 
 **Public/User Accessible:**
-- Products (GET /api/v1/products) - Default: 20 per page
+- Products (GET /api/v1/products) - Default: 10 per page
 - Product Categories (GET /api/v1/product_categories) - Default: 20 per page
 - Producers (GET /api/v1/producers) - Default: 20 per page
 - Countries (GET /api/v1/countries) - Default: 50 per page
@@ -1491,7 +1417,7 @@ Delete a promotion-category association.
 #### GET /api/v1/products
 List all products with pagination support.
 - **Auth Required**: None (public access)
-- **Pagination**: Yes (default: 20 per page, max: 100)
+- **Pagination**: Yes (default: 10 per page, max: 100)
 - **Query Parameters**: 
   - `page` (optional): Page number
   - `per_page` (optional): Items per page
