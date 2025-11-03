@@ -47,3 +47,5 @@
 # Ignore documentation/planning files
 /EAGERLOADING.md
 /REFACTOR_USER_CART_ORDERS_PLAN.md
+/NGROK_SETUP.md
+/check_status.sh
