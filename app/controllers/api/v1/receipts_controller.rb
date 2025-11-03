@@ -17,13 +17,13 @@ class Api::V1::ReceiptsController < ApplicationController
         Receipt.all
       end.includes(
         { user: :user_detail },
-        { user_cart_order: :shopping_cart }
+        { user_cart_order: :warehouse_orders }
       ).recent
     else
       # Regular users see only their own receipts
       collection = current_user.receipts.includes(
         { user: :user_detail },
-        { user_cart_order: :shopping_cart }
+        { user_cart_order: :warehouse_orders }
       ).recent
     end
 
@@ -44,17 +44,39 @@ class Api::V1::ReceiptsController < ApplicationController
 
   # GET /api/v1/receipts/latest (Get the most recent receipt for the current user)
   def latest
-    @receipt = current_user.receipts
-      .includes(
-        :user,
-        user_cart_order: {
-          shopping_cart: { shopping_cart_items: :product },
-          address: :country,
-          warehouse_orders: :company_site
-        }
-      )
-      .order(created_at: :desc)
-      .first
+    # Users get their own latest receipt, admins need to specify user_id
+    if current_admin_user&.management?
+      if params[:user_id].present?
+        user = User.find(params[:user_id])
+        @receipt = user.receipts
+          .includes(
+            :user,
+            user_cart_order: {
+              shopping_cart: :shopping_cart_items,
+              address: :country,
+              warehouse_orders: { inventory: :product, company_site: :address }
+            }
+          )
+          .order(created_at: :desc)
+          .first
+      else
+        return render json: { error: "user_id parameter required for admin access" }, status: :unprocessable_content
+      end
+    elsif current_user
+      @receipt = current_user.receipts
+        .includes(
+          :user,
+          user_cart_order: {
+            shopping_cart: :shopping_cart_items,
+            address: :country,
+            warehouse_orders: { inventory: :product, company_site: :address }
+          }
+        )
+        .order(created_at: :desc)
+        .first
+    else
+      return render json: { error: "Unauthorized" }, status: :unauthorized
+    end
 
     if @receipt
       render :show
@@ -69,9 +91,9 @@ class Api::V1::ReceiptsController < ApplicationController
     @receipt = Receipt.includes(
       :user,
       user_cart_order: {
-        shopping_cart: { shopping_cart_items: :product },
+        shopping_cart: :shopping_cart_items,
         address: :country,
-        warehouse_orders: :company_site
+        warehouse_orders: { inventory: :product, company_site: :address }
       }
     ).find(params[:id])
   rescue ActiveRecord::RecordNotFound

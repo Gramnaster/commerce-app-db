@@ -39,6 +39,44 @@
 
 ## Recent Changes
 
+### November 2025: Receipts Response Structure Update
+
+**Breaking Change:** Receipt items are now returned via `warehouse_orders` instead of `shopping_cart_items`:
+
+**What Changed:**
+- **Old structure:** `receipt.order.shopping_cart.shopping_cart_items` (empty after order creation)
+- **New structure:** `receipt.order.warehouse_orders` (persists order history)
+
+**Why This Changed:**
+- `shopping_cart_items` are cleared after order creation to prevent old items appearing in active cart
+- `warehouse_orders` are created during order processing and persist as the historical record
+- This provides accurate order history and warehouse assignment tracking
+
+**Frontend Migration Required:**
+```javascript
+// OLD (now returns empty array)
+receipt.order.shopping_cart.shopping_cart_items.forEach(item => {
+  const product = item.product;
+  const qty = item.qty;
+});
+
+// NEW (correct approach)
+receipt.order.warehouse_orders.forEach(order => {
+  const product = order.inventory.product;
+  const qty = order.qty;
+  const warehouse = order.company_site;
+  const status = order.product_status; // e.g., "on_delivery", "storage"
+});
+```
+
+**Response Changes:**
+- `items_count`: Now counts `warehouse_orders` instead of `shopping_cart_items`
+- `total_quantity`: Now sums from `warehouse_orders`
+- Each item now includes warehouse assignment and delivery status
+- Product access via: `warehouse_order.inventory.product`
+
+---
+
 ### November 2025: User Cart Orders Refactoring
 
 **Breaking Change:** The `user_cart_orders` endpoint parameter has changed:
@@ -224,6 +262,64 @@ Create a new user account. Only basic information is required for registration.
   }
 }
 ```
+
+**Error Responses:**
+
+*Email Already Exists (422):*
+```json
+{
+  "status": {
+    "message": "User registration failed",
+    "errors": ["Email has already been taken"],
+    "code": "email_already_exists",
+    "field": "email"
+  }
+}
+```
+
+*Invalid Password (422):*
+```json
+{
+  "status": {
+    "message": "User registration failed",
+    "errors": ["Password is too short (minimum is 6 characters)"],
+    "code": "invalid_password",
+    "field": "password"
+  }
+}
+```
+
+*Password Mismatch (422):*
+```json
+{
+  "status": {
+    "message": "User registration failed",
+    "errors": ["Password confirmation doesn't match Password"],
+    "code": "password_mismatch",
+    "field": "password_confirmation"
+  }
+}
+```
+
+*Multiple Errors (422):*
+```json
+{
+  "status": {
+    "message": "User registration failed",
+    "errors": [
+      "Email has already been taken",
+      "Password is too short (minimum is 6 characters)"
+    ],
+    "code": "email_already_exists",
+    "field": "email"
+  }
+}
+```
+
+**Error Codes:**
+- `email_already_exists` - Email is already registered
+- `invalid_password` - Password doesn't meet requirements
+- `password_mismatch` - Password confirmation doesn't match
 
 **What Gets Auto-Created:**
 - `user_detail`: Created with provided first_name, last_name, dob
@@ -2819,6 +2915,21 @@ View all user orders.
 - **Auth Required**: Management Admin JWT token
 - **Returns**: Array of all orders with user address and item details
 
+#### GET /api/v1/user_cart_orders/warehouse/:warehouse_id (Management Only)
+View orders for a specific warehouse.
+- **Auth Required**: Management Admin JWT token
+- **Path Parameter**: `warehouse_id` - The company_site ID (warehouse)
+- **Returns**: Array of orders that have items fulfilled by this warehouse
+- **Note**: An order may appear if it has ANY items from this warehouse (even if other items come from different warehouses)
+
+**Example Request:**
+```bash
+curl -X GET http://localhost:3001/api/v1/user_cart_orders/warehouse/5 \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
+```
+
+**Use Case:** Warehouse admins can see all orders they need to fulfill.
+
 #### GET /api/v1/user_cart_orders/:id (Management Only)
 View a specific order.
 - **Auth Required**: Management Admin JWT token
@@ -3227,40 +3338,49 @@ curl -X GET http://localhost:3001/api/v1/receipts/4 \
     },
     "items": [
       {
-        "id": 6,
+        "id": 1,
         "qty": "2.0",
         "subtotal": "219.9",
+        "warehouse": {
+          "id": 4,
+          "title": "JPB Warehouse C"
+        },
+        "product_status": "on_delivery",
         "product": {
           "id": 1,
           "title": "Fjallraven - Foldsack No. 1 Backpack",
           "description": "Your perfect pack for everyday use...",
-          "price": 109.95
+          "price": 109.95,
+          "image": "https://fakestoreapi.com/img/backpack.jpg",
+          "product_images": [
+            {
+              "id": 1,
+              "url": "https://fakestoreapi.com/img/backpack.jpg"
+            }
+          ]
         }
       },
       {
-        "id": 7,
+        "id": 2,
         "qty": "3.0",
         "subtotal": "66.9",
+        "warehouse": {
+          "id": 4,
+          "title": "JPB Warehouse C"
+        },
+        "product_status": "storage",
         "product": {
           "id": 2,
           "title": "Mens Casual Premium Slim Fit T-Shirts",
           "description": "Slim-fitting style...",
-          "price": 22.3
+          "price": 22.3,
+          "image": null,
+          "product_images": []
         }
       }
     ],
     "items_count": 2,
-    "total_quantity": "5.0",
-    "delivery_orders": [
-      {
-        "company_site": {
-          "id": 4,
-          "title": "JPB Warehouse C"
-        },
-        "status": "storage",
-        "delivered_at": "2025-11-01T10:31:24.665Z"
-      }
-    ]
+    "total_quantity": "5.0"
   }
 }
 ```
@@ -3269,15 +3389,23 @@ curl -X GET http://localhost:3001/api/v1/receipts/4 \
 
 #### GET /api/v1/receipts/latest
 Get the most recent receipt for the authenticated user. Perfect for redirecting after checkout!
-- **Auth Required**: User JWT token
-- **Authorization**: Users can only view their own receipts
+- **Auth Required**: User JWT token OR Management Admin JWT token
+- **Authorization**: 
+  - Users can only view their own latest receipt
+  - Management admins must provide `user_id` parameter
 - **Returns**: Same format as GET /api/v1/receipts/:id
 - **Error**: Returns 404 if user has no receipts
 
-**Example Request:**
+**Example Request (User):**
 ```bash
 curl -X GET http://localhost:3001/api/v1/receipts/latest \
   -H "Authorization: Bearer YOUR_USER_TOKEN"
+```
+
+**Example Request (Admin):**
+```bash
+curl -X GET "http://localhost:3001/api/v1/receipts/latest?user_id=5" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
 ```
 
 **Example Response:**

@@ -1,15 +1,14 @@
 class Api::V1::Admin::ReceiptsController < ApplicationController
   include Paginatable
 
+  before_action :authenticate_admin_user!
+  before_action :authorize_management!
   before_action :set_receipt, only: [ :show, :destroy ]
 
   respond_to :json
 
   # GET /api/v1/admin/receipts (Management only - view all receipts)
   def index
-    authenticate_admin_user!
-    authorize_management!
-
     collection = Receipt.includes(:user, :user_cart_order).recent
 
     # Optional filtering by user
@@ -38,15 +37,10 @@ class Api::V1::Admin::ReceiptsController < ApplicationController
 
   # GET /api/v1/admin/receipts/:id (Management only - view any receipt detail)
   def show
-    authenticate_admin_user!
-    authorize_management!
   end
 
   # DELETE /api/v1/admin/receipts/:id (Management only - delete receipt)
   def destroy
-    authenticate_admin_user!
-    authorize_management!
-
     if @receipt.destroy
       render json: { message: "Receipt deleted successfully" }, status: :ok
     else
