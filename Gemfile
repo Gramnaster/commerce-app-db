@@ -23,7 +23,7 @@ gem "will_paginate", "~> 4.0"
 gem "finnhub_ruby", "~> 2.0.0"
 gem "bullet", group: "development"
 gem "faraday", "~> 2.12"
-gem "faraday-net_http", "~> 3.0"
+gem "faraday-net_http", "~> 3.4"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"
